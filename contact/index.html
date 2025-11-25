@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -17,11 +17,6 @@
             --secondary: #666;
             --border: #ddd;
             --accent: #ec3750;
-        }
-
-        .project{
-            display: flex;
-            flex-direction: row;
         }
 
         [data-theme="dark"] {
@@ -112,15 +107,46 @@
             transform: scale(1.1);
         }
 
+        .social {
+            display: flex;
+            gap: 16px;
+            margin: 24px 0;
+        }
 
-     
-        .hyplink{
+        .social a {
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .project {
+            margin: 24px 0;
+            padding: 24px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .project:first-child {
+            border-top: none;
+        }
+
+        .project h3 {
+            margin-top: 0;
+        }
+
+        .project .tech {
             font-size: 14px;
+            color: var(--accent);
             font-weight: 600;
             margin-bottom: 8px;
-            background-color: transparent;
-            color:var(--secondary);
-            text-decoration: none;
+        }
+
+        .contact-item {
+            margin: 12px 0;
+            font-size: 18px;
+        }
+
+        .contact-item strong {
+            color: var(--text);
         }
 
         footer {
@@ -151,33 +177,31 @@
     </style>
 </head>
 <body>
-    <button class="theme-toggle" id="themeToggle">◐</button>
+    
+<div class="social">
+        <a href="mailto:bhandari.basanta.47@gmail.com">Email</a>
+        <a href="https://github.com/basanta-bhandari" target="_blank">GitHub</a>
+    </div>
 
-    <h1>Basanta Bhandari</h1>
-    <p class="subtitle"> Hello World!  <br>  </p>
+    
 
-    <p>I'm a 13-year-old CS enthusiast from Rupandehi, Nepal in Grade 8 student with a deep interest in technology, programming, and creative problem-solving. In my free time, I build websites, write programs, play chess, and sketch.</p>
 
-    <p>I work with Python, JavaScript, Godot, and HTML/CSS. I've built a strong foundation in web development and enjoy creating projects that combine my interests in programming and creativity.</p>
 
-<div class="project" >
-    <button class="hyplink" ><a href="/contact/index.html">Contact</a></button> 
-    <button class="hyplink" ><a href="/projects/index.html">My work</a></button>
-    <button class="hyplink" ><a href="">-------</a></button> 
-    <button class="hyplink" ><a href="">-------</a></button>
-    <button class="hyplink" ><a href="">-------</a></button> 
-    <button class="hyplink" ><a href="">-------</a></button>
-    <button class="hyplink" ><a href="">-------</a></button> 
-    <button class="hyplink" ><a href="">-------</a></button>
-    <button class="hyplink" ><a href="">-------</a></button> 
-    <button class="hyplink" ><a href="">-------</a></button>
-    <button class="hyplink" ><a href="">-------</a></button> 
-    <button class="hyplink" ><a href="">-------</a></button>
-    <button class="hyplink" ><a href="">-------</a></button> 
-    <button class="hyplink" ><a href="">-------</a></button>
-</div>
+   
+    <h2>Get in touch</h2>
+    
+    <p>I'd love to connect with fellow developers, students, or anyone interested in technology and programming!</p>
 
-    <footer>
+    <div class="contact-item">
+        <strong>Email:</strong> <a href="mailto:bhandari.basanta.47@gmail.com">bhandari.basanta.47@gmail.com</a>
+    </div>
+    
+    <div class="contact-item">
+        <strong>Location:</strong> Tilottama, Rupandehi, Nepal
+    </div>
+</body>
+
+<footer>
         © 2025 Made by Basanta Bhandari.
     </footer>
 
