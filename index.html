@@ -3,9 +3,490 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portfolio</title>
+    <title>Basanta Bhandari - CV</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #ffffff;
+            --text: #1a1a1a;
+            --secondary: #ffffff;
+            --accent: #2563eb;
+            --border: #e5e7eb;
+            --hover: #f3f4f6;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --text: #f1f5f9;
+            --secondary: #1e293b;
+            --accent: #3b82f6;
+            --border: #334155;
+            --hover: #334155;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            padding: 1rem 0;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--hover);
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding-top: 80px;
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-text h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        .hero-text .subtitle {
+            font-size: 1.3rem;
+            color: var(--text);
+            opacity: 0.8;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-text p {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            transition: all 0.3s;
+        }
+
+        .social-links a:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .profile-img {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+        }
+
+        section {
+            padding: 5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: var(--accent);
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        .card {
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            font-size: 1.4rem;
+        }
+
+        .card h4 {
+            margin-bottom: 0.8rem;
+            font-weight: 500;
+        }
+
+        .location {
+            color: var(--accent);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        .tech-stack {
+            color: var(--accent);
+            font-size: 0.9rem;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-item i {
+            color: var(--accent);
+            font-size: 1.3rem;
+            width: 35px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 768px) {
+            .hero-content, .about-grid, .contact-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .hero-text h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .profile-img {
+                max-width: 300px;
+                margin: 0 auto;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello World!</h1>
+    <nav>
+        <div class="container">
+            <div class="nav-container">
+                <ul class="nav-links">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#education">Education</a></li>
+                    <li><a href="#projects">Projects</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Basanta Bhandari</h1>
+                    <p class="subtitle">12-year-old CS Enthusiast from Rupandehi, Nepal</p>
+                    <p>I am a 12-year-old student studying in Grade 8 with a deep interest in technology, programming, and creative problem-solving.</p>
+                    
+                    <div class="social-links">
+                        <a href="mailto:bhandari.basanta.47@gmail.com" title="Email">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                        <a href="https://github.com/basanta-bhandari" target="_blank" title="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                    </div>
+
+                    <div class="cta-buttons">
+                        <a href="#contact" class="btn btn-primary">Get In Touch</a>
+                        <a href="#projects" class="btn btn-secondary">View Projects</a>
+                    </div>
+                </div>
+                <div>
+                    <img src="../images/pfp.jpg" alt="Basanta Bhandari" class="profile-img">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about">
+        <div class="container">
+            <h2 class="section-title">About Me</h2>
+            <div class="about-grid">
+                <div>
+                    <div class="card">
+                        <h3>Skills</h3>
+                        <p><strong>Languages:</strong> Python, JavaScript, HTML/CSS</p>
+                        <p><strong>Tools:</strong> Godot, Git/GitHub</p>
+                        <p><strong>Interests:</strong> Web Development, Game Development, Chess, Drawing</p>
+                    </div>
+                </div>
+                <div>
+                    <p style="margin-bottom: 1.5rem;">I'm a 12-year-old high school student and tech enthusiast from Tilottama, Nepal. In my free time, I build websites, write programs, play chess, and  sketch.</p>
+                    
+                    <p style="margin-bottom: 1.5rem;">I work with Python, JavaScript, Godot, and HTML/CSS for programming. I have built a strong foundation in Web Development and enjoy creating projects that combine my interests in programming and creativity.</p>
+                    
+                    <p>As a young developer, I'm passionate about learning new technologies and tackling challenges that help me grow my skills.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="education">
+        <div class="container">
+            <h2 class="section-title">Education</h2>
+            
+            <div class="card">
+                <h3>Shree Shanti Model Secondary School</h3>
+                <h4>Grade 6-8 (Currently in Grade 8)</h4>
+                <div class="location">Tilottama-5, Nepal</div>
+                <p>Actively involved in various clubs and extracurricular activities, including coding clubs and academic competitions.</p>
+            </div>
+            
+            <div class="card">
+                <h3>Paramount/Horizon G.B.S</h3>
+                <h4>Class 1-5 (Primary Education)</h4>
+                <div class="location">Tilottama-1, Nepal</div>
+                <p>Participated in various extracurricular activities and developed early interest in technology.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="projects">
+        <div class="container">
+            <h2 class="section-title">My Projects</h2>
+            
+            <div class="card">
+                <h3>Typing test</h3>
+                <div class="tech-stack">Python, CLI/ Curses</div>
+                <p style="margin: 1rem 0;">Project submitted for Terminal-craft (A YSWS program for Summer of Making). Some simple CLI utilities made in Python, demonstrating my command-line interface development skills.</p>
+                <a href="" class="btn btn-primary" target="_blank">To be added</a>
+            </div>
+
+            <div class="card">
+                <h3>Py-DoS</h3>
+                <div class="tech-stack">Python, CLI</div>
+                <p style="margin: 1rem 0;">A simple CLI/CUI MS-DOS based 'OS' made entirely in Python, showcasing system-level programming concepts.</p>
+                <a href="https://pypi.org/project/Py-DOS-B1/" class="btn btn-primary" target="_blank">View on PyPI/Github</a>
+            </div>
+
+            <div class="card">
+                <h3>Typing test</h3>
+                <div class="tech-stack">Python/Django</div>
+                <p style="margin: 1rem 0;">A web-based typing test in python.</p>
+                <a href="" class="btn btn-primary" target="_blank">To be added.</a>
+            </div>
+
+             <div class="card">
+                <h3>Website</h3>
+                <div class="tech-stack">HTML/CSS & JS</div>
+                <p style="margin: 1rem 0;">A wesite made for our school's <a href="hackclub.com">Hackclub</a></p>
+                <a href="" class="btn btn-primary" target="_blank">To be added.</a>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="contact">
+        <div class="container">
+            <h2 class="section-title">Let's Connect</h2>
+            
+            <div class="contact-grid">
+                <div>
+                    <h3 style="margin-bottom: 1.5rem;">Get in Touch</h3>
+                    <p style="margin-bottom: 2rem;">I'd love to connect with fellow developers, students, or anyone interested in technology and programming!</p>
+                    
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>bhandari.basanta.47@gmail.com</span>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Tilottama, Rupandehi, Nepal</span>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <i class="fab fa-github"></i>
+                        <a href="https://github.com/basanta-bhandari" target="_blank" style="color: var(--text);">github.com/basanta-bhandari</a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: 1.5rem;">Send Message</h3>
+                    <p style="opacity: 0.7; margin-bottom: 1rem;">Feel free to reach out via email for any collaboration, project inquiries, or just to say hello!</p>
+                    <a href="mailto:bhandari.basanta.47@gmail.com" class="btn btn-primary">Email Me</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Basanta Bhandari. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const toggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        const icon = toggle.querySelector('i');
+
+        const theme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', theme);
+        icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+
+        toggle.addEventListener('click', () => {
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            localStorage.setItem('theme', next);
+        });
+
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', e => {
+                e.preventDefault();
+                document.querySelector(a.getAttribute('href'))?.scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
 </body>
 </html>
