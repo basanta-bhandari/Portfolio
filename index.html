@@ -22,6 +22,8 @@
         .project{
             display: flex;
             flex-direction: row;
+            gap: 16px;
+            flex-wrap: wrap;
         }
 
         [data-theme="dark"] {
@@ -117,10 +119,21 @@
         .hyplink{
             font-size: 14px;
             font-weight: 600;
-            margin-bottom: 8px;
             background-color: transparent;
-            color:var(--secondary);
+            border: none;
+            padding: 0;
+            color: var(--secondary);
             text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .hyplink:hover {
+            color: var(--accent);
+        }
+
+        .hyplink a {
+            border: none;
         }
 
         footer {
@@ -160,21 +173,9 @@
 
     <p>I work with Python, JavaScript, Godot, and HTML/CSS. I've built a strong foundation in web development and enjoy creating projects that combine my interests in programming and creativity.</p>
 
-<div class="project" >
-    <button class="hyplink" ><a href="/contact/index.html">Contact</a></button> 
-    <button class="hyplink" ><a href="/projects/index.html">My work</a></button>
-    <button class="hyplink" ><a href="">-------</a></button> 
-    <button class="hyplink" ><a href="">-------</a></button>
-    <button class="hyplink" ><a href="">-------</a></button> 
-    <button class="hyplink" ><a href="">-------</a></button>
-    <button class="hyplink" ><a href="">-------</a></button> 
-    <button class="hyplink" ><a href="">-------</a></button>
-    <button class="hyplink" ><a href="">-------</a></button> 
-    <button class="hyplink" ><a href="">-------</a></button>
-    <button class="hyplink" ><a href="">-------</a></button> 
-    <button class="hyplink" ><a href="">-------</a></button>
-    <button class="hyplink" ><a href="">-------</a></button> 
-    <button class="hyplink" ><a href="">-------</a></button>
+<div class="project">
+    <button class="hyplink"><a href="/contact/index.html">Contact</a></button> 
+    <button class="hyplink"><a href="/projects/index.html">My work</a></button>
 </div>
 
     <footer>
