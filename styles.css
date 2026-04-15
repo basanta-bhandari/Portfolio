@@ -108,7 +108,7 @@ body {
 
 .window-body { flex: 1; overflow-y: auto; position: relative; }
 
-/* macOS scrollbar */
+
 .window-body::-webkit-scrollbar { width: 6px; }
 .window-body::-webkit-scrollbar-track { background: transparent; }
 .window-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
@@ -146,7 +146,7 @@ body {
 }
 .link-btn:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.28); }
 
-/* --- projects window portfolio embed --- */
+/* --- projects window  --- */
 .portfolio-embed {
     background: rgba(18, 18, 20, 0.6);
     color: #f0f0f0;
@@ -315,9 +315,9 @@ body {
   padding: 0 8px;
   font-family: monospace;
 }
-.desktop { bottom: 40px; } /* stop icons hiding behind taskbar */
+.desktop { bottom: 40px; } 
 
-/* --- Quickfind (Spotlight) Overlay --- */
+
 #quickfind-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.4); backdrop-filter: blur(8px);
@@ -362,7 +362,7 @@ body {
   color: rgba(100,180,255,0.8); font-size: 14px;
 }
 
-/* --- Snap Assist Bar --- */
+
 #snap-assist-bar {
   position: fixed; top: 0; left: 50%; transform: translateX(-50%);
   display: none; gap: 20px; padding: 20px; z-index: 9998;
@@ -388,7 +388,7 @@ body {
   opacity: 1;
 }
 
-/* --- Context Menu Styles --- */
+
 .context-menu {
   position: fixed; background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(40px);
   border: 0.5px solid rgba(255,255,255,0.12); border-radius: 8px;
@@ -407,7 +407,7 @@ body {
   font-size: 14px; opacity: 0.7;
 }
 
-/* --- File Manager (Finder) --- */
+/* --- File Manager --- */
 .finder-toolbar {
   display: flex; gap: 8px; padding: 12px;
   background: rgba(255,255,255,0.03);
