@@ -52,7 +52,7 @@ document.querySelectorAll('.desk-icon').forEach(icon => {
   });
 });
 
-// Window Buttons
+// traffic lights (the fun kind, not the road kind)
 document.querySelectorAll('.close').forEach(btn => {
   btn.onclick = () => {
     const win = document.getElementById(btn.dataset.closes);
@@ -94,7 +94,7 @@ document.querySelectorAll('.minb').forEach(btn => {
   };
 });
 
-// Taskbar item clicks
+// taskbar clicky stuff prolly
 document.querySelectorAll('.task-item').forEach(item => {
   item.addEventListener('click', () => {
     const targetId = item.dataset.target;
@@ -164,6 +164,7 @@ document.querySelectorAll('.resizer').forEach(handle => {
   });
 });
 
+// tick tock. time is fake but clocks are real
 function updateTime() {
   const now = new Date();
   const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -175,6 +176,7 @@ function updateTime() {
 setInterval(updateTime, 1000);
 updateTime();
 
+// battery api - if it works it works. if not, pretend its 100%
 if ('getBattery' in navigator) {
   navigator.getBattery().then(function(battery) {
     function updateBattery() {
@@ -292,6 +294,7 @@ function openWindowByName(name) {
 
 quickfindInput.addEventListener('input', updateQuickfindSuggestions);
 
+// snap assist - windows snapping into place like lego
 const snapAssistBar = document.getElementById('snap-assist-bar');
 let isWindowDragging = false;
 let activeDropZone = null;
@@ -406,7 +409,7 @@ document.addEventListener('click', () => {
   if (contextMenu) contextMenu.style.display = 'none';
 });
 
-// Desktop right-click
+// right-click goes brrr
 document.getElementById('desktop').addEventListener('contextmenu', (e) => {
   showContextMenu(e, [
     { icon: 'ph-file-plus', text: 'New Folder', action: () => {} },
@@ -414,6 +417,7 @@ document.getElementById('desktop').addEventListener('contextmenu', (e) => {
   ]);
 });
 
+// VITUAL FILE SYSTEM!! not real files. dont be fooled
 class VirtualFileSystem {
   constructor() {
     this.files = JSON.parse(localStorage.getItem('vfs_files')) || {};
@@ -615,7 +619,8 @@ const defaultBgs = [
   { name: 'Mountain', url: './Backgrounds/mountain.png' },
   { name: 'Default', url: './Backgrounds/default.png' },
   { name: 'Forest', url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&h=600&fit=crop' },
-  { name: 'Spirited Away', url: './Backgrounds/Spirited Away Station.png' }
+  { name: 'Spirited Away', url: './Backgrounds/Spirted_Away_Station.png' },
+  { name: 'Boba', url: './Backgrounds/boba.png' }
 ];
 
 defaultBgs.forEach(bg => {
@@ -652,12 +657,34 @@ bgResetBtn.addEventListener('click', () => {
   localStorage.removeItem('bgColor');
 });
 
-const savedBg = localStorage.getItem('bgImage');
-const savedColor = localStorage.getItem('bgColor');
-if (savedBg) {
-  wallpaper.style.backgroundImage = `url('${savedBg}')`;
+function initBobaMode() {
+  wallpaper.style.backgroundImage = "url('./Backgrounds/boba.png')";
+  document.getElementById('welcome').classList.add('hidden');
+  const bobaWin = document.getElementById('boba-welcome');
+  bobaWin.classList.remove('hidden');
+  bringToFront(bobaWin);
+  localStorage.setItem('bobaMode', 'true');
 }
-if (savedColor) {
-  wallpaper.style.background = savedColor;
-  bgColorPicker.value = savedColor;
+
+function switchToDefault() {
+  localStorage.removeItem('bobaMode');
+  document.getElementById('boba-welcome').classList.add('hidden');
+  wallpaper.style.backgroundImage = "url('./Backgrounds/fig.png')";
+  const welcomeWin = document.getElementById('welcome');
+  welcomeWin.classList.remove('hidden');
+  bringToFront(welcomeWin);
+}
+
+if (new URLSearchParams(window.location.search).has('boba') || localStorage.getItem('bobaMode') === 'true') {
+  initBobaMode();
+} else {
+  const savedBg = localStorage.getItem('bgImage');
+  const savedColor = localStorage.getItem('bgColor');
+  if (savedBg) {
+    wallpaper.style.backgroundImage = `url('${savedBg}')`;
+  }
+  if (savedColor) {
+    wallpaper.style.background = savedColor;
+    bgColorPicker.value = savedColor;
+  }
 }
