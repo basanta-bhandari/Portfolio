@@ -1,0 +1,60 @@
+cat > /mnt/user-data/outputs/distrohopper.html << 'HTMLEOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DISTROHOP!</title>
+<script src="script.js"></script>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<div class="ui top-bar">
+  <span class="logo"> DISTROHOPPER 3D<span>migration script builder</span></span>
+</div>
+
+<div class="panels-row">
+  <div class="panel" id="from-panel">
+    <h2>▶ FROM</h2>
+    <div class="radial-wrap">
+      <div class="radial-toggle" id="from-toggle"><span class="plus">+</span></div>
+      <div class="radial-ring" id="from-ring"></div>
+    </div>
+    <div class="radial-selected-name" id="from-name">tap to choose</div>
+  </div>
+  <div class="arrow-col">
+    <div class="big-arrow">→</div>
+    <div id="risk-badge" class="risk-badge" style="display:none"></div>
+  </div>
+  <div class="panel" id="to-panel">
+    <h2>TO ▶</h2>
+    <div class="radial-wrap">
+      <div class="radial-toggle" id="to-toggle"><span class="plus">+</span></div>
+      <div class="radial-ring" id="to-ring"></div>
+    </div>
+    <div class="radial-selected-name" id="to-name">tap to choose</div>
+  </div>
+</div>
+<div class="bottom-bar">
+  <div class="bottom-bar-inner">
+    <div class="gen-row">
+      <div id="path-label" class="path-label">← Select source and target distro</div>
+      <button id="gen-btn" class="gen-btn" disabled>BUILD SCRIPT →</button>
+    </div>
+    <div id="code-wrap" class="code-wrap">
+  <div class="term-window">
+    <div class="term-header">
+      <div class="term-dot dot-red"></div>
+      <div class="term-dot dot-yel"></div>
+      <div class="term-dot dot-grn"></div>
+      <div class="term-title">bash — distrohopper</div>
+      <button class="copy-btn" id="copy-btn">COPY</button>
+    </div>
+    <div class="code-block" id="code-out"></div>
+  </div>
+</div>
+<link rel="stylesheet" href="style.css">
+</body>
+</html>
+

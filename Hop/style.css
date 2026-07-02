@@ -1,0 +1,295 @@
+*{margin:0;padding:0;
+    box-sizing:border-box}
+
+body
+{
+    font-family:'Courier New',monospace;background:#000;color:#fff;
+    overflow:hidden;height:100vh
+}
+#canvas
+{
+    position:absolute;top:0;left:0;
+    width:100%;
+    height:100%;
+    z-index:1
+}
+.ui
+{
+    position:absolute;z-index:10;
+    pointer-events:none
+}
+.top-bar
+{
+    top:14px;
+    left:50%;
+    transform:translateX(-50%);background:rgba(6,12,24,0.96);
+    padding:10px 28px;border-radius:50px;
+    border:1px solid #22ff88;
+    pointer-events:all;
+    white-space:nowrap
+}
+.logo
+{
+    font-size:22px;
+    font-weight:bold;
+    color:#22ff88;
+    letter-spacing:2px}
+
+.logo span
+{
+    color:#fff;
+    opacity:0.6;
+    font-size:14px;
+    margin-left:8px;
+    letter-spacing:1px
+}
+
+.panels-row
+{position:absolute;
+    top:70px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;gap:24px;
+    align-items:flex-start;
+    z-index:10;
+    pointer-events:none}
+
+.panel {
+  background: rgba(18, 22, 36, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 14px 18px 16px;
+  width: 240px;
+  pointer-events: all;
+  text-align: center;
+  transition: box-shadow 0.5s ease, border-color 0.5s ease;
+}
+.panel h2
+{
+    color:#22ff88;
+    text-align:center;margin-bottom:12px;
+    font-size:13px;letter-spacing:3px;
+    text-transform:uppercase}
+.distro-grid
+{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:7px
+}
+
+.distro-btn
+{
+    background:rgba(20,30,50,0.9);
+    border:1.5px solid #1e3a5f;
+    border-radius:9px;
+    padding:9px 5px;
+    text-align:center;cursor:pointer;
+    font-size:11px;transition:all 0.18s;
+    font-family:'Courier New',monospace
+}
+
+.distro-btn:hover
+{
+border-color:#22ff88;
+background:rgba(34,255,136,0.08)
+}
+
+.distro-btn.selected {
+    border-color: #22ff88;
+    background: rgba(34, 255, 136, 0.18);
+    box-shadow: 0 0 10px rgba(34, 255, 136, 0.25);
+}
+
+.distro-btn .dname {
+    color: #eee;
+    font-weight: bold;
+    font-size: 10.5px;
+}
+
+.distro-btn .dbase {
+    color: #555;
+    font-size: 9px;
+    margin-top: 2px;
+}
+
+.arrow-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 40px;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.big-arrow {
+    font-size: 44px;
+    color: #22ff88;
+    line-height: 1;
+}
+
+.risk-badge {
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 120px;
+    line-height: 1.3;
+}
+
+.bottom-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    background: rgba(4, 8, 18, 0.98);
+    border-top: 1px solid #1e3a5f;
+    pointer-events: all;
+}
+
+.bottom-bar-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 12px 20px;
+}
+
+.gen-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 10px;
+}
+
+.path-label {
+    color: #22ff88;
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+    flex: 1;
+}
+
+.gen-btn {
+    padding: 10px 26px;
+    background: linear-gradient(90deg, #22ff88, #00cc66);
+    color: #000;
+    font-weight: bold;
+    font-size: 14px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+}
+
+.gen-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.code-wrap {
+    display: none;
+    position: relative;
+}
+
+.code-block {
+  background: transparent;
+  padding: 16px;
+  font-family: 'Courier New', monospace;
+  font-size: 11.5px;
+  max-height: 280px;
+  overflow-y: auto;
+  line-height: 1.55;
+  color: #cad3f5;
+}
+
+.code-block .c-comment {
+  color: #5b6078;
+  font-style: italic;
+}
+
+.code-block .c-cmd {
+  color: #8aadf4;
+  position: relative;
+  top: 0;
+  right: 0;
+  padding: 4px 12px;
+  background: #363a4f;
+  border: 1px solid #494d64;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  color: #cad3f5;
+  font-family: 'Courier New', monospace;
+  z-index: 2;
+  transition: all 0.2s;
+}
+
+.copy-btn:hover {
+  background: #a6da95;
+  color: #1e2030;
+  border-color: #a6da95;
+
+  font-weight: bold;
+} 
+.copy-btn {
+  margin-left: auto; 
+  position: relative;
+  top: 0; right: 0;
+  padding: 4px 12px;
+  background: #363a4f;
+  border: 1px solid #494d64;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  color: #cad3f5;
+  font-family: 'Courier New', monospace;
+  z-index: 2;
+  transition: all 0.2s;
+}
+.copy-btn:hover { background: #a6da95; color: #1e2030; border-color: #a6da95; }
+
+.hint {
+    color: #444;
+    font-size: 11px;
+    text-align: center;
+    margin-top: 8px;
+    padding-bottom: 4px;
+}
+.term-window {
+  background: #24273a; /* Catppuccin Macchiato Base */
+  border: 1px solid #363a4f;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  margin-top: 10px;
+}
+.term-header {
+  background: #1e2030; /* Macchiato Mantle */
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #363a4f;
+  position: relative;
+}
+.term-dot 
+{ width: 12px; height: 12px; border-radius: 50%; }
+.dot-red 
+{ background: #ed8796; } 
+.dot-yel 
+{ background: #eed49f; } 
+.dot-grn 
+{ background: #a6da95; } 
+.term-title {
+  position: absolute;
+  width: 100%; left: 0;
+  text-align: center;
+  pointer-events: none;
+  color: #8087a2;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
