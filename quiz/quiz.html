@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Formula Drill — Trigonometry & Statistics</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root{
+    --ink:#1b1f23;
+    --paper:#eef0ea;
+    --paper2:#e2e5db;
+    --rule:#c7cbbd;
+    --brass:#8a7248;
+    --brass-dim:#b7a06e;
+    --ok:#3a6b4c;
+    --ok-bg:#dbe6dc;
+    --bad:#9c3d2e;
+    --bad-bg:#e6d3cd;
+    --mono: 'JetBrains Mono', monospace;
+    --display: 'Fraunces', serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--mono);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .sheet{
+    max-width:720px;
+    margin:0 auto;
+    padding:40px 24px 80px;
+  }
+  header{
+    border-bottom:2px solid var(--ink);
+    padding-bottom:16px;
+    margin-bottom:28px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+  }
+  header h1{
+    font-family:var(--display);
+    font-weight:600;
+    font-size:26px;
+    letter-spacing:-0.01em;
+    margin:0;
+  }
+  header .tag{
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--brass);
+    text-align:right;
+  }
+
+  /* ---- Setup screen ---- */
+  .field{
+    margin-bottom:26px;
+  }
+  .field label{
+    display:block;
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:#5b5f56;
+    margin-bottom:10px;
+  }
+  .chooser{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .chooser button{
+    font-family:var(--mono);
+    font-size:15px;
+    font-weight:500;
+    padding:10px 16px;
+    background:var(--paper2);
+    border:1.5px solid var(--rule);
+    color:var(--ink);
+    cursor:pointer;
+    transition:all .12s ease;
+  }
+  .chooser button:hover{ border-color:var(--brass); }
+  .chooser button.active{
+    background:var(--ink);
+    color:var(--paper);
+    border-color:var(--ink);
+  }
+  .catlist{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    border-top:1px solid var(--rule);
+  }
+  .catrow{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:13px 2px;
+    border-bottom:1px solid var(--rule);
+  }
+  .catrow input{ accent-color:var(--ink); width:15px; height:15px; margin-top:3px; flex-shrink:0; }
+  .catrow .catbody{ flex:1; cursor:pointer; }
+  .catrow .catname-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:8px;
+  }
+  .catrow .catname{
+    font-size:14px;
+    color:var(--ink);
+  }
+  .catrow .diff{
+    font-size:10px;
+    letter-spacing:0.1em;
+    color:var(--brass-dim);
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  .catrow .catdesc{
+    font-size:11.5px;
+    color:#6b6f62;
+    margin-top:3px;
+    line-height:1.5;
+  }
+  .start-btn{
+    width:100%;
+    padding:16px;
+    font-family:var(--display);
+    font-weight:600;
+    font-size:18px;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    cursor:pointer;
+    margin-top:10px;
+    letter-spacing:0.01em;
+  }
+  .start-btn:hover{ background:var(--brass); }
+  .start-btn:disabled{ background:#9a9a90; cursor:not-allowed; }
+
+  /* ---- Quiz screen ---- */
+  .progress-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color:#5b5f56;
+    margin-bottom:6px;
+    letter-spacing:0.04em;
+  }
+  .barwrap{
+    height:3px;
+    background:var(--rule);
+    margin-bottom:36px;
+  }
+  .bar{
+    height:100%;
+    background:var(--ink);
+    transition:width .25s ease;
+  }
+  .qcard{
+    background:var(--paper2);
+    border:1.5px solid var(--ink);
+    padding:32px 28px;
+    margin-bottom:22px;
+  }
+  .qmeta{
+    display:flex;
+    justify-content:space-between;
+    font-size:10px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--brass);
+    margin-bottom:18px;
+  }
+  .qprompt{
+    font-family:var(--display);
+    font-size:21px;
+    line-height:1.55;
+    font-weight:500;
+  }
+  .qprompt .expr{
+    font-family:var(--mono);
+    font-weight:700;
+    background:var(--paper);
+    padding:1px 6px;
+    border:1px solid var(--rule);
+  }
+  .answer-row{
+    display:flex;
+    gap:10px;
+    margin-top:4px;
+  }
+  input[type=text]{
+    flex:1;
+    font-family:var(--mono);
+    font-size:16px;
+    padding:13px 14px;
+    border:1.5px solid var(--rule);
+    background:var(--paper);
+    color:var(--ink);
+  }
+  input[type=text]:focus{ outline:none; border-color:var(--ink); }
+  .nav-btn{
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:14px;
+    padding:0 22px;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    cursor:pointer;
+  }
+  .nav-btn:hover{ background:var(--brass); }
+  .skip{
+    margin-top:12px;
+    background:none;
+    border:none;
+    font-family:var(--mono);
+    font-size:12px;
+    color:#7a7d72;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+  }
+
+  /* ---- Score screen ---- */
+  .score-card{
+    text-align:center;
+    padding:50px 20px 30px;
+    border-top:2px solid var(--ink);
+    border-bottom:2px solid var(--ink);
+  }
+  .score-num{
+    font-family:var(--display);
+    font-size:74px;
+    font-weight:600;
+    line-height:1;
+  }
+  .score-num span{
+    font-size:28px;
+    color:#7a7d72;
+  }
+  .score-label{
+    font-size:11px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--brass);
+    margin-top:10px;
+  }
+  .breakdown{
+    margin-top:34px;
+  }
+  .breakdown h3{
+    font-family:var(--display);
+    font-size:16px;
+    font-weight:600;
+    margin:0 0 10px;
+  }
+  .brow{
+    display:flex;
+    justify-content:space-between;
+    padding:9px 0;
+    border-bottom:1px solid var(--rule);
+    font-size:13px;
+  }
+  .brow .tag-diff{
+    font-size:10px;
+    padding:2px 6px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+  }
+  .tag-diff.easy{ background:#dbe6dc; color:var(--ok); }
+  .tag-diff.med{ background:#ecdfc4; color:#8a6a20; }
+  .tag-diff.hard{ background:#e6d3cd; color:var(--bad); }
+
+  .review{ margin-top:38px; }
+  .revitem{
+    border:1.5px solid var(--rule);
+    padding:16px 18px;
+    margin-bottom:12px;
+    background:var(--paper2);
+  }
+  .revitem.correct{ border-left:5px solid var(--ok); }
+  .revitem.wrong{ border-left:5px solid var(--bad); }
+  .revitem.blank{ border-left:5px solid #9a9a90; }
+  .rev-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .rev-q{
+    font-family:var(--display);
+    font-size:15.5px;
+    font-weight:500;
+  }
+  .rev-verdict{
+    font-size:10px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    padding:3px 8px;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  .rev-verdict.correct{ background:var(--ok-bg); color:var(--ok); }
+  .rev-verdict.wrong{ background:var(--bad-bg); color:var(--bad); }
+  .rev-verdict.blank{ background:#e3e3dc; color:#6b6f62; }
+  .rev-line{
+    font-size:13px;
+    margin-top:5px;
+    line-height:1.5;
+  }
+  .rev-line .lbl{
+    color:#7a7d72;
+    display:inline-block;
+    min-width:76px;
+  }
+  .rev-line .yours{ color:var(--bad); }
+  .rev-line .yours.correct-text{ color:var(--ok); }
+  .rev-line .correct-ans{ color:var(--ok); font-weight:600; }
+
+  .restart-btn{
+    width:100%;
+    padding:16px;
+    font-family:var(--display);
+    font-weight:600;
+    font-size:16px;
+    background:transparent;
+    border:1.5px solid var(--ink);
+    color:var(--ink);
+    cursor:pointer;
+    margin-top:28px;
+  }
+  .restart-btn:hover{ background:var(--ink); color:var(--paper); }
+
+  .hint{
+    font-size:12px;
+    color:#7a7d72;
+    margin-top:8px;
+    line-height:1.5;
+  }
+  ::selection{ background:var(--brass-dim); color:#fff; }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <h1>Formula Drill</h1>
+    <div class="tag">trig &amp; statistics — recall<br>not solving</div>
+  </header>
+
+  <!-- SETUP -->
+  <div id="setup">
+    <div class="field">
+      <label>Categories to draw from</label>
+      <div class="catlist" id="catlist"></div>
+    </div>
+
+    <div class="field">
+      <label>Number of questions</label>
+      <div class="chooser" id="qcount">
+        <button data-v="5">5</button>
+        <button data-v="10" class="active">10</button>
+        <button data-v="15">15</button>
+        <button data-v="20">20</button>
+        <button data-v="25">25</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Full marks</label>
+      <div class="chooser" id="fullmarks">
+        <button data-v="25">25</button>
+        <button data-v="50" class="active">50</button>
+        <button data-v="75">75</button>
+      </div>
+    </div>
+
+    <button class="start-btn" id="startBtn">Begin drill</button>
+    <div class="hint">Each question is weighted by difficulty (easy / medium / hard) so its point value varies — everything scales to your chosen full marks. At the end you'll get a right/wrong check against what you typed — matching is a lenient text comparison (spacing, θ vs "theta", ^2 vs ², etc. are all fine), not a strict grader, so glance over the review yourself too.</div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz" style="display:none;">
+    <div class="progress-row">
+      <span id="qposition">Q1 / 10</span>
+      <span id="qrunning">0 / 50</span>
+    </div>
+    <div class="barwrap"><div class="bar" id="bar" style="width:0%"></div></div>
+
+    <div class="qcard">
+      <div class="qmeta">
+        <span id="qcat">—</span>
+        <span id="qdiff">—</span>
+      </div>
+      <div class="qprompt" id="qprompt">—</div>
+    </div>
+
+    <div class="answer-row">
+      <input type="text" id="answerInput" placeholder="Type the formula, or leave blank" autocomplete="off">
+      <button class="nav-btn" id="nextBtn">Next →</button>
+    </div>
+    <button class="skip" id="skipBtn">skip without answering</button>
+  </div>
+
+  <!-- SCORE -->
+  <div id="scoreScreen" style="display:none;">
+    <div class="score-card">
+      <div class="score-num" id="finalScore">0<span>/50</span></div>
+      <div class="score-label" id="scoreLabel">Questions attempted</div>
+    </div>
+
+    <div class="breakdown">
+      <h3>By category</h3>
+      <div id="breakdown"></div>
+    </div>
+
+    <div class="review">
+      <h3 style="font-family:var(--display);font-size:16px;font-weight:600;margin:0 0 10px;">Answer review</h3>
+      <div id="reviewList"></div>
+    </div>
+
+    <button class="restart-btn" id="restartBtn">Run another drill</button>
+  </div>
+</div>
+
+<script>
+/* ============ FORMULA BANK ============ */
+/* diff: 1=easy 2=medium 3=hard — scoring weight only.
+   each item: q = prompt text, a = canonical correct answer (shown in review),
+   alt = optional array of alternate accepted phrasings for auto-checking. */
+const BANK = {
+  "Trig Ratios": {
+    diff:1,
+    desc:"The core P/H, B/H, P/B definitions and how sin/cos/tan/cot relate to each other — e.g. sinθ = P/H, tanθ = sinθ/cosθ.",
+    items:[
+      {q:"sin θ in terms of the sides of a right triangle", a:"P/H", alt:["opposite/hypotenuse","perpendicular/hypotenuse"]},
+      {q:"cos θ in terms of the sides of a right triangle", a:"B/H", alt:["adjacent/hypotenuse","base/hypotenuse"]},
+      {q:"tan θ in terms of the sides of a right triangle", a:"P/B", alt:["opposite/adjacent"]},
+      {q:"cosec θ in terms of the sides of a right triangle", a:"H/P", alt:["hypotenuse/opposite","hypotenuse/perpendicular"]},
+      {q:"sec θ in terms of the sides of a right triangle", a:"H/B", alt:["hypotenuse/adjacent","hypotenuse/base"]},
+      {q:"cot θ in terms of the sides of a right triangle", a:"B/P", alt:["adjacent/opposite"]},
+      {q:"tan θ in terms of sin θ and cos θ", a:"sinθ/cosθ"},
+      {q:"cot θ in terms of cos θ and sin θ", a:"cosθ/sinθ"},
+    ]
+  },
+  "Reciprocal Identities": {
+    diff:1,
+    desc:"Each ratio written as 1 over its reciprocal partner — sin↔cosec, cos↔sec, tan↔cot.",
+    items:[
+      {q:"sin θ in terms of cosec θ", a:"1/cosecθ"},
+      {q:"cos θ in terms of sec θ", a:"1/secθ"},
+      {q:"tan θ in terms of cot θ", a:"1/cotθ"},
+      {q:"cosec θ in terms of sin θ", a:"1/sinθ"},
+      {q:"sec θ in terms of cos θ", a:"1/cosθ"},
+      {q:"cot θ in terms of tan θ", a:"1/tanθ"},
+    ]
+  },
+  "Pythagorean Identities": {
+    diff:1,
+    desc:"The three identities built from the Pythagorean theorem — sin²+cos²=1 and its two secant/cosecant variants.",
+    items:[
+      {q:"sin²A + cos²A = ?", a:"1"},
+      {q:"1 + tan²A = ?", a:"sec²A"},
+      {q:"1 + cot²A = ?", a:"cosec²A"},
+      {q:"sec²A − tan²A = ?", a:"1"},
+      {q:"cosec²A − cot²A = ?", a:"1"},
+    ]
+  },
+  "Co-function (Complementary) Identities": {
+    diff:2,
+    desc:"What happens at exactly 90°−θ — every function swaps to its co-function (sin↔cos, tan↔cot, sec↔cosec), sign always stays positive.",
+    items:[
+      {q:"sin(90° − θ) = ?", a:"cosθ"},
+      {q:"cos(90° − θ) = ?", a:"sinθ"},
+      {q:"tan(90° − θ) = ?", a:"cotθ"},
+      {q:"cot(90° − θ) = ?", a:"tanθ"},
+      {q:"sec(90° − θ) = ?", a:"cosecθ"},
+      {q:"cosec(90° − θ) = ?", a:"secθ"},
+    ]
+  },
+  "Allied Angle / Quadrant Formulas": {
+    diff:3,
+    desc:"f(A ± θ) for A = 90°, 180°, 270°, 360°, and negative angles — the ASTC quadrant-sign rules, e.g. sin(180°+θ) = −sinθ.",
+    items:[
+      {q:"sin(180° − θ) = ?", a:"sinθ"},
+      {q:"sin(180° + θ) = ?", a:"-sinθ"},
+      {q:"cos(180° − θ) = ?", a:"-cosθ"},
+      {q:"cos(180° + θ) = ?", a:"-cosθ"},
+      {q:"tan(180° + θ) = ?", a:"tanθ"},
+      {q:"sin(360° − θ) = ?", a:"-sinθ"},
+      {q:"cos(360° − θ) = ?", a:"cosθ"},
+      {q:"sin(270° − θ) = ?", a:"-cosθ"},
+      {q:"cos(270° − θ) = ?", a:"-sinθ"},
+      {q:"sin(270° + θ) = ?", a:"-cosθ"},
+      {q:"cos(270° + θ) = ?", a:"sinθ"},
+      {q:"sin(90° + θ) = ?", a:"cosθ"},
+      {q:"cos(90° + θ) = ?", a:"-sinθ"},
+      {q:"tan(90° + θ) = ?", a:"-cotθ"},
+      {q:"sin(−θ) = ?", a:"-sinθ"},
+      {q:"cos(−θ) = ?", a:"cosθ"},
+      {q:"tan(−θ) = ?", a:"-tanθ"},
+    ]
+  },
+  "Sum & Difference Formulas": {
+    diff:2,
+    desc:"Expanding sin/cos/tan of (A+B) or (A−B) into separate A and B terms.",
+    items:[
+      {q:"sin(A + B) = ?", a:"sinAcosB+cosAsinB"},
+      {q:"sin(A − B) = ?", a:"sinAcosB-cosAsinB"},
+      {q:"cos(A + B) = ?", a:"cosAcosB-sinAsinB"},
+      {q:"cos(A − B) = ?", a:"cosAcosB+sinAsinB"},
+      {q:"tan(A + B) = ?", a:"(tanA+tanB)/(1-tanAtanB)"},
+      {q:"tan(A − B) = ?", a:"(tanA-tanB)/(1+tanAtanB)"},
+    ]
+  },
+  "Double Angle Formulas": {
+    diff:2,
+    desc:"sin2A, cos2A (in its three interchangeable forms), and tan2A written purely in terms of the single angle A.",
+    items:[
+      {q:"sin 2A = ?", a:"2sinAcosA"},
+      {q:"cos 2A in terms of cos²A and sin²A = ?", a:"cos²A-sin²A"},
+      {q:"cos 2A in terms of cos²A only = ?", a:"2cos²A-1"},
+      {q:"cos 2A in terms of sin²A only = ?", a:"1-2sin²A"},
+      {q:"tan 2A = ?", a:"2tanA/(1-tan²A)"},
+    ]
+  },
+  "Triple Angle Formulas": {
+    diff:3,
+    desc:"sin3A, cos3A, tan3A expanded into powers of sinA, cosA, tanA.",
+    items:[
+      {q:"sin 3A = ?", a:"3sinA-4sin³A"},
+      {q:"cos 3A = ?", a:"4cos³A-3cosA"},
+      {q:"tan 3A = ?", a:"(3tanA-tan³A)/(1-3tan²A)"},
+    ]
+  },
+  "Half Angle Formulas": {
+    diff:3,
+    desc:"sin(A/2), cos(A/2), tan(A/2) written as square roots involving cosA.",
+    items:[
+      {q:"sin(A/2) = ?", a:"±√((1-cosA)/2)"},
+      {q:"cos(A/2) = ?", a:"±√((1+cosA)/2)"},
+      {q:"tan(A/2) = ?", a:"±√((1-cosA)/(1+cosA))"},
+    ]
+  },
+  "Sum-to-Product Formulas": {
+    diff:3,
+    desc:"Turning sinA±sinB or cosA±cosB into a product of two sin/cos terms with half-sum and half-difference angles.",
+    items:[
+      {q:"sin A + sin B = ?", a:"2sin((A+B)/2)cos((A-B)/2)"},
+      {q:"sin A − sin B = ?", a:"2cos((A+B)/2)sin((A-B)/2)"},
+      {q:"cos A + cos B = ?", a:"2cos((A+B)/2)cos((A-B)/2)"},
+      {q:"cos A − cos B = ?", a:"-2sin((A+B)/2)sin((A-B)/2)"},
+    ]
+  },
+  "Product-to-Sum Formulas": {
+    diff:3,
+    desc:"The reverse direction — 2sinAcosB and similar products rewritten as a sum or difference of two terms.",
+    items:[
+      {q:"2 sin A cos B = ?", a:"sin(A+B)+sin(A-B)"},
+      {q:"2 cos A sin B = ?", a:"sin(A+B)-sin(A-B)"},
+      {q:"2 cos A cos B = ?", a:"cos(A+B)+cos(A-B)"},
+      {q:"2 sin A sin B = ?", a:"cos(A-B)-cos(A+B)"},
+    ]
+  },
+  "Inverse Trig Formulas": {
+    diff:2,
+    desc:"Identities for sin⁻¹, cos⁻¹, tan⁻¹, etc. — complementary pairs summing to π/2, and odd-function rules like sin⁻¹(−x).",
+    items:[
+      {q:"sin⁻¹x + cos⁻¹x = ?", a:"π/2"},
+      {q:"tan⁻¹x + cot⁻¹x = ?", a:"π/2"},
+      {q:"sec⁻¹x + cosec⁻¹x = ?", a:"π/2"},
+      {q:"sin⁻¹(−x) = ?", a:"-sin⁻¹x"},
+      {q:"tan⁻¹(−x) = ?", a:"-tan⁻¹x"},
+    ]
+  },
+  "Law of Sines / Cosines": {
+    diff:2,
+    desc:"Triangle-solving formulas that aren't angle identities — relating side lengths a,b,c to angles A,B,C.",
+    items:[
+      {q:"a/sin A = b/sin B = c/sin C = ?", a:"2R"},
+      {q:"a² = ? (law of cosines, in terms of b, c, A)", a:"b²+c²-2bc·cosA"},
+      {q:"cos A = ? (law of cosines, in terms of a, b, c)", a:"(b²+c²-a²)/(2bc)"},
+    ]
+  },
+  "Statistics — Central Tendency & Partition": {
+    diff:1,
+    desc:"Mean, median, mode, and the partition values (quartiles Q, deciles D, percentiles P) that split ordered data — for both raw lists and grouped/frequency tables.",
+    items:[
+      {q:"Mean (ungrouped data) = ?", a:"Σx/n"},
+      {q:"Mean (grouped/discrete frequency data) = ?", a:"Σfx/Σf"},
+      {q:"Mean by step-deviation (assumed mean) method = ?", a:"A+(Σfu/Σf)×h"},
+      {q:"Median (grouped data) = ?", a:"L+((n/2-cf)/f)×h"},
+      {q:"Mode (grouped data) = ?", a:"L+((f1-f0)/(2f1-f0-f2))×h"},
+      {q:"Median of ungrouped data, n odd = ?", a:"((n+1)/2)th term"},
+      {q:"Median of ungrouped data, n even = ?", a:"avg of (n/2)th and (n/2+1)th terms"},
+      {q:"Qₖ, kth quartile (grouped data) = ?", a:"L+((kn/4-cf)/f)×h"},
+      {q:"Dₖ, kth decile (grouped data) = ?", a:"L+((kn/10-cf)/f)×h"},
+      {q:"Pₖ, kth percentile (grouped data) = ?", a:"L+((kn/100-cf)/f)×h"},
+    ]
+  },
+  "Statistics — Dispersion & Deviation": {
+    diff:2,
+    desc:"How spread-out the data is — mean deviation, variance, standard deviation (raw and grouped), coefficient of variation, range, and quartile deviation.",
+    items:[
+      {q:"Mean deviation about the mean (ungrouped) = ?", a:"Σ|x-x̄|/n"},
+      {q:"Mean deviation about the median (ungrouped) = ?", a:"Σ|x-M|/n"},
+      {q:"Variance, population (ungrouped) = ?", a:"Σ(x-x̄)²/n"},
+      {q:"Standard deviation, population (ungrouped) = ?", a:"√(Σ(x-x̄)²/n)"},
+      {q:"Variance (grouped/frequency data) = ?", a:"Σf(x-x̄)²/Σf"},
+      {q:"Standard deviation, step-deviation method = ?", a:"h×√(Σfu²/Σf-(Σfu/Σf)²)"},
+      {q:"Coefficient of variation (C.V.) = ?", a:"(SD/mean)×100"},
+      {q:"Sample variance (n−1 denominator) = ?", a:"Σ(x-x̄)²/(n-1)"},
+      {q:"Range = ?", a:"max-min"},
+      {q:"Quartile deviation (semi-interquartile range) = ?", a:"(Q3-Q1)/2"},
+      {q:"Coefficient of quartile deviation = ?", a:"(Q3-Q1)/(Q3+Q1)"},
+    ]
+  },
+};
+
+const DIFF_LABEL = {1:"easy", 2:"medium", 3:"hard"};
+const DIFF_CLASS = {1:"easy", 2:"med", 3:"hard"};
+
+/* ============ SETUP UI ============ */
+const catlist = document.getElementById('catlist');
+Object.keys(BANK).forEach(cat=>{
+  const c = BANK[cat];
+  const row = document.createElement('label');
+  row.className = 'catrow';
+  row.innerHTML = `<input type="checkbox" checked data-cat="${cat}">
+    <div class="catbody">
+      <div class="catname-row"><span class="catname">${cat}</span><span class="diff">${DIFF_LABEL[c.diff]}</span></div>
+      <div class="catdesc">${c.desc}</div>
+    </div>`;
+  catlist.appendChild(row);
+});
+
+let qCount = 10, fullMarks = 50;
+
+function wireChooser(id, setter){
+  const el = document.getElementById(id);
+  el.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      el.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      setter(parseInt(btn.dataset.v));
+    });
+  });
+}
+wireChooser('qcount', v=>qCount=v);
+wireChooser('fullmarks', v=>fullMarks=v);
+
+/* ============ ANSWER NORMALIZATION / CHECKING ============ */
+function normalize(s){
+  if(!s) return '';
+  let x = s.toLowerCase();
+  x = x.replace(/theta/g,'θ');
+  x = x.replace(/\bpi\b/g,'π');
+  x = x.replace(/sqrt/g,'√');
+  x = x.replace(/x-?bar|xbar/g,'x̄');
+  x = x.replace(/\^2/g,'²').replace(/\^3/g,'³');
+  x = x.replace(/\^-1|\^\(-1\)/g,'⁻¹').replace(/\^1\b/g,'');
+  x = x.replace(/×|·/g,'*');
+  x = x.replace(/÷/g,'/');
+  x = x.replace(/\bsigma\b/g,'σ');
+  x = x.replace(/±|\+\/-|\+-/g,'±');
+  x = x.replace(/[\s(),=.]/g,'');
+  return x;
+}
+
+function checkAnswer(userText, item){
+  const u = normalize(userText);
+  if(!u) return null; // blank
+  const candidates = [item.a, ...(item.alt||[])].map(normalize);
+  return candidates.includes(u);
+}
+
+/* ============ QUIZ STATE ============ */
+let questions = [];
+let currentIndex = 0;
+let attempted = 0;
+let earnedSoFar = 0;
+let results = [];
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  const checked = [...catlist.querySelectorAll('input:checked')].map(i=>i.dataset.cat);
+  if(checked.length===0){ alert("Pick at least one category."); return; }
+
+  let pool = [];
+  checked.forEach(cat=>{
+    const d = BANK[cat].diff;
+    BANK[cat].items.forEach(item=>{
+      pool.push({cat, diff:d, q:item.q, a:item.a, alt:item.alt});
+    });
+  });
+  shuffle(pool);
+  if(pool.length < qCount){
+    while(pool.length < qCount){
+      pool.push(pool[Math.floor(Math.random()*pool.length)]);
+    }
+  }
+  questions = pool.slice(0, qCount);
+
+  const totalDiffUnits = questions.reduce((s,q)=>s+q.diff,0);
+  let running = 0;
+  questions.forEach((q,i)=>{
+    if(i === questions.length-1){
+      q.weight = Math.round((fullMarks - running)*10)/10;
+    } else {
+      q.weight = Math.round((q.diff/totalDiffUnits)*fullMarks*10)/10;
+      running += q.weight;
+    }
+  });
+
+  currentIndex = 0; attempted = 0; earnedSoFar = 0; results = [];
+  document.getElementById('setup').style.display='none';
+  document.getElementById('quiz').style.display='block';
+  document.getElementById('scoreScreen').style.display='none';
+  renderQuestion();
+});
+
+function renderQuestion(){
+  const q = questions[currentIndex];
+  document.getElementById('qposition').textContent = `Q${currentIndex+1} / ${questions.length}`;
+  document.getElementById('qrunning').textContent = `${earnedSoFar.toFixed(1)} / ${fullMarks}`;
+  document.getElementById('bar').style.width = `${(currentIndex/questions.length)*100}%`;
+  document.getElementById('qcat').textContent = q.cat;
+  document.getElementById('qdiff').textContent = `${DIFF_LABEL[q.diff]} · ${q.weight} pts`;
+  document.getElementById('qprompt').innerHTML = q.q.replace(/(sin|cos|tan|cot|sec|cosec)/g, '<span class="expr">$1</span>');
+  document.getElementById('answerInput').value = '';
+  document.getElementById('answerInput').focus();
+}
+
+function advance(userAnswer){
+  const q = questions[currentIndex];
+  const isCorrect = checkAnswer(userAnswer, q);
+  const wasAnswered = userAnswer.trim().length > 0;
+  if(wasAnswered){
+    attempted++;
+    if(isCorrect) earnedSoFar += q.weight;
+  }
+  results.push({cat:q.cat, diff:q.diff, weight:q.weight, q:q.q, a:q.a, userAnswer:userAnswer.trim(), answered:wasAnswered, correct:isCorrect});
+
+  currentIndex++;
+  if(currentIndex >= questions.length){
+    finishQuiz();
+  } else {
+    renderQuestion();
+  }
+}
+
+document.getElementById('nextBtn').addEventListener('click', ()=>{
+  advance(document.getElementById('answerInput').value);
+});
+document.getElementById('answerInput').addEventListener('keydown', e=>{
+  if(e.key==='Enter'){ document.getElementById('nextBtn').click(); }
+});
+document.getElementById('skipBtn').addEventListener('click', ()=>{
+  advance('');
+});
+
+function finishQuiz(){
+  document.getElementById('quiz').style.display='none';
+  document.getElementById('scoreScreen').style.display='block';
+
+  const scoredEarned = results.reduce((s,r)=> s + (r.correct ? r.weight : 0), 0);
+  const correctCount = results.filter(r=>r.correct).length;
+
+  document.getElementById('finalScore').innerHTML = `${scoredEarned.toFixed(1)}<span>/${fullMarks}</span>`;
+  document.getElementById('scoreLabel').textContent =
+    `${correctCount} correct · ${attempted} attempted · ${questions.length} total`;
+
+  const byCat = {};
+  results.forEach(r=>{
+    if(!byCat[r.cat]) byCat[r.cat] = {earned:0, total:0, diff:r.diff};
+    byCat[r.cat].total += r.weight;
+    if(r.correct) byCat[r.cat].earned += r.weight;
+  });
+  const bd = document.getElementById('breakdown');
+  bd.innerHTML = '';
+  Object.keys(byCat).forEach(cat=>{
+    const c = byCat[cat];
+    const row = document.createElement('div');
+    row.className = 'brow';
+    row.innerHTML = `<span>${cat} <span class="tag-diff ${DIFF_CLASS[c.diff]}">${DIFF_LABEL[c.diff]}</span></span><span>${c.earned.toFixed(1)} / ${c.total.toFixed(1)}</span>`;
+    bd.appendChild(row);
+  });
+
+  const rl = document.getElementById('reviewList');
+  rl.innerHTML = '';
+  results.forEach(r=>{
+    const div = document.createElement('div');
+    let verdictClass, verdictText;
+    if(!r.answered){ verdictClass='blank'; verdictText='blank'; }
+    else if(r.correct){ verdictClass='correct'; verdictText='correct'; }
+    else { verdictClass='wrong'; verdictText='wrong'; }
+    div.className = `revitem ${verdictClass}`;
+    div.innerHTML = `
+      <div class="rev-top">
+        <span class="rev-q">${r.q}</span>
+        <span class="rev-verdict ${verdictClass}">${verdictText}</span>
+      </div>
+      ${r.answered ? `<div class="rev-line"><span class="lbl">your answer:</span><span class="yours ${r.correct?'correct-text':''}">${r.userAnswer}</span></div>` : ''}
+      <div class="rev-line"><span class="lbl">correct:</span><span class="correct-ans">${r.a}</span></div>
+    `;
+    rl.appendChild(div);
+  });
+}
+
+document.getElementById('restartBtn').addEventListener('click', ()=>{
+  document.getElementById('scoreScreen').style.display='none';
+  document.getElementById('setup').style.display='block';
+});
+</script>
+</body>
+</html>

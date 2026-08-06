@@ -214,36 +214,3 @@ footer {
         padding-top: 20px;
     }
 }
-
-/* ---------- blog page ---------- */
-
-.blog-shell {
-    position: relative;
-    z-index: 2;
-    max-width: 800px;
-    margin: 60px auto;
-    padding: 0 40px;
-}
-
-.blog-terminal {
-    border: 2px solid var(--line);
-    border-radius: 20px;
-    background: #0c0c0c;
-    color: #eaeaea;
-    overflow: hidden;
-}
-
-.blog-terminal .term-body {
-    padding: 40px 30px;
-    min-height: 180px;
-    font-size: 1.05em;
-}
-
-.blog-note {
-    margin-top: 24px;
-    font-size: .82em;
-    color: var(--muted);
-    text-align: center;
-}
-
-
