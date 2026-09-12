@@ -1,127 +1,76 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Post</title>
-<style>
-.post-wrap {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 40px;
-    position: relative;
-    z-index: 2;
-}
-
-.post-wrap h1 {
-    font-family: Arial, Helvetica, sans-serif;
-    margin-bottom: 8px;
-    font-size: clamp(1.8rem, 5vw, 2.6rem);
-}
-
-.post-date {
-    color: var(--muted);
-    font-size: .8em;
-    margin-bottom: 24px;
-    letter-spacing: .5px;
-}
-
-.post-content {
-    line-height: 1.8;
-    font-size: .95rem;
-}
-
-.post-content p { margin-bottom: 16px; }
-
-.post-content h1,
-.post-content h2,
-.post-content h3 {
-    font-family: Arial, Helvetica, sans-serif;
-    margin: 28px 0 12px;
-}
-
-.post-content img {
-    max-width: 100%;
-    border-radius: 10px;
-    margin: 16px 0;
-    border: 1px solid var(--hair);
-}
-
-.post-content a {
-    text-decoration: underline;
-    font-weight: bold;
-}
-
-</style>
+    <link rel="stylesheet" href="/blog/styles.css">
 </head>
 <body>
-<div class="grid-background"></div>
-<nav class="topnav">
-    <a href="../index.html" class="brand">Home?<span class="dot">.</span></a>
-    <div class="links">
-        <a href="../index.html">Home</a>
-        <a href="../projects/ ">Projects</a>
-        <a href="index.html" class="current">Blog</a>
-        <a href="https://github.com/basanta-bhandari" target="_blank">GitHub</a>
+    <div class="grid-background"></div>
+
+    <nav class="topnav">
+        <a href="../index.html" class="brand">Home?<span class="dot">.</span></a>
+        <div class="links">
+            <a href="../index.html">Home</a>
+            <a href="../projects/">Projects</a>
+            <a href="index.html" class="current">Blog</a>
+            <a href="https://github.com/basanta-bhandari" target="_blank">GitHub</a>
+        </div>
+    </nav>
+
+    <header class="page-header">
+        <h1>Blog</h1>
+        <p>Notes, updates, and whatever I'm building this week.</p>
+    </header>
+
+    <div class="blog-shell">
+        <div class="blog-terminal" id="fallbackTerminal">
+            <div class="term-bar">
+                <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
+                <span class="term-path">~/blog/first-post.md</span>
+            </div>
+            <div class="term-body">
+                <span class="prompt">$</span> <span class="out">cat first-post.md</span><br><br>
+                <span class="out" id="blogTypedLine">Hello World!<span class="type-cursor"></span></span>
+            </div>
+        </div>
+
+        <div id="postsList" class="posts-list"></div>
+        <p class="blog-note" id="blogNote">First real post is coming soon &mdash; check back later.</p>
     </div>
-</nav>
-<div class="post-wrap">
-    <h1 id="postTitle">Loading...</h1>
-    <div class="post-date" id="postDate"></div>
-    <div class="post-content" id="postContent"></div>
-</div>
-<footer>
-    <p>BASANTA BHANDARI &bull; PORTFOLIO &bull; 2026</p>
-</footer>
-<script>
-const slug = new URLSearchParams(window.location.search).get('slug');
 
-// Tiny markdown renderer - supports headings, bold, italic, links, images,
-// and paragraphs. Everything is HTML-escaped first, so user content can
-// never inject raw tags - only the specific patterns below become HTML.
-function renderMarkdown(md) {
-    const escape = (s) => s
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+    <footer>
+        <p>BASANTA BHANDARI &bull; PORTFOLIO &bull; 2026</p>
+        <p style="margin-top:8px;">
+            <a href="https://github.com/basanta-bhandari" target="_blank">GitHub</a>
+        </p>
+    </footer>
 
-    let html = escape(md);
+    <script>
+    async function loadPosts() {
+        try {
+            const res = await fetch('/api/posts');
+            if (!res.ok) return; // leave the fallback terminal showing
+            const posts = await res.json();
+            if (!posts.length) return;
 
-    html = html.replace(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g,
-        '<img src="$2" alt="$1">');
-    html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
-        '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-    html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
-    html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
-    html = html.replace(/^# (.*)$/gm, '<h1>$1</h1>');
+            document.getElementById('fallbackTerminal').style.display = 'none';
+            document.getElementById('blogNote').style.display = 'none';
 
-    html = html.split(/\n\n+/).map(block => {
-        const trimmed = block.trim();
-        if (/^<h[1-3]>/.test(trimmed) || /^<img/.test(trimmed)) return trimmed;
-        return '<p>' + trimmed.replace(/\n/g, '<br>') + '</p>';
-    }).join('\n');
-
-    return html;
-}
-
-async function load() {
-    if (!slug) {
-        document.getElementById('postTitle').textContent = 'Post not found';
-        return;
+            const list = document.getElementById('postsList');
+            posts.forEach(p => {
+                const card = document.createElement('a');
+                card.href = 'post.html?slug=' + encodeURIComponent(p.slug);
+                card.className = 'post-card';
+                const date = new Date(p.published_at).toLocaleDateString();
+                card.innerHTML =
+                    '<h3>' + p.title + '</h3>' +
+                    '<p class="post-card-date">' + date + '</p>' +
+                    (p.excerpt ? '<p>' + p.excerpt + '</p>' : '');
+                list.appendChild(card);
+            });
+        } catch {
+            // API/DB not set up yet (e.g. local static preview) - fallback stays visible
+        }
     }
-    const res = await fetch('/api/posts/' + encodeURIComponent(slug));
-    if (!res.ok) {
-        document.getElementById('postTitle').textContent = 'Post not found';
-        return;
-    }
-    const post = await res.json();
-    document.getElementById('postTitle').textContent = post.title;
-    document.getElementById('postDate').textContent = new Date(post.published_at).toLocaleDateString();
-    document.getElementById('postContent').innerHTML = renderMarkdown(post.content);
-}
-load();
-</script>
+    loadPosts();
+    </script>
 </body>
 </html>
