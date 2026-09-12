@@ -6,67 +6,228 @@
 <title>Admin Dashboard</title>
 <link rel="stylesheet" href="../blog/styles.css">
 <style>
-  .admin-wrap { max-width: 800px; margin: 40px auto; position: relative; z-index: 2; padding: 0 20px 60px; }
-  .admin-wrap h2 { margin-bottom: 16px; font-family: Arial, Helvetica, sans-serif; }
-  .admin-wrap input, .admin-wrap textarea {
-    width: 100%; padding: 10px; margin-bottom: 12px; font-family: inherit;
-    border: 1px solid #000; border-radius: 6px;
+  .admin-wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+    padding: 40px 20px 70px;
   }
-  .admin-wrap textarea { min-height: 220px; resize: vertical; }
-  .admin-wrap button { padding: 10px 18px; font-family: inherit; background: #000; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
-  .post-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; padding: 10px 0; }
-  .post-row button { background: #c00; padding: 6px 12px; font-size: .8em; border-radius: 6px; }
-  .msg { font-size: .85em; margin-bottom: 10px; min-height: 1em; }
-  #logoutBtn { float: right; background: #666; }
-  .topbar { display: flex; justify-content: space-between; align-items: center; padding-top: 30px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+  .topbar h2 { font-family: Arial, Helvetica, sans-serif; margin: 0; }
+  #logoutBtn {
+    background: var(--muted);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-family: var(--mono);
+    cursor: pointer;
+  }
+
+  .field { margin-bottom: 18px; }
+  .field label {
+    display: block;
+    font-size: .72rem;
+    letter-spacing: .5px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .field .hint {
+    font-size: .72rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .admin-wrap input[type="text"] {
+    width: 100%;
+    padding: 11px 12px;
+    font-family: var(--mono);
+    font-size: .9rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--fg);
+  }
+
+  .content-toolbar { display: flex; gap: 8px; margin-bottom: 8px; }
+  .content-toolbar button {
+    font-family: var(--mono);
+    font-size: .75rem;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .content-toolbar button:hover { background: var(--fg); color: #fff; }
+
+  #content {
+    width: 100%;
+    min-height: 480px;
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: .92rem;
+    line-height: 1.6;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--fg);
+    resize: vertical;
+  }
+
+  .publish-btn {
+    padding: 12px 22px;
+    font-family: var(--mono);
+    font-size: .9rem;
+    background: var(--fg);
+    color: var(--bg);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 6px;
+  }
+  .publish-btn:hover { opacity: .85; }
+
+  .msg { font-size: .85rem; margin-bottom: 10px; min-height: 1em; }
+
+  .post-row {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--hair); padding: 12px 0;
+  }
+  .post-row button {
+    background: #c0392b; color: #fff; border: none;
+    padding: 7px 14px; font-size: .78rem; border-radius: 8px;
+    font-family: var(--mono); cursor: pointer;
+  }
 </style>
 </head>
 <body>
 <div class="grid-background"></div>
+
+<nav class="topnav">
+    <a href="../index.html" class="brand">Home?<span class="dot">.</span></a>
+    <div class="links">
+        <a href="../index.html">Home</a>
+        <a href="../projects/">Projects</a>
+        <a href="../blog/index.html">Blog</a>
+        <a href="https://github.com/basanta-bhandari" target="_blank">GitHub</a>
+    </div>
+</nav>
+
 <div class="admin-wrap">
   <div class="topbar">
-    <h2 style="margin:0;">Blog Admin</h2>
+    <h2>New Post</h2>
     <button id="logoutBtn">Log out</button>
   </div>
 
-  <h2 style="margin-top:30px;">New Post</h2>
   <div class="msg" id="createMsg"></div>
   <form id="postForm">
-    <input type="text" id="title" placeholder="Title" required>
-    <input type="text" id="slug" placeholder="slug-like-this (used in the URL)" required>
-    <input type="text" id="excerpt" placeholder="Short excerpt (optional)">
-    <textarea id="content" placeholder="Post content" required></textarea>
-    <button type="submit">Publish</button>
+    <div class="field">
+      <label for="title">Title</label>
+      <input type="text" id="title" required>
+    </div>
+
+    <div class="field">
+      <label for="slug">Slug</label>
+      <input type="text" id="slug" required>
+      <div class="hint">The part of the URL for this post — e.g. a post titled "My First Post" might use the slug <code>my-first-post</code>, giving you basanta.space/blog/post.html?slug=my-first-post. Auto-filled from the title, edit if you want something different. Letters, numbers, and hyphens only.</div>
+    </div>
+
+    <div class="field">
+      <label for="excerpt">Excerpt <span style="font-weight:normal;">(optional)</span></label>
+      <input type="text" id="excerpt">
+      <div class="hint">A one-line teaser shown on the blog list page under the title, before someone clicks in. Leave blank to skip it.</div>
+    </div>
+
+    <div class="field">
+      <label for="content">Content</label>
+      <div class="content-toolbar">
+        <button type="button" id="insertImageBtn">+ Image</button>
+        <button type="button" id="insertLinkBtn">+ Link</button>
+      </div>
+      <textarea id="content" required placeholder="Write your post here.
+
+Supports:
+# Heading
+## Subheading
+**bold** and *italic*
+[link text](https://example.com)
+![alt text](https://example.com/image.jpg)
+
+Leave a blank line between paragraphs."></textarea>
+      <div class="hint">Images aren't uploaded here — paste a URL to an image already hosted somewhere (e.g. imgur, GitHub, or a link from your own site) using the image syntax above, or click "+ Image" to insert it for you.</div>
+    </div>
+
+    <button type="submit" class="publish-btn">Publish</button>
   </form>
 
-  <h2 style="margin-top:40px;">Existing Posts</h2>
+  <h2 style="margin-top:50px;">Existing Posts</h2>
   <div id="postsList"></div>
 </div>
+
 <script>
 async function checkAuth() {
   const res = await fetch('/api/session', { credentials: 'include' });
   const data = await res.json();
-  if (!data.loggedIn) window.location.href = 'login.html';
+  if (!data.loggedIn) window.location.href = '/login/';
 }
 checkAuth();
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await fetch('/api/logout', { method: 'POST', credentials: 'include' });
-  window.location.href = 'login.html';
+  window.location.href = '/login/';
+});
+
+// Auto-fill slug from title, but only while the user hasn't hand-edited it
+const titleInput = document.getElementById('title');
+const slugInput = document.getElementById('slug');
+let slugTouched = false;
+slugInput.addEventListener('input', () => { slugTouched = true; });
+titleInput.addEventListener('input', () => {
+  if (slugTouched) return;
+  slugInput.value = titleInput.value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+});
+
+const contentBox = document.getElementById('content');
+function insertAtCursor(text) {
+  const start = contentBox.selectionStart;
+  const end = contentBox.selectionEnd;
+  contentBox.value = contentBox.value.slice(0, start) + text + contentBox.value.slice(end);
+  contentBox.focus();
+  contentBox.selectionStart = contentBox.selectionEnd = start + text.length;
+}
+
+document.getElementById('insertImageBtn').addEventListener('click', () => {
+  const url = prompt('Image URL (must already be hosted somewhere - imgur, GitHub, etc.):');
+  if (!url) return;
+  const alt = prompt('Alt text (short description of the image):', '') || '';
+  insertAtCursor('\n![' + alt + '](' + url + ')\n');
+});
+
+document.getElementById('insertLinkBtn').addEventListener('click', () => {
+  const url = prompt('Link URL:');
+  if (!url) return;
+  const text = prompt('Link text:', url) || url;
+  insertAtCursor('[' + text + '](' + url + ')');
 });
 
 async function loadPosts() {
   const res = await fetch('/api/posts');
   const posts = await res.json();
   const list = document.getElementById('postsList');
-  list.innerHTML = posts.length ? '' : '<p style="color:#666;">No posts yet.</p>';
+  list.innerHTML = posts.length ? '' : '<p style="color:var(--muted);">No posts yet.</p>';
   posts.forEach(p => {
     const row = document.createElement('div');
     row.className = 'post-row';
     const label = document.createElement('span');
     label.textContent = p.title + ' ';
     const small = document.createElement('small');
-    small.style.color = '#666';
+    small.style.color = 'var(--muted)';
     small.textContent = '(' + p.slug + ')';
     label.appendChild(small);
     const delBtn = document.createElement('button');
@@ -85,10 +246,10 @@ loadPosts();
 
 document.getElementById('postForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const title = document.getElementById('title').value;
-  const slug = document.getElementById('slug').value;
+  const title = titleInput.value;
+  const slug = slugInput.value;
   const excerpt = document.getElementById('excerpt').value;
-  const content = document.getElementById('content').value;
+  const content = contentBox.value;
   const msg = document.getElementById('createMsg');
   msg.textContent = '';
 
@@ -100,13 +261,14 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
   });
   const data = await res.json();
   if (!res.ok) {
-    msg.style.color = '#c00';
+    msg.style.color = '#c0392b';
     msg.textContent = data.error || 'Failed to publish';
     return;
   }
-  msg.style.color = '#080';
+  msg.style.color = '#27ae60';
   msg.textContent = 'Published!';
   document.getElementById('postForm').reset();
+  slugTouched = false;
   loadPosts();
 });
 </script>
