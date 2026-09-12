@@ -6,6 +6,53 @@
 <title>Admin Dashboard</title>
 <link rel="stylesheet" href="styles.css">
 <style>
+  .post-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px;
+      position: relative;
+      z-index: 2;
+  }
+
+  .post-wrap h1 {
+      font-family: Arial, Helvetica, sans-serif;
+      margin-bottom: 8px;
+      font-size: clamp(1.8rem, 5vw, 2.6rem);
+  }
+
+  .post-date {
+      color: var(--muted);
+      font-size: .8em;
+      margin-bottom: 24px;
+      letter-spacing: .5px;
+  }
+
+  .post-content {
+      line-height: 1.8;
+      font-size: .95rem;
+  }
+
+  .post-content p { margin-bottom: 16px; }
+
+  .post-content h1,
+  .post-content h2,
+  .post-content h3 {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 28px 0 12px;
+  }
+
+  .post-content img {
+      max-width: 100%;
+      border-radius: 10px;
+      margin: 16px 0;
+      border: 1px solid var(--hair);
+  }
+
+  .post-content a {
+      text-decoration: underline;
+      font-weight: bold;
+  }
+
   .admin-wrap {
     max-width: 900px;
     margin: 0 auto;
