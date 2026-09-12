@@ -57,7 +57,7 @@
             const list = document.getElementById('postsList');
             posts.forEach(p => {
                 const card = document.createElement('a');
-                card.href = 'post.html?slug=' + encodeURIComponent(p.slug);
+                card.href = '/blog/post.html?slug=' + encodeURIComponent(p.slug);
                 card.className = 'post-card';
                 const date = new Date(p.published_at).toLocaleDateString();
                 card.innerHTML =
