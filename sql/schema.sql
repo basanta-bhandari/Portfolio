@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS posts (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  excerpt TEXT,
+  content TEXT NOT NULL,
+  published_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

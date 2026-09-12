@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
+<link rel="stylesheet" href="../blog/styles.css">
+<style>
+  .admin-wrap { max-width: 800px; margin: 40px auto; position: relative; z-index: 2; padding: 0 20px 60px; }
+  .admin-wrap h2 { margin-bottom: 16px; font-family: Arial, Helvetica, sans-serif; }
+  .admin-wrap input, .admin-wrap textarea {
+    width: 100%; padding: 10px; margin-bottom: 12px; font-family: inherit;
+    border: 1px solid #000; border-radius: 6px;
+  }
+  .admin-wrap textarea { min-height: 220px; resize: vertical; }
+  .admin-wrap button { padding: 10px 18px; font-family: inherit; background: #000; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+  .post-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; padding: 10px 0; }
+  .post-row button { background: #c00; padding: 6px 12px; font-size: .8em; border-radius: 6px; }
+  .msg { font-size: .85em; margin-bottom: 10px; min-height: 1em; }
+  #logoutBtn { float: right; background: #666; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; padding-top: 30px; }
+</style>
+</head>
+<body>
+<div class="grid-background"></div>
+<div class="admin-wrap">
+  <div class="topbar">
+    <h2 style="margin:0;">Blog Admin</h2>
+    <button id="logoutBtn">Log out</button>
+  </div>
+
+  <h2 style="margin-top:30px;">New Post</h2>
+  <div class="msg" id="createMsg"></div>
+  <form id="postForm">
+    <input type="text" id="title" placeholder="Title" required>
+    <input type="text" id="slug" placeholder="slug-like-this (used in the URL)" required>
+    <input type="text" id="excerpt" placeholder="Short excerpt (optional)">
+    <textarea id="content" placeholder="Post content" required></textarea>
+    <button type="submit">Publish</button>
+  </form>
+
+  <h2 style="margin-top:40px;">Existing Posts</h2>
+  <div id="postsList"></div>
+</div>
+<script>
+async function checkAuth() {
+  const res = await fetch('/api/session', { credentials: 'include' });
+  const data = await res.json();
+  if (!data.loggedIn) window.location.href = 'login.html';
+}
+checkAuth();
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+  window.location.href = 'login.html';
+});
+
+async function loadPosts() {
+  const res = await fetch('/api/posts');
+  const posts = await res.json();
+  const list = document.getElementById('postsList');
+  list.innerHTML = posts.length ? '' : '<p style="color:#666;">No posts yet.</p>';
+  posts.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'post-row';
+    const label = document.createElement('span');
+    label.textContent = p.title + ' ';
+    const small = document.createElement('small');
+    small.style.color = '#666';
+    small.textContent = '(' + p.slug + ')';
+    label.appendChild(small);
+    const delBtn = document.createElement('button');
+    delBtn.textContent = 'Delete';
+    delBtn.addEventListener('click', async () => {
+      if (!confirm('Delete "' + p.title + '"?')) return;
+      await fetch('/api/posts/' + encodeURIComponent(p.slug), { method: 'DELETE', credentials: 'include' });
+      loadPosts();
+    });
+    row.appendChild(label);
+    row.appendChild(delBtn);
+    list.appendChild(row);
+  });
+}
+loadPosts();
+
+document.getElementById('postForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const title = document.getElementById('title').value;
+  const slug = document.getElementById('slug').value;
+  const excerpt = document.getElementById('excerpt').value;
+  const content = document.getElementById('content').value;
+  const msg = document.getElementById('createMsg');
+  msg.textContent = '';
+
+  const res = await fetch('/api/posts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ title, slug, excerpt, content })
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    msg.style.color = '#c00';
+    msg.textContent = data.error || 'Failed to publish';
+    return;
+  }
+  msg.style.color = '#080';
+  msg.textContent = 'Published!';
+  document.getElementById('postForm').reset();
+  loadPosts();
+});
+</script>
+</body>
+</html>

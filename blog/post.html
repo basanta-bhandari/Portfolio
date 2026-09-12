@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .post-wrap { max-width: 900px; margin: 0 auto; padding: 40px; position: relative; z-index: 2; }
+  .post-wrap h1 { font-family: Arial, Helvetica, sans-serif; margin-bottom: 8px; font-size: clamp(1.8rem, 5vw, 2.6rem); }
+  .post-date { color: #666; font-size: .8em; margin-bottom: 24px; letter-spacing: .5px; }
+  .post-content { line-height: 1.8; white-space: pre-wrap; font-size: .95rem; }
+</style>
+</head>
+<body>
+<div class="grid-background"></div>
+<nav class="topnav">
+    <a href="../index.html" class="brand">Home?<span class="dot">.</span></a>
+    <div class="links">
+        <a href="../index.html">Home</a>
+        <a href="../projects/ ">Projects</a>
+        <a href="index.html" class="current">Blog</a>
+        <a href="https://github.com/basanta-bhandari" target="_blank">GitHub</a>
+    </div>
+</nav>
+<div class="post-wrap">
+    <h1 id="postTitle">Loading...</h1>
+    <div class="post-date" id="postDate"></div>
+    <div class="post-content" id="postContent"></div>
+</div>
+<footer>
+    <p>BASANTA BHANDARI &bull; PORTFOLIO &bull; 2026</p>
+</footer>
+<script>
+const slug = new URLSearchParams(window.location.search).get('slug');
+
+async function load() {
+    if (!slug) {
+        document.getElementById('postTitle').textContent = 'Post not found';
+        return;
+    }
+    const res = await fetch('/api/posts/' + encodeURIComponent(slug));
+    if (!res.ok) {
+        document.getElementById('postTitle').textContent = 'Post not found';
+        return;
+    }
+    const post = await res.json();
+    document.getElementById('postTitle').textContent = post.title;
+    document.getElementById('postDate').textContent = new Date(post.published_at).toLocaleDateString();
+    document.getElementById('postContent').textContent = post.content;
+}
+load();
+</script>
+</body>
+</html>

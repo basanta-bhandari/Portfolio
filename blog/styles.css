@@ -217,3 +217,43 @@ footer a {
         padding-bottom: 2px;
     }
 }
+/* --- Add this to the bottom of blog/styles.css --- */
+
+.posts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 16px;
+}
+
+.post-card {
+    display: block;
+    border: 2px solid var(--line);
+    border-radius: calc(var(--radius) - 6px);
+    padding: 20px 22px;
+    text-decoration: none;
+    color: inherit;
+    transition: background .15s, color .15s;
+}
+
+.post-card:hover {
+    background: var(--fg);
+    color: #fff;
+}
+
+.post-card h3 {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1.15rem;
+    margin-bottom: 6px;
+}
+
+.post-card-date {
+    font-size: .75rem;
+    color: var(--muted);
+    letter-spacing: .5px;
+    margin-bottom: 8px;
+}
+
+.post-card:hover .post-card-date {
+    color: #ccc;
+}

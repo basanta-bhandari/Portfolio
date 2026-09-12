@@ -1,6 +1,6 @@
 <html>
 <head>
-    <link rel="stylesheet" href="blog/styles.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="grid-background"></div>
@@ -21,7 +21,7 @@
     </header>
 
     <div class="blog-shell">
-        <div class="blog-terminal">
+        <div class="blog-terminal" id="fallbackTerminal">
             <div class="term-bar">
                 <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
                 <span class="term-path">~/blog/first-post.md</span>
@@ -31,7 +31,9 @@
                 <span class="out" id="blogTypedLine">Hello World!<span class="type-cursor"></span></span>
             </div>
         </div>
-        <p class="blog-note">First real post is coming soon &mdash; check back later.</p>
+
+        <div id="postsList" class="posts-list"></div>
+        <p class="blog-note" id="blogNote">First real post is coming soon &mdash; check back later.</p>
     </div>
 
     <footer>
@@ -42,5 +44,34 @@
     </footer>
 
     <script src="script.js"></script>
+    <script>
+    async function loadPosts() {
+        try {
+            const res = await fetch('/api/posts');
+            if (!res.ok) return; // leave the fallback terminal showing
+            const posts = await res.json();
+            if (!posts.length) return;
+
+            document.getElementById('fallbackTerminal').style.display = 'none';
+            document.getElementById('blogNote').style.display = 'none';
+
+            const list = document.getElementById('postsList');
+            posts.forEach(p => {
+                const card = document.createElement('a');
+                card.href = 'post.html?slug=' + encodeURIComponent(p.slug);
+                card.className = 'post-card';
+                const date = new Date(p.published_at).toLocaleDateString();
+                card.innerHTML =
+                    '<h3>' + p.title + '</h3>' +
+                    '<p class="post-card-date">' + date + '</p>' +
+                    (p.excerpt ? '<p>' + p.excerpt + '</p>' : '');
+                list.appendChild(card);
+            });
+        } catch {
+            // API/DB not set up yet (e.g. local static preview) - fallback stays visible
+        }
+    }
+    loadPosts();
+    </script>
 </body>
 </html>
