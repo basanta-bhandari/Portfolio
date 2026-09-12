@@ -134,7 +134,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       errorMsg.textContent = data.error || 'Login failed';
       return;
     }
-    window.location.href = '/admin/dashboard.html';
+    window.location.href = '/admin/index.html';
   } catch {
     errorMsg.textContent = 'Network error';
   }
