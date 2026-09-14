@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Post</title>
+<script src="/theme.js?v=2"></script>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="/theme-toggle.css?v=2">
 <style>
 .post-wrap {
     max-width: 900px;
@@ -14,6 +16,27 @@
     z-index: 2;
 }
 
+.post-terminal {
+    border: 2px solid var(--line);
+    border-radius: calc(var(--radius) + 2px);
+    overflow: hidden;
+    background: #080808;
+    color: #eaeaea;
+    box-shadow: 0 14px 30px rgba(0,0,0,.13);
+}
+
+.post-terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    border-bottom: 1px solid rgba(255,255,255,.18);
+}
+
+.post-terminal-bar .term-dot { display: inline-block; }
+
+.post-terminal-content { padding: 28px 30px 34px; }
+
 .post-wrap h1 {
     font-family: Arial, Helvetica, sans-serif;
     margin-bottom: 8px;
@@ -21,7 +44,7 @@
 }
 
 .post-date {
-    color: var(--muted);
+    color: #b8b8b8;
     font-size: .8em;
     margin-bottom: 24px;
     letter-spacing: .5px;
@@ -53,6 +76,12 @@
     font-weight: bold;
 }
 
+.post-terminal .term-path { margin-left: 10px; color: #b8b8b8; }
+
+@media (max-width: 620px) {
+    .post-wrap { padding: 28px 18px 42px; }
+}
+
 </style>
 </head>
 <body>
@@ -64,15 +93,24 @@
         <a href="../projects/">Projects</a>
         <a href="index.html" class="current">Blog</a>
         <a href="https://github.com/basanta-bhandari" target="_blank">GitHub</a>
+        <button type="button" class="theme-toggle" data-theme-toggle><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
     </div>
 </nav>
 <div class="post-wrap">
-    <h1 id="postTitle">Loading...</h1>
-    <div class="post-date" id="postDate"></div>
-    <div class="post-content" id="postContent"></div>
+    <div class="post-terminal">
+        <div class="post-terminal-bar">
+            <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
+            <span class="term-path" id="postPath">~/blog/post.md</span>
+        </div>
+        <div class="post-terminal-content">
+            <h1 id="postTitle">Loading...</h1>
+            <div class="post-date" id="postDate"></div>
+            <div class="post-content" id="postContent"></div>
+        </div>
+    </div>
 </div>
 <footer>
-    <p>BASANTA BHANDARI &bull; PORTFOLIO &bull; 2026</p>
+    <p>BASANTA BHANDARI - PORTFOLIO - 2026</p>
 </footer>
 <script>
 const slug = new URLSearchParams(window.location.search).get('slug');
@@ -88,7 +126,7 @@ function renderMarkdown(md) {
 
     let html = escape(md);
 
-    html = html.replace(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g,
+    html = html.replace(/!\[([^\]]*)\]\(((?:https?:\/\/|data:image\/(?:png|jpeg|gif|webp|avif);base64,)[^\s)]+)\)/gi,
         '<img src="$2" alt="$1">');
     html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
         '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
@@ -119,7 +157,10 @@ async function load() {
     }
     const post = await res.json();
     document.getElementById('postTitle').textContent = post.title;
-    document.getElementById('postDate').textContent = new Date(post.published_at).toLocaleDateString();
+    document.getElementById('postPath').textContent = '~/blog/' + post.slug + '.md';
+    const published = new Date(post.published_at).toLocaleDateString();
+    const edited = post.updated_at ? ' - Edited ' + new Date(post.updated_at).toLocaleString() : '';
+    document.getElementById('postDate').textContent = published + edited;
     document.getElementById('postContent').innerHTML = renderMarkdown(post.content);
 }
 load();

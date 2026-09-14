@@ -1,6 +1,8 @@
 <html>
 <head>
+    <script src="/theme.js?v=2"></script>
     <link rel="stylesheet" href="/blog/styles.css">
+    <link rel="stylesheet" href="/theme-toggle.css?v=2">
 </head>
 <body>
     <div class="grid-background"></div>
@@ -12,6 +14,7 @@
             <a href="../projects/">Projects</a>
             <a href="index.html" class="current">Blog</a>
             <a href="https://github.com/basanta-bhandari" target="_blank">GitHub</a>
+            <button type="button" class="theme-toggle" data-theme-toggle><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
         </div>
     </nav>
 
@@ -21,23 +24,26 @@
     </header>
 
     <div class="blog-shell">
+        <label class="search-label" for="blogSearch">Search posts</label>
+        <input id="blogSearch" class="search-input" type="search" placeholder="Title, excerpt, or slug" autocomplete="off">
+        <p id="searchEmpty" class="search-empty" hidden>No posts match that search.</p>
         <div class="blog-terminal" id="fallbackTerminal">
             <div class="term-bar">
                 <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
-                <span class="term-path">~/blog/first-post.md</span>
+                <span class="term-path">~/blog/README.md</span>
             </div>
             <div class="term-body">
-                <span class="prompt">$</span> <span class="out">cat first-post.md</span><br><br>
-                <span class="out" id="blogTypedLine">Hello World!<span class="type-cursor"></span></span>
+                <span class="prompt">$</span> <span class="out">cat README.md</span><br><br>
+                <span class="out" id="blogTypedLine">Notes, updates, and things I am building.<span class="type-cursor"></span></span>
             </div>
         </div>
 
         <div id="postsList" class="posts-list"></div>
-        <p class="blog-note" id="blogNote">First real post is coming soon &mdash; check back later.</p>
+        <p class="blog-note" id="blogNote">First real post is coming soon - check back later.</p>
     </div>
 
     <footer>
-        <p>BASANTA BHANDARI &bull; PORTFOLIO &bull; 2026</p>
+        <p>BASANTA BHANDARI - PORTFOLIO - 2026</p>
         <p style="margin-top:8px;">
             <a href="https://github.com/basanta-bhandari" target="_blank">GitHub</a>
         </p>
@@ -51,14 +57,36 @@
             const posts = await res.json();
             if (!posts.length) return;
 
-            document.getElementById('fallbackTerminal').style.display = 'none';
             document.getElementById('blogNote').style.display = 'none';
 
             const list = document.getElementById('postsList');
+            const search = document.getElementById('blogSearch');
+            const empty = document.getElementById('searchEmpty');
+            const fuzzyMatch = (query, value) => {
+                const words = value.toLowerCase().match(/[\p{L}\p{N}]+/gu) || [];
+                return query.toLowerCase().trim().split(/\s+/).every(term =>
+                    words.some(word => {
+                        let at = 0;
+                        for (const character of term) { at = word.indexOf(character, at); if (at === -1) return false; at++; }
+                        return true;
+                    })
+                );
+            };
+            const filter = () => {
+                const query = search.value.trim(); let visible = 0;
+                list.querySelectorAll('.post-card').forEach(card => {
+                    const matches = !query || fuzzyMatch(query, card.dataset.search);
+                    card.hidden = !matches;
+                    if (matches) visible++;
+                });
+                empty.hidden = visible !== 0;
+            };
+
             posts.forEach(p => {
                 const card = document.createElement('a');
                 card.href = '/blog/post.html?slug=' + encodeURIComponent(p.slug);
                 card.className = 'post-card';
+                card.dataset.search = [p.title, p.excerpt || '', p.slug].join(' ');
                 const date = new Date(p.published_at).toLocaleDateString();
                 card.innerHTML =
                     '<h3>' + p.title + '</h3>' +
@@ -66,6 +94,7 @@
                     (p.excerpt ? '<p>' + p.excerpt + '</p>' : '');
                 list.appendChild(card);
             });
+            search.addEventListener('input', filter);
         } catch {
             // API/DB not set up yet (e.g. local static preview) - fallback stays visible
         }

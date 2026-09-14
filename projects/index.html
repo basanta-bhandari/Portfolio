@@ -1,240 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="/projects/styles.css" >
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>olympics-w3</title>
-    <style>
-        
-    </style>
+    <title>Projects</title>
+    <script src="/theme.js?v=2"></script>
+    <link rel="stylesheet" href="/projects/styles.css">
+    <link rel="stylesheet" href="/theme-toggle.css?v=2">
 </head>
 <body>
     <div class="grid-background"></div>
-
-    <div class="container">
-        <div class="section-block">
+    <nav class="topnav">
+        <a href="../index.html" class="brand">Home?<span class="dot">.</span></a>
+        <div class="links">
+            <a href="../index.html">Home</a>
+            <a href="index.html" class="current">Projects</a>
+            <a href="../blog/index.html">Blog</a>
+            <a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">GitHub</a>
+            <button type="button" class="theme-toggle" data-theme-toggle><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
+        </div>
+    </nav>
+    <main class="container">
+        <section class="section-block">
             <div class="section-header">
-                <h2>Projects</h2>
+                <h1>Projects</h1>
                 <p>All my projects in one place.</p>
             </div>
-
-            <div class="content-grid">
-                <div class="project-card">
-                    <div class="linked"><h3><a href="basanta.space">Portfolio(to be finished)</a></h3></div>
-                    <p>Personal portfolio and landing page. Where I showcase who I am and what I build. Simple. Direct. Me.</p>
-                    <div class="tech-tags">
-                        <div class="tech-tag">HTML/CSS</div>
-                        <div class="tech-tag">Portfolio</div>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://basanta.space" target="_blank">Visit</a>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>Hackclub Shanti(In Devlopment)</h3>
-                    <p>Official website for our school's coding community. Events. Projects. Members. Where builders meet and collaborate.</p>
-                    <div class="tech-tags">
-                        <div class="tech-tag">HTML/CSS</div>
-                        <div class="tech-tag">Community</div>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://shantihacks.org" target="_blank">Visit</a>
-                        <a href="https://github.com/orgs/Hackclub-Shanti" target="_blank">GitHub</a>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>Retrohouse</h3>
-                    <p>90s-inspired blog celebrating retro web aesthetics. Neon colors. Animated GIFs. Nostalgic vibes. Pure chaos. Made for <div class="linked"><a href="olympics.hackclub.com">Boba Olympics</a></div></p>
-                    <div class="tech-tags">
-                        <div class="tech-tag">HTML/CSS</div>
-                        <div class="tech-tag">90s Design</div>
-                        <div class="tech-tag">Nostalgia</div>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://github.com/basanta-bhandari/Olympics" target="_blank">GitHub</a>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>404 Experience</h3>
-                    <p>Creative error page. When things break, make it memorable. Minimal. Stark. Intentional design in failure.Made for <div class="linked"><a href="olympics.hackclub.com">Boba Olympics</a></div></p>
-                    <div class="tech-tags">
-                        <div class="tech-tag">HTML/CSS</div>
-                        <div class="tech-tag">Interaction</div>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://github.com/basanta-bhandari" target="_blank">View (Coming)</a>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>Distrohopper</h3>
-                    <p>Distrohopping script builder for a dozen of the most popular Debian-based distros. Build, tweak, and generate install flows from the web.</p>
-                    <div class="tech-tags">
-                        <div class="tech-tag">Web</div>
-                        <div class="tech-tag">Debian</div>
-                        <div class="tech-tag">Automation</div>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://github.com/basanta-bhandari" target="_blank">View</a>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>RefDek</h3>
-                    <p>A reference deck for maintaining bibliography and glossary entries with descriptions and categories, easy to add and organize from the web.</p>
-                    <div class="tech-tags">
-                        <div class="tech-tag">Web</div>
-                        <div class="tech-tag">Research</div>
-                        <div class="tech-tag">Knowledge Base</div>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://github.com/basanta-bhandari" target="_blank">View</a>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>Pytype(Limited Text Samples)</h3>
-                    <p>Python/curses type checking and validation software, i.e Monkeytype in a Terminal. </p>
-                    <div class="tech-tags">
-                        <div class="tech-tag">Python</div>
-                        <div class="tech-tag">Typing Test</div>
-                        <div class="tech-tag">Package</div>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://pypi.org/project/Pytype-B1/" target="_blank">PyPI</a>
-                        <a href="https://github.com/basanta-bhandari/Pytype" target="_blank">GitHub</a>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>PyDOS</h3>
-                    <p>DOS emulator for the modern terminal.Complete with Package manager, Web tools(using Browsh), Nostalgic. Fun. Educational. Alpha version with features in development.</p>
-                    <div class="tech-tags">
-                        <div class="tech-tag">Python</div>
-                        <div class="tech-tag">Emulator</div>
-                        <div class="tech-tag">Terminal</div>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://pypi.org/project/Py-DOS-B1/" target="_blank">PyPI</a>
-                        <a href="https://github.com/basanta-bhandari/PY_DOS" target="_blank">GitHub</a>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>Terminal Speil</h3>
-                    <p>CLI D&amp;D-esque game. Built for Summer of Making. Command-line interface game design. Strategic. Narrative-driven.</p>
-                    <div class="tech-tags">
-                        <div class="tech-tag">Python</div>
-                        <div class="tech-tag">Game</div>
-                        <div class="tech-tag">CLI</div>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://pypi.org/project/Pytype-B1/" target="_blank">PyPI</a>
-                        <a href="https://github.com/basanta-bhandari/Summer_of_Making" target="_blank">GitHub</a>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>Pomodoro CLI</h3>
-                    <p>Terminal-based pomodoro timer. Is lightweight, works offline, no mouse required-Just Get working!</p>
-                    <div class="tech-tags">
-                        <div class="tech-tag">Python</div>
-                        <div class="tech-tag">Productivity</div>
-                        <div class="tech-tag">Timer</div>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://github.com/basanta-bhandari" target="_blank">GitHub</a>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>Termui</h3>
-                    <p>A TUI tool launcher with sudo password caching, custom tool addition, and automatic package manager detection. Fast, terminal-first workflow.</p>
-                    <div class="tech-tags">
-                        <div class="tech-tag">Python</div>
-                        <div class="tech-tag">TUI</div>
-                        <div class="tech-tag">CLI</div>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://pypi.org/user/basantabh/" target="_blank">View</a>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>Lantern</h3>
-                    <p>Yggdrasil-based mesh E2E CLI messaging network tool inspired by Mutiny from Halt &amp; Catch Fire. Private, distributed, command-line communication.</p>
-                    <div class="tech-tags">
-                        <div class="tech-tag">Python</div>
-                        <div class="tech-tag">Networking</div>
-                        <div class="tech-tag">E2E Messaging</div>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://pypi.org/user/basantabh/" target="_blank">View</a>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>Discord Bot</h3>
-                    <p>Custom Discord bot for  management and automation for our sever, we've since pivioted to slack tho ^-^</p>
-                    <div class="tech-tags">
-                        <div class="tech-tag">Python</div>
-                        <div class="tech-tag">Discord</div>
-                        <div class="tech-tag">Bot</div>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://github.com/basanta-bhandari" target="_blank">GitHub</a>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>Hackatime Figma Plugin</h3>
-                    <p>Figma plugin integration with Hackatime.( for the desktop application) for <div class="linked"><a href="carnival.hackclub.com">Carnival</a></div></p>
-                    <div class="tech-tags">
-                        <div class="tech-tag">JavaScript</div>
-                        <div class="tech-tag">Figma </div>
-                        <div class="tech-tag">Plugin</div>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://github.com/basanta-bhandari/Hackatime" target="_blank">GitHub</a>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>AoPS Enhanced Learning</h3>
-                    <p>Art of Problem Solving platform enhancement. Filter by mastery level. Visual analytics on strengths/weaknesses. Topic-specific stats. Gameified with quests, achievements, XP, and Resilience/Strength stats. Integrated resource links.</p>
-                    <div class="tech-tags">
-                        <div class="tech-tag">Browser Extension</div>
-                        <div class="tech-tag">Analytics</div>
-                        <div class="tech-tag">Mathematics</div>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://github.com/basanta-bhandari" target="_blank">GitHub</a>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>Coming Soon!</h3>
-                    <p>dýa like maths?</p>
-                    <div class="tech-tags">
-                        <div class="tech-tag">Math</div>
-                        <div class="tech-tag">Javascript</div>
-                        <div class="tech-tag">???</div>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://github.com/basanta-bhandari" target="_blank">Coming</a>
-                    </div>
-                </div>
+            <label class="search-label" for="projectSearch">Search projects</label>
+            <input id="projectSearch" class="search-input" type="search" placeholder="Name, description, category" autocomplete="off">
+            <p id="searchEmpty" class="search-empty" hidden>No projects match that search.</p>
+            <div id="contentGrid" class="content-grid">
+                <article class="project-card"><h3><a href="https://basanta.space">Portfolio (to be finished)</a></h3><p>Personal portfolio and landing page. Where I showcase who I am and what I build. Simple. Direct. Me.</p><div class="tech-tags"><span class="tech-tag">HTML/CSS</span><span class="tech-tag">Portfolio</span></div><div class="project-links"><a href="https://basanta.space" target="_blank" rel="noopener">Visit</a></div></article>
+                <article class="project-card"><h3>Hackclub Shanti (In Development)</h3><p>Official website for our school's coding community. Events. Projects. Members. Where builders meet and collaborate.</p><div class="tech-tags"><span class="tech-tag">HTML/CSS</span><span class="tech-tag">Community</span></div><div class="project-links"><a href="https://shantihacks.org" target="_blank" rel="noopener">Visit</a><a href="https://github.com/orgs/Hackclub-Shanti" target="_blank" rel="noopener">GitHub</a></div></article>
+                <article class="project-card"><h3>Retrohouse</h3><p>90s-inspired blog celebrating retro web aesthetics. Neon colors. Animated GIFs. Nostalgic vibes. Pure chaos.</p><div class="tech-tags"><span class="tech-tag">HTML/CSS</span><span class="tech-tag">90s Design</span><span class="tech-tag">Nostalgia</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari/Olympics" target="_blank" rel="noopener">GitHub</a></div></article>
+                <article class="project-card"><h3>Pytype</h3><p>Python/curses type checking and validation software: Monkeytype in a terminal.</p><div class="tech-tags"><span class="tech-tag">Python</span><span class="tech-tag">Typing Test</span><span class="tech-tag">Package</span></div><div class="project-links"><a href="https://pypi.org/project/Pytype-B1/" target="_blank" rel="noopener">PyPI</a><a href="https://github.com/basanta-bhandari/Pytype" target="_blank" rel="noopener">GitHub</a></div></article>
+                <article class="project-card"><h3>PyDOS</h3><p>DOS emulator for the modern terminal, with a package manager and web tools.</p><div class="tech-tags"><span class="tech-tag">Python</span><span class="tech-tag">Emulator</span><span class="tech-tag">Terminal</span></div><div class="project-links"><a href="https://pypi.org/project/Py-DOS-B1/" target="_blank" rel="noopener">PyPI</a><a href="https://github.com/basanta-bhandari/PY_DOS" target="_blank" rel="noopener">GitHub</a></div></article>
+                <article class="project-card"><h3>Terminal Speil</h3><p>CLI D&amp;D-esque game built for Summer of Making. Strategic and narrative-driven.</p><div class="tech-tags"><span class="tech-tag">Python</span><span class="tech-tag">Game</span><span class="tech-tag">CLI</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari/Summer_of_Making" target="_blank" rel="noopener">GitHub</a></div></article>
+                <article class="project-card"><h3>Pomodoro CLI</h3><p>Lightweight terminal-based pomodoro timer that works offline and needs no mouse.</p><div class="tech-tags"><span class="tech-tag">Python</span><span class="tech-tag">Productivity</span><span class="tech-tag">Timer</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">GitHub</a></div></article>
+                <article class="project-card"><h3>Lantern</h3><p>Yggdrasil-based mesh E2E CLI messaging network tool inspired by Mutiny from Halt &amp; Catch Fire.</p><div class="tech-tags"><span class="tech-tag">Python</span><span class="tech-tag">Networking</span><span class="tech-tag">E2E Messaging</span></div><div class="project-links"><a href="https://pypi.org/user/basantabh/" target="_blank" rel="noopener">View</a></div></article>
+                <article class="project-card"><h3>404 Experience</h3><p>Creative error page. When things break, make it memorable.</p><div class="tech-tags"><span class="tech-tag">HTML/CSS</span><span class="tech-tag">Interaction</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">View</a></div></article>
+                <article class="project-card"><h3>Distrohopper</h3><p>Distrohopping script builder for popular Debian-based distros.</p><div class="tech-tags"><span class="tech-tag">Web</span><span class="tech-tag">Debian</span><span class="tech-tag">Automation</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">View</a></div></article>
+                <article class="project-card"><h3>RefDek</h3><p>A reference deck for maintaining bibliography and glossary entries with descriptions and categories.</p><div class="tech-tags"><span class="tech-tag">Web</span><span class="tech-tag">Research</span><span class="tech-tag">Knowledge Base</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">View</a></div></article>
+                <article class="project-card"><h3>Termui</h3><p>A TUI tool launcher with sudo password caching, custom tool addition, and automatic package-manager detection.</p><div class="tech-tags"><span class="tech-tag">Python</span><span class="tech-tag">TUI</span><span class="tech-tag">CLI</span></div><div class="project-links"><a href="https://pypi.org/user/basantabh/" target="_blank" rel="noopener">View</a></div></article>
+                <article class="project-card"><h3>Discord Bot</h3><p>Custom Discord bot for management and automation for our server.</p><div class="tech-tags"><span class="tech-tag">Python</span><span class="tech-tag">Discord</span><span class="tech-tag">Bot</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">GitHub</a></div></article>
+                <article class="project-card"><h3>Hackatime Figma Plugin</h3><p>Figma plugin integration with Hackatime for the desktop application.</p><div class="tech-tags"><span class="tech-tag">JavaScript</span><span class="tech-tag">Figma</span><span class="tech-tag">Plugin</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari/Hackatime" target="_blank" rel="noopener">GitHub</a></div></article>
+                <article class="project-card"><h3>AoPS Enhanced Learning</h3><p>Art of Problem Solving platform enhancement with mastery filters and visual analytics.</p><div class="tech-tags"><span class="tech-tag">Browser Extension</span><span class="tech-tag">Analytics</span><span class="tech-tag">Mathematics</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">GitHub</a></div></article>
+                <article class="project-card"><h3>Coming Soon!</h3><p>Do you like maths?</p><div class="tech-tags"><span class="tech-tag">Math</span><span class="tech-tag">JavaScript</span><span class="tech-tag">???</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">Coming</a></div></article>
             </div>
-        </div>
-    </div>
-
-    <footer>
-        <p>BASANTA BHANDARI • PORTFOLIO • 2026</p>
-        <p><a href="github.com/basanta-bhandari">Github</a><a href=""></a></p>
-    </footer>
+        </section>
+    </main>
+    <footer><p>BASANTA BHANDARI - PORTFOLIO - 2026</p><p><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">GitHub</a></p></footer>
+    <script>
+    const grid = document.getElementById('contentGrid');
+    const search = document.getElementById('projectSearch');
+    const empty = document.getElementById('searchEmpty');
+    function fuzzyMatch(query, value) {
+        const words = value.toLowerCase().match(/[\p{L}\p{N}]+/gu) || [];
+        return query.toLowerCase().trim().split(/\s+/).every(term => words.some(word => {
+            let at = 0;
+            for (const character of term) { at = word.indexOf(character, at); if (at === -1) return false; at++; }
+            return true;
+        }));
+    }
+    function filterProjects() {
+        const query = search.value.trim(); let visible = 0;
+        grid.querySelectorAll('.project-card').forEach(card => { const matches = !query || fuzzyMatch(query, card.textContent); card.hidden = !matches; if (matches) visible++; });
+        empty.hidden = visible !== 0;
+    }
+    function asArray(value) { try { return Array.isArray(value) ? value : JSON.parse(value || '[]'); } catch { return []; } }
+    function safeUrl(value) { try { return /^https?:$/.test(new URL(value).protocol) ? value : null; } catch { return null; } }
+    function text(parent, tag, value, className) { const el = document.createElement(tag); el.textContent = value; if (className) el.className = className; parent.appendChild(el); return el; }
+    function addProject(project) {
+        const card = document.createElement('article'); card.className = 'project-card'; text(card, 'h3', project.name); text(card, 'p', project.subtitle);
+        const tags = document.createElement('div'); tags.className = 'tech-tags'; asArray(project.categories).forEach(category => text(tags, 'span', category, 'tech-tag')); card.appendChild(tags);
+        const links = document.createElement('div'); links.className = 'project-links';
+        const addLink = (url, label) => { const valid = safeUrl(url); if (!valid) return; const link = document.createElement('a'); link.href = valid; link.target = '_blank'; link.rel = 'noopener'; link.textContent = label; links.appendChild(link); };
+        addLink(project.github_url, 'GitHub'); asArray(project.additional_links).forEach((link, index) => addLink(link, `Link ${index + 1}`));
+        if (links.childElementCount) card.appendChild(links); grid.prepend(card);
+    }
+    search.addEventListener('input', filterProjects);
+    fetch('/api/projects').then(res => res.ok ? res.json() : []).then(projects => { projects.reverse().forEach(addProject); filterProjects(); }).catch(() => {});
+    </script>
 </body>
 </html>

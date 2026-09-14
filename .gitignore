@@ -1,12 +1,6 @@
 node_modules/
-.vercel
+.vercel/
 .env
 .env.local
 .env*.local
 .git
-.env.example
-package.json
-/admin
-/login
-/api
-/lib

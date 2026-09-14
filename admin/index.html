@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Dashboard</title>
+<script src="/theme.js?v=2"></script>
 <link rel="stylesheet" href="../blog/styles.css">
+<link rel="stylesheet" href="/theme-toggle.css?v=2">
 <style>
   .admin-wrap {
     max-width: 900px;
@@ -38,7 +40,9 @@
     color: var(--muted);
     margin-top: 4px;
   }
-  .admin-wrap input[type="text"] {
+  .admin-wrap input[type="text"],
+  .admin-wrap input[type="url"],
+  .admin-wrap textarea {
     width: 100%;
     padding: 11px 12px;
     font-family: var(--mono);
@@ -99,9 +103,31 @@
     padding: 7px 14px; font-size: .78rem; border-radius: 8px;
     font-family: var(--mono); cursor: pointer;
   }
+  .post-actions { display: flex; gap: 8px; align-items: center; }
+  .post-row .edit-btn, .post-row .download-btn {
+    background: transparent; color: var(--fg); border: 1px solid var(--line);
+    text-decoration: none;
+  }
+  .post-row .edit-btn:hover, .post-row .download-btn:hover { background: var(--fg); color: #fff; }
+  .post-row .delete-btn { background: #c0392b; }
+  .image-picker { display: none; }
+  .admin-tabs { display: inline-flex; gap: 4px; padding: 5px; margin: -10px 0 30px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); }
+  .admin-tabs button { min-width: 104px; padding: 9px 16px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font: .8rem var(--mono); cursor: pointer; }
+  .admin-tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); }
+  .admin-panel[hidden] { display: none; }
+  body.admin-pending .topnav, body.admin-pending .admin-wrap { visibility: hidden; }
+  .project-form { margin-top: 50px; padding-top: 36px; border-top: 2px solid var(--line); }
+  .project-form textarea { min-height: 100px; resize: vertical; }
+  .project-actions { display: flex; gap: 8px; align-items: center; }
+  @media (max-width: 620px) {
+    .admin-wrap { padding: 24px 18px 50px; }
+    .topbar, .post-row { align-items: flex-start; gap: 12px; flex-direction: column; }
+    .post-actions, .project-actions { flex-wrap: wrap; }
+    .post-row button, .post-row .download-btn { padding: 8px 10px; }
+  }
 </style>
 </head>
-<body>
+<body class="admin-pending">
 <div class="grid-background"></div>
 
 <nav class="topnav">
@@ -111,15 +137,23 @@
         <a href="../projects/">Projects</a>
         <a href="../blog/index.html">Blog</a>
         <a href="https://github.com/basanta-bhandari" target="_blank">GitHub</a>
+        <button type="button" class="theme-toggle" data-theme-toggle><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
     </div>
 </nav>
 
 <div class="admin-wrap">
   <div class="topbar">
-    <h2>New Post</h2>
+    <h2>Admin Dashboard</h2>
     <button id="logoutBtn">Log out</button>
   </div>
 
+  <div class="admin-tabs" role="tablist" aria-label="Admin sections">
+    <button type="button" role="tab" id="blogTab" aria-controls="blogPanel" aria-selected="true">Blog</button>
+    <button type="button" role="tab" id="projectsTab" aria-controls="projectsPanel" aria-selected="false">Projects</button>
+  </div>
+
+  <section class="admin-panel" id="blogPanel" role="tabpanel" aria-labelledby="blogTab">
+  <h2 id="formHeading">New Post</h2>
   <div class="msg" id="createMsg"></div>
   <form id="postForm">
     <div class="field">
@@ -130,7 +164,7 @@
     <div class="field">
       <label for="slug">Slug</label>
       <input type="text" id="slug" required>
-      <div class="hint">The part of the URL for this post — e.g. a post titled "My First Post" might use the slug <code>my-first-post</code>, giving you basanta.space/blog/post.html?slug=my-first-post. Auto-filled from the title, edit if you want something different. Letters, numbers, and hyphens only.</div>
+      <div class="hint">The part of the URL for this post. For example, a post titled "My First Post" might use the slug <code>my-first-post</code>, giving you basanta.space/blog/post.html?slug=my-first-post. Auto-filled from the title, edit if you want something different. Letters, numbers, and hyphens only.</div>
     </div>
 
     <div class="field">
@@ -144,6 +178,7 @@
       <div class="content-toolbar">
         <button type="button" id="insertImageBtn">+ Image</button>
         <button type="button" id="insertLinkBtn">+ Link</button>
+        <input class="image-picker" id="imagePicker" type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif">
       </div>
       <textarea id="content" required placeholder="Write your post here.
 
@@ -152,26 +187,59 @@ Supports:
 ## Subheading
 **bold** and *italic*
 [link text](https://example.com)
-![alt text](https://example.com/image.jpg)
+![alt text](uploaded-image.png)
 
 Leave a blank line between paragraphs."></textarea>
-      <div class="hint">Images aren't uploaded here — paste a URL to an image already hosted somewhere (e.g. imgur, GitHub, or a link from your own site) using the image syntax above, or click "+ Image" to insert it for you.</div>
+      <div class="hint">Click "+ Image" to choose an image from your device. It is saved with this post, so no image URL is needed. PNG, JPG, GIF, WebP, and AVIF up to 3 MB are supported.</div>
     </div>
 
-    <button type="submit" class="publish-btn">Publish</button>
+    <button type="submit" class="publish-btn" id="submitBtn">Publish</button>
+    <button type="button" id="cancelEditBtn" style="display:none; margin-left:8px;" class="publish-btn">Cancel edit</button>
   </form>
 
   <h2 style="margin-top:50px;">Existing Posts</h2>
   <div id="postsList"></div>
+  </section>
+
+  <section class="admin-panel project-form" id="projectsPanel" role="tabpanel" aria-labelledby="projectsTab" hidden>
+    <h2 id="projectFormHeading">New Project</h2>
+    <div class="msg" id="projectMsg"></div>
+    <form id="projectForm">
+      <div class="field"><label for="projectName">Name</label><input type="text" id="projectName" required></div>
+      <div class="field"><label for="projectSubtitle">Subtitle / short description</label><textarea id="projectSubtitle" required></textarea></div>
+      <div class="field"><label for="githubUrl">GitHub link <span style="font-weight:normal;">(optional)</span></label><input type="url" id="githubUrl" placeholder="https://github.com/..." inputmode="url"></div>
+      <div class="field"><label for="additionalLinks">Additional links <span style="font-weight:normal;">(optional)</span></label><textarea id="additionalLinks" placeholder="One URL per line"></textarea><div class="hint">Add a website, PyPI page, video, or any other link - one per line.</div></div>
+      <div class="field"><label for="projectCategories">Categories</label><input type="text" id="projectCategories" list="categoryOptions" placeholder="Python, CLI, package" required><datalist id="categoryOptions"></datalist><div class="hint">Separate categories with commas. Existing categories appear as suggestions; type a new one to add it for future projects.</div></div>
+      <button type="submit" class="publish-btn" id="projectSubmitBtn">Add project</button>
+      <button type="button" id="cancelProjectEditBtn" style="display:none; margin-left:8px;" class="publish-btn">Cancel edit</button>
+    </form>
+    <h2 style="margin-top:50px;">Existing Added Projects</h2>
+    <div id="projectsList"></div>
+  </section>
 </div>
 
 <script>
 async function checkAuth() {
-  const res = await fetch('/api/session', { credentials: 'include' });
-  const data = await res.json();
-  if (!data.loggedIn) window.location.href = '/login/';
+  try {
+    const res = await fetch('/api/session', { credentials: 'include' });
+    const data = res.ok ? await res.json() : {};
+    if (!data.loggedIn) return window.location.replace('/login/');
+    document.body.classList.remove('admin-pending');
+  } catch {
+    window.location.replace('/login/');
+  }
 }
 checkAuth();
+
+function selectAdminPanel(name) {
+  const blog = name === 'blog';
+  document.getElementById('blogPanel').hidden = !blog;
+  document.getElementById('projectsPanel').hidden = blog;
+  document.getElementById('blogTab').setAttribute('aria-selected', String(blog));
+  document.getElementById('projectsTab').setAttribute('aria-selected', String(!blog));
+}
+document.getElementById('blogTab').addEventListener('click', () => selectAdminPanel('blog'));
+document.getElementById('projectsTab').addEventListener('click', () => selectAdminPanel('projects'));
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await fetch('/api/logout', { method: 'POST', credentials: 'include' });
@@ -194,6 +262,8 @@ titleInput.addEventListener('input', () => {
 });
 
 const contentBox = document.getElementById('content');
+const imagePicker = document.getElementById('imagePicker');
+let editingSlug = null;
 function insertAtCursor(text) {
   const start = contentBox.selectionStart;
   const end = contentBox.selectionEnd;
@@ -203,10 +273,21 @@ function insertAtCursor(text) {
 }
 
 document.getElementById('insertImageBtn').addEventListener('click', () => {
-  const url = prompt('Image URL (must already be hosted somewhere - imgur, GitHub, etc.):');
-  if (!url) return;
-  const alt = prompt('Alt text (short description of the image):', '') || '';
-  insertAtCursor('\n![' + alt + '](' + url + ')\n');
+  imagePicker.click();
+});
+
+imagePicker.addEventListener('change', () => {
+  const file = imagePicker.files[0];
+  imagePicker.value = '';
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) {
+    alert('Please choose an image smaller than 3 MB.');
+    return;
+  }
+  const alt = prompt('Alt text (short description of the image):', file.name.replace(/\.[^.]+$/, '')) || '';
+  const reader = new FileReader();
+  reader.onload = () => insertAtCursor('\n![' + alt + '](' + reader.result + ')\n');
+  reader.readAsDataURL(file);
 });
 
 document.getElementById('insertLinkBtn').addEventListener('click', () => {
@@ -230,19 +311,58 @@ async function loadPosts() {
     small.style.color = 'var(--muted)';
     small.textContent = '(' + p.slug + ')';
     label.appendChild(small);
+    const actions = document.createElement('div');
+    actions.className = 'post-actions';
+    const editBtn = document.createElement('button');
+    editBtn.className = 'edit-btn';
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', () => startEdit(p));
+    const downloadLink = document.createElement('a');
+    downloadLink.className = 'download-btn';
+    downloadLink.textContent = 'Download .md';
+    downloadLink.href = '/api/posts/' + encodeURIComponent(p.slug) + '?format=markdown';
     const delBtn = document.createElement('button');
+    delBtn.className = 'delete-btn';
     delBtn.textContent = 'Delete';
     delBtn.addEventListener('click', async () => {
       if (!confirm('Delete "' + p.title + '"?')) return;
       await fetch('/api/posts/' + encodeURIComponent(p.slug), { method: 'DELETE', credentials: 'include' });
       loadPosts();
     });
+    actions.append(editBtn, downloadLink, delBtn);
     row.appendChild(label);
-    row.appendChild(delBtn);
+    row.appendChild(actions);
     list.appendChild(row);
   });
 }
 loadPosts();
+
+async function startEdit(post) {
+  const res = await fetch('/api/posts/' + encodeURIComponent(post.slug), { credentials: 'include' });
+  if (!res.ok) return;
+  const fullPost = await res.json();
+  editingSlug = fullPost.slug;
+  titleInput.value = fullPost.title;
+  slugInput.value = fullPost.slug;
+  document.getElementById('excerpt').value = fullPost.excerpt || '';
+  contentBox.value = fullPost.content;
+  slugInput.readOnly = true;
+  document.getElementById('formHeading').textContent = 'Edit Post';
+  document.getElementById('submitBtn').textContent = 'Save changes';
+  document.getElementById('cancelEditBtn').style.display = 'inline-block';
+  document.getElementById('postForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelEdit() {
+  editingSlug = null;
+  document.getElementById('postForm').reset();
+  slugTouched = false;
+  slugInput.readOnly = false;
+  document.getElementById('formHeading').textContent = 'New Post';
+  document.getElementById('submitBtn').textContent = 'Publish';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+}
+document.getElementById('cancelEditBtn').addEventListener('click', cancelEdit);
 
 document.getElementById('postForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -253,8 +373,9 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
   const msg = document.getElementById('createMsg');
   msg.textContent = '';
 
-  const res = await fetch('/api/posts', {
-    method: 'POST',
+  const isEditing = Boolean(editingSlug);
+  const res = await fetch(isEditing ? '/api/posts/' + encodeURIComponent(editingSlug) : '/api/posts', {
+    method: isEditing ? 'PUT' : 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify({ title, slug, excerpt, content })
@@ -266,11 +387,82 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
     return;
   }
   msg.style.color = '#27ae60';
-  msg.textContent = 'Published!';
-  document.getElementById('postForm').reset();
-  slugTouched = false;
+  msg.textContent = isEditing ? 'Changes saved!' : 'Published!';
+  cancelEdit();
   loadPosts();
 });
+
+const projectForm = document.getElementById('projectForm');
+const projectName = document.getElementById('projectName');
+const projectSubtitle = document.getElementById('projectSubtitle');
+const githubUrl = document.getElementById('githubUrl');
+const additionalLinks = document.getElementById('additionalLinks');
+const projectCategories = document.getElementById('projectCategories');
+let editingProjectId = null;
+
+function listValues(value) {
+  return String(value || '').split(/[\n,]/).map(item => item.trim()).filter(Boolean);
+}
+function projectArray(value) {
+  try { return Array.isArray(value) ? value : JSON.parse(value || '[]'); } catch { return []; }
+}
+function updateCategoryOptions(projects) {
+  const categories = [...new Set(projects.flatMap(project => projectArray(project.categories)).map(item => item.trim()).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b));
+  const options = document.getElementById('categoryOptions');
+  options.replaceChildren(...categories.map(category => {
+    const option = document.createElement('option'); option.value = category; return option;
+  }));
+}
+async function loadProjects() {
+  const res = await fetch('/api/projects');
+  const projects = res.ok ? await res.json() : [];
+  updateCategoryOptions(projects);
+  const list = document.getElementById('projectsList');
+  list.innerHTML = projects.length ? '' : '<p style="color:var(--muted);">No added projects yet.</p>';
+  projects.forEach(project => {
+    const row = document.createElement('div'); row.className = 'post-row';
+    const label = document.createElement('span'); label.textContent = project.name + ' ';
+    const small = document.createElement('small'); small.style.color = 'var(--muted)';
+    small.textContent = '(' + projectArray(project.categories).join(', ') + ')'; label.appendChild(small);
+    const actions = document.createElement('div'); actions.className = 'project-actions';
+    const edit = document.createElement('button'); edit.className = 'edit-btn'; edit.textContent = 'Edit'; edit.addEventListener('click', () => startProjectEdit(project));
+    const remove = document.createElement('button'); remove.className = 'delete-btn'; remove.textContent = 'Delete'; remove.addEventListener('click', async () => {
+      if (!confirm('Delete "' + project.name + '"?')) return;
+      await fetch('/api/projects/' + project.id, { method: 'DELETE', credentials: 'include' }); loadProjects();
+    });
+    actions.append(edit, remove); row.append(label, actions); list.appendChild(row);
+  });
+}
+function cancelProjectEdit() {
+  editingProjectId = null; projectForm.reset();
+  document.getElementById('projectFormHeading').textContent = 'New Project';
+  document.getElementById('projectSubmitBtn').textContent = 'Add project';
+  document.getElementById('cancelProjectEditBtn').style.display = 'none';
+}
+function startProjectEdit(project) {
+  editingProjectId = project.id; projectName.value = project.name; projectSubtitle.value = project.subtitle;
+  githubUrl.value = project.github_url || ''; additionalLinks.value = projectArray(project.additional_links).join('\n');
+  projectCategories.value = projectArray(project.categories).join(', ');
+  document.getElementById('projectFormHeading').textContent = 'Edit Project';
+  document.getElementById('projectSubmitBtn').textContent = 'Save changes';
+  document.getElementById('cancelProjectEditBtn').style.display = 'inline-block';
+  projectForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+document.getElementById('cancelProjectEditBtn').addEventListener('click', cancelProjectEdit);
+projectForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const editing = Boolean(editingProjectId);
+  const msg = document.getElementById('projectMsg'); msg.textContent = '';
+  const res = await fetch(editing ? '/api/projects/' + editingProjectId : '/api/projects', {
+    method: editing ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+    body: JSON.stringify({ name: projectName.value.trim(), subtitle: projectSubtitle.value.trim(), githubUrl: githubUrl.value.trim(), additionalLinks: listValues(additionalLinks.value), categories: listValues(projectCategories.value) })
+  });
+  const data = await res.json();
+  if (!res.ok) { msg.style.color = '#c0392b'; msg.textContent = data.error || 'Could not save project'; return; }
+  msg.style.color = '#27ae60'; msg.textContent = editing ? 'Changes saved!' : 'Project added!'; cancelProjectEdit(); loadProjects();
+});
+loadProjects();
 </script>
 </body>
 </html>
