@@ -4,7 +4,7 @@ import { verifyRequest } from '../../lib/auth.js';
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     const rows = await sql`
-      SELECT id, title, slug, excerpt, published_at, updated_at
+      SELECT id, title, slug, excerpt, published_at
       FROM posts
       ORDER BY published_at DESC
     `;
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
       const rows = await sql`
         INSERT INTO posts (title, slug, content, excerpt)
         VALUES (${title}, ${slug}, ${content}, ${excerpt || null})
-        RETURNING id, title, slug, published_at, updated_at
+        RETURNING id, title, slug, published_at
       `;
       return res.status(201).json(rows[0]);
     } catch (err) {
