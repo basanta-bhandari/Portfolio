@@ -17,6 +17,9 @@ export default async function handler(req, res) {
     if (!Array.isArray(additionalLinks) || !Array.isArray(categories)) {
       return res.status(400).json({ error: 'links and categories must be lists' });
     }
+    if (!categories.length || categories.length > 3) {
+      return res.status(400).json({ error: 'new projects need between one and three categories' });
+    }
     const rows = await sql`
       INSERT INTO projects (name, subtitle, github_url, additional_links, categories)
       VALUES (${name}, ${subtitle}, ${githubUrl || null}, ${JSON.stringify(additionalLinks)}::jsonb, ${JSON.stringify(categories)}::jsonb)

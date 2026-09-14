@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Dashboard</title>
 <script src="/theme.js?v=2"></script>
+<script src="/project-categories.js"></script>
 <link rel="stylesheet" href="../blog/styles.css">
 <link rel="stylesheet" href="/theme-toggle.css?v=2">
 <style>
@@ -53,14 +54,15 @@
     color: var(--fg);
   }
 
-  .content-toolbar { display: flex; gap: 8px; margin-bottom: 8px; }
+  .content-toolbar { display: flex; gap: 10px; margin-bottom: 8px; }
   .content-toolbar button {
     font-family: var(--mono);
     font-size: .75rem;
-    padding: 6px 10px;
+    padding: 7px 14px;
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: 999px;
     background: transparent;
+    color: var(--fg);
     cursor: pointer;
   }
   .content-toolbar button:hover { background: var(--fg); color: #fff; }
@@ -119,6 +121,14 @@
   .project-form { margin-top: 50px; padding-top: 36px; border-top: 2px solid var(--line); }
   .project-form textarea { min-height: 100px; resize: vertical; }
   .project-actions { display: flex; gap: 8px; align-items: center; }
+  .category-control { display: flex; gap: 8px; align-items: center; }
+  .category-control select { flex: 1; min-width: 0; padding: 11px 12px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--fg); font: .9rem var(--mono); }
+  .category-control button, .category-chip button { font: .75rem var(--mono); border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--fg); cursor: pointer; }
+  .category-control button { padding: 10px 13px; white-space: nowrap; }
+  .category-control button:disabled { opacity: .45; cursor: not-allowed; }
+  .category-chip-list { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+  .category-chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 7px 5px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: .78rem; }
+  .category-chip button { padding: 1px 5px; }
   @media (max-width: 620px) {
     .admin-wrap { padding: 24px 18px 50px; }
     .topbar, .post-row { align-items: flex-start; gap: 12px; flex-direction: column; }
@@ -209,7 +219,7 @@ Leave a blank line between paragraphs."></textarea>
       <div class="field"><label for="projectSubtitle">Subtitle / short description</label><textarea id="projectSubtitle" required></textarea></div>
       <div class="field"><label for="githubUrl">GitHub link <span style="font-weight:normal;">(optional)</span></label><input type="url" id="githubUrl" placeholder="https://github.com/..." inputmode="url"></div>
       <div class="field"><label for="additionalLinks">Additional links <span style="font-weight:normal;">(optional)</span></label><textarea id="additionalLinks" placeholder="One URL per line"></textarea><div class="hint">Add a website, PyPI page, video, or any other link - one per line.</div></div>
-      <div class="field"><label for="projectCategories">Categories</label><input type="text" id="projectCategories" list="categoryOptions" placeholder="Python, CLI, package" required><datalist id="categoryOptions"></datalist><div class="hint">Separate categories with commas. Existing categories appear as suggestions; type a new one to add it for future projects.</div></div>
+      <div class="field"><label for="categorySelect">Categories <span style="font-weight:normal;">(up to 3 for new projects)</span></label><div class="category-control"><select id="categorySelect"><option value="">Choose a category</option></select><button type="button" id="newCategoryBtn">+ New category</button></div><div id="selectedCategories" class="category-chip-list"></div><div class="hint">Choose an existing category or add a new one. New categories become available for future projects.</div></div>
       <button type="submit" class="publish-btn" id="projectSubmitBtn">Add project</button>
       <button type="button" id="cancelProjectEditBtn" style="display:none; margin-left:8px;" class="publish-btn">Cancel edit</button>
     </form>
@@ -397,8 +407,11 @@ const projectName = document.getElementById('projectName');
 const projectSubtitle = document.getElementById('projectSubtitle');
 const githubUrl = document.getElementById('githubUrl');
 const additionalLinks = document.getElementById('additionalLinks');
-const projectCategories = document.getElementById('projectCategories');
+const categorySelect = document.getElementById('categorySelect');
+const selectedCategoriesBox = document.getElementById('selectedCategories');
 let editingProjectId = null;
+let selectedProjectCategories = [];
+let availableCategories = new Set(window.BASE_PROJECT_CATEGORIES || []);
 
 function listValues(value) {
   return String(value || '').split(/[\n,]/).map(item => item.trim()).filter(Boolean);
@@ -407,13 +420,43 @@ function projectArray(value) {
   try { return Array.isArray(value) ? value : JSON.parse(value || '[]'); } catch { return []; }
 }
 function updateCategoryOptions(projects) {
-  const categories = [...new Set(projects.flatMap(project => projectArray(project.categories)).map(item => item.trim()).filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b));
-  const options = document.getElementById('categoryOptions');
-  options.replaceChildren(...categories.map(category => {
-    const option = document.createElement('option'); option.value = category; return option;
-  }));
+  projects.flatMap(project => projectArray(project.categories)).map(item => item.trim()).filter(Boolean)
+    .forEach(category => availableCategories.add(category));
+  const placeholder = document.createElement('option'); placeholder.value = ''; placeholder.textContent = 'Choose a category';
+  const options = [...availableCategories].sort((a, b) => a.localeCompare(b)).map(category => {
+    const option = document.createElement('option'); option.value = category; option.textContent = category;
+    option.disabled = selectedProjectCategories.includes(category); return option;
+  });
+  categorySelect.replaceChildren(placeholder, ...options);
 }
+function renderSelectedCategories() {
+  selectedCategoriesBox.replaceChildren(...selectedProjectCategories.map(category => {
+    const chip = document.createElement('span'); chip.className = 'category-chip'; chip.textContent = category;
+    const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove';
+    remove.setAttribute('aria-label', 'Remove ' + category);
+    remove.addEventListener('click', () => {
+      selectedProjectCategories = selectedProjectCategories.filter(item => item !== category);
+      renderSelectedCategories(); updateCategoryOptions([]);
+    });
+    chip.appendChild(remove); return chip;
+  }));
+  categorySelect.disabled = selectedProjectCategories.length >= 3;
+  document.getElementById('newCategoryBtn').disabled = selectedProjectCategories.length >= 3;
+}
+categorySelect.addEventListener('change', () => {
+  const category = categorySelect.value;
+  if (!category || selectedProjectCategories.includes(category)) return;
+  if (selectedProjectCategories.length >= 3) return;
+  selectedProjectCategories.push(category); categorySelect.value = '';
+  renderSelectedCategories(); updateCategoryOptions([]);
+});
+document.getElementById('newCategoryBtn').addEventListener('click', () => {
+  if (selectedProjectCategories.length >= 3) return;
+  const category = (prompt('New category name:') || '').trim();
+  if (!category || selectedProjectCategories.includes(category)) return;
+  availableCategories.add(category); selectedProjectCategories.push(category);
+  renderSelectedCategories(); updateCategoryOptions([]);
+});
 async function loadProjects() {
   const res = await fetch('/api/projects');
   const projects = res.ok ? await res.json() : [];
@@ -436,6 +479,7 @@ async function loadProjects() {
 }
 function cancelProjectEdit() {
   editingProjectId = null; projectForm.reset();
+  selectedProjectCategories = []; renderSelectedCategories(); updateCategoryOptions([]);
   document.getElementById('projectFormHeading').textContent = 'New Project';
   document.getElementById('projectSubmitBtn').textContent = 'Add project';
   document.getElementById('cancelProjectEditBtn').style.display = 'none';
@@ -443,7 +487,7 @@ function cancelProjectEdit() {
 function startProjectEdit(project) {
   editingProjectId = project.id; projectName.value = project.name; projectSubtitle.value = project.subtitle;
   githubUrl.value = project.github_url || ''; additionalLinks.value = projectArray(project.additional_links).join('\n');
-  projectCategories.value = projectArray(project.categories).join(', ');
+  selectedProjectCategories = projectArray(project.categories); renderSelectedCategories(); updateCategoryOptions([]);
   document.getElementById('projectFormHeading').textContent = 'Edit Project';
   document.getElementById('projectSubmitBtn').textContent = 'Save changes';
   document.getElementById('cancelProjectEditBtn').style.display = 'inline-block';
@@ -454,9 +498,10 @@ projectForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const editing = Boolean(editingProjectId);
   const msg = document.getElementById('projectMsg'); msg.textContent = '';
+  if (!selectedProjectCategories.length) { msg.style.color = '#c0392b'; msg.textContent = 'Choose at least one category.'; return; }
   const res = await fetch(editing ? '/api/projects/' + editingProjectId : '/api/projects', {
     method: editing ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-    body: JSON.stringify({ name: projectName.value.trim(), subtitle: projectSubtitle.value.trim(), githubUrl: githubUrl.value.trim(), additionalLinks: listValues(additionalLinks.value), categories: listValues(projectCategories.value) })
+    body: JSON.stringify({ name: projectName.value.trim(), subtitle: projectSubtitle.value.trim(), githubUrl: githubUrl.value.trim(), additionalLinks: listValues(additionalLinks.value), categories: selectedProjectCategories })
   });
   const data = await res.json();
   if (!res.ok) { msg.style.color = '#c0392b'; msg.textContent = data.error || 'Could not save project'; return; }
