@@ -27,17 +27,6 @@
         <label class="search-label" for="blogSearch">Search posts</label>
         <input id="blogSearch" class="search-input" type="search" placeholder="Title, excerpt, or slug" autocomplete="off">
         <p id="searchEmpty" class="search-empty" hidden>No posts match that search.</p>
-        <div class="blog-terminal" id="fallbackTerminal">
-            <div class="term-bar">
-                <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
-                <span class="term-path">~/blog/README.md</span>
-            </div>
-            <div class="term-body">
-                <span class="prompt">$</span> <span class="out">cat README.md</span><br><br>
-                <span class="out" id="blogTypedLine">Notes, updates, and things I am building.<span class="type-cursor"></span></span>
-            </div>
-        </div>
-
         <div id="postsList" class="posts-list"></div>
         <p class="blog-note" id="blogNote">First real post is coming soon - check back later.</p>
     </div>
@@ -87,11 +76,32 @@
                 card.href = '/blog/post.html?slug=' + encodeURIComponent(p.slug);
                 card.className = 'post-card';
                 card.dataset.search = [p.title, p.excerpt || '', p.slug].join(' ');
-                const date = new Date(p.published_at).toLocaleDateString();
-                card.innerHTML =
-                    '<h3>' + p.title + '</h3>' +
-                    '<p class="post-card-date">' + date + '</p>' +
-                    (p.excerpt ? '<p>' + p.excerpt + '</p>' : '');
+                const bar = document.createElement('div');
+                bar.className = 'post-card-bar';
+                for (let i = 0; i < 3; i++) {
+                    const dot = document.createElement('span');
+                    dot.className = 'term-dot';
+                    bar.appendChild(dot);
+                }
+                const path = document.createElement('span');
+                path.className = 'term-path';
+                path.textContent = '~/blog/' + p.slug + '.md';
+                bar.appendChild(path);
+
+                const body = document.createElement('div');
+                body.className = 'post-card-body';
+                const title = document.createElement('h3');
+                title.textContent = p.title;
+                const date = document.createElement('p');
+                date.className = 'post-card-date';
+                date.textContent = new Date(p.published_at).toLocaleDateString();
+                body.append(title, date);
+                if (p.excerpt) {
+                    const excerpt = document.createElement('p');
+                    excerpt.textContent = p.excerpt;
+                    body.appendChild(excerpt);
+                }
+                card.append(bar, body);
                 list.appendChild(card);
             });
             search.addEventListener('input', filter);
