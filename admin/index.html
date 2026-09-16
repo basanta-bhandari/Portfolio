@@ -4,13 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Dashboard</title>
+<link rel="icon" type="image/png" href="/favicon.png">
 <script src="/theme.js?v=2"></script>
 <script src="/project-categories.js"></script>
 <link rel="stylesheet" href="../blog/styles.css">
 <link rel="stylesheet" href="/theme-toggle.css?v=2">
 <style>
   .admin-wrap {
-    max-width: 900px;
+    max-width: 1180px;
     margin: 0 auto;
     position: relative;
     z-index: 2;
@@ -129,11 +130,91 @@
   .category-chip-list { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
   .category-chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 7px 5px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: .78rem; }
   .category-chip button { padding: 1px 5px; }
+  .humanizer-intro { max-width: 760px; color: var(--muted); line-height: 1.65; margin: -4px 0 24px; }
+  .local-runtime-card { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 1.2fr); gap: 18px; align-items: center; padding: 17px 18px; margin-bottom: 18px; border: 1px solid var(--line); border-radius: 14px; }
+  .local-runtime-title { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; font: 600 .95rem Arial, Helvetica, sans-serif; }
+  .runtime-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); box-shadow: 0 0 0 4px color-mix(in srgb, var(--muted) 14%, transparent); }
+  .runtime-dot[data-state="ready"] { background: #27834b; box-shadow: 0 0 0 4px color-mix(in srgb, #27834b 14%, transparent); }
+  .runtime-dot[data-state="error"] { background: #c0392b; box-shadow: 0 0 0 4px color-mix(in srgb, #c0392b 14%, transparent); }
+  .local-runtime-copy p { margin: 0; color: var(--muted); font-size: .74rem; line-height: 1.55; }
+  .runtime-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .runtime-step { min-width: 0; padding: 10px; border: 1px solid var(--hair); border-radius: 10px; }
+  .runtime-step strong { display: block; margin-bottom: 3px; font-size: .74rem; }
+  .runtime-step span { display: block; color: var(--muted); font-size: .66rem; line-height: 1.4; }
+  .humanizer-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 16px 24px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; margin-bottom: 18px; }
+  .humanizer-control { display: grid; gap: 7px; }
+  .humanizer-control > span { color: var(--muted); font-size: .72rem; letter-spacing: .5px; }
+  .humanizer-control select { min-width: 250px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); color: var(--fg); font: .78rem var(--mono); }
+  .rewrite-levels { display: flex; gap: 6px; }
+  .rewrite-levels input { position: absolute; opacity: 0; pointer-events: none; }
+  .rewrite-levels label { padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .76rem; cursor: pointer; }
+  .rewrite-levels input:checked + label { background: var(--fg); color: var(--bg); }
+  .rough-control { display: flex; align-items: center; gap: 9px; font-size: .78rem; cursor: pointer; padding-bottom: 8px; }
+  .rough-control input { accent-color: var(--fg); }
+  .humanizer-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+  .humanizer-pane { min-width: 0; }
+  .humanizer-pane-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+  .humanizer-pane-head label { font-size: .76rem; letter-spacing: .5px; color: var(--muted); }
+  .humanizer-count { font-size: .68rem; color: var(--muted); }
+  .humanizer-text { min-height: 480px; resize: vertical; line-height: 1.58; }
+  .humanizer-actions { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; margin-top: 16px; }
+  .humanizer-actions button { padding: 10px 16px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--fg); font: .78rem var(--mono); cursor: pointer; }
+  .humanizer-actions button:first-child { background: var(--fg); color: var(--bg); }
+  .humanizer-actions button:disabled { opacity: .45; cursor: not-allowed; }
+  .sample-trainer { padding: 18px; margin: 0 0 18px; border: 1px solid var(--line); border-radius: 14px; background: color-mix(in srgb, var(--bg) 92%, var(--fg)); }
+  .sample-trainer[hidden] { display: none; }
+  .sample-trainer-head { display: flex; align-items: start; justify-content: space-between; gap: 18px; margin-bottom: 14px; }
+  .sample-trainer-head h3 { margin: 0 0 5px; font: 600 1rem Arial, Helvetica, sans-serif; }
+  .sample-trainer-head p { margin: 0; color: var(--muted); font-size: .74rem; line-height: 1.5; }
+  .sample-trainer-head button { padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--fg); font: .72rem var(--mono); cursor: pointer; }
+  .sample-stepper { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-bottom: 15px; }
+  .sample-step { padding: 7px 8px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .68rem; text-align: center; }
+  .sample-step[data-state="active"] { background: var(--fg); color: var(--bg); }
+  .sample-step[data-state="done"] { border-color: #27834b; color: #27834b; }
+  #writingSample { min-height: 180px; resize: vertical; }
+  .sample-analysis { margin: 14px 0 0; padding: 13px; border-left: 3px solid var(--line); white-space: pre-wrap; color: var(--muted); font: .76rem/1.55 var(--mono); }
+  .sample-analysis[hidden], .sample-confirm[hidden] { display: none; }
+  .sample-confirm { margin-top: 14px; }
+  .sample-confirm p { margin: 0 0 9px; font-size: .82rem; }
+  .sample-profile-meta { margin-left: auto; color: var(--muted); font-size: .72rem; }
+  .secondary-danger { color: #c0392b !important; }
+  #humanizerStatus { min-height: 1.4em; margin: 13px 0 0; color: var(--muted); font-size: .78rem; }
+  #humanizerStatus[data-type="error"] { color: #c0392b; }
+  #humanizerStatus[data-type="success"] { color: #27834b; }
+  #modelProgress { width: 100%; height: 7px; margin-top: 10px; accent-color: var(--fg); }
   @media (max-width: 620px) {
     .admin-wrap { padding: 24px 18px 50px; }
     .topbar, .post-row { align-items: flex-start; gap: 12px; flex-direction: column; }
     .post-actions, .project-actions { flex-wrap: wrap; }
     .post-row button, .post-row .download-btn { padding: 8px 10px; }
+    .admin-wrap input[type="text"],
+    .admin-wrap input[type="url"],
+    .admin-wrap textarea,
+    #content,
+    .category-control select { font-size: 16px; }
+    .content-toolbar { flex-wrap: wrap; }
+    .admin-tabs { display: flex; width: 100%; margin-bottom: 24px; }
+    .admin-tabs button { flex: 1; min-width: 0; }
+    .humanizer-grid { grid-template-columns: 1fr; }
+    .humanizer-text { min-height: 330px; }
+    .humanizer-control, .humanizer-control select { width: 100%; }
+    .rewrite-levels { flex-wrap: wrap; }
+    .local-runtime-card { grid-template-columns: 1fr; }
+    .runtime-steps { grid-template-columns: 1fr; }
+    .sample-stepper { grid-template-columns: 1fr 1fr; }
+    .sample-trainer-head { flex-direction: column; }
+    .category-control { align-items: stretch; flex-wrap: wrap; }
+    .category-control select { flex-basis: 100%; }
+    .category-control button { min-height: 42px; }
+    .publish-btn { padding: 12px 16px; }
+    #content { min-height: 360px; }
+  }
+  @media (max-width: 420px) {
+    .admin-wrap { padding-left: 14px; padding-right: 14px; }
+    .topbar h2, .admin-wrap h2 { font-size: 1.35rem; }
+    .post-actions, .project-actions { width: 100%; }
+    .post-actions > *, .project-actions > * { flex: 1 1 auto; text-align: center; }
+    #cancelEditBtn, #cancelProjectEditBtn { margin-left: 0 !important; margin-top: 8px; }
   }
 </style>
 </head>
@@ -159,6 +240,7 @@
 
   <div class="admin-tabs" role="tablist" aria-label="Admin sections">
     <button type="button" role="tab" id="blogTab" aria-controls="blogPanel" aria-selected="true">Blog</button>
+    <button type="button" role="tab" id="humanizerTab" aria-controls="humanizerPanel" aria-selected="false">Humanizer</button>
     <button type="button" role="tab" id="projectsTab" aria-controls="projectsPanel" aria-selected="false">Projects</button>
   </div>
 
@@ -211,6 +293,95 @@ Leave a blank line between paragraphs."></textarea>
   <div id="postsList"></div>
   </section>
 
+  <section class="admin-panel" id="humanizerPanel" role="tabpanel" aria-labelledby="humanizerTab" hidden>
+    <h2>Voice editor</h2>
+    <p class="humanizer-intro">Markdown goes in, Markdown comes out. No account, API key, or usage bill. The writing brain runs on this device and your draft is never sent to an inference server.</p>
+
+    <div class="local-runtime-card">
+      <div class="local-runtime-copy">
+        <div class="local-runtime-title"><span class="runtime-dot" id="runtimeDot"></span><span id="runtimeReadiness">Checking this browser...</span></div>
+        <p id="runtimeDetail">The 3B option needs about 2.3 GB of graphics memory. Choose the lighter model if loading fails.</p>
+      </div>
+      <div class="runtime-steps" aria-label="How the local writing model works">
+        <div class="runtime-step"><strong>1. Pick what fits</strong><span>3B writes better; 1B needs less memory.</span></div>
+        <div class="runtime-step"><strong>2. Load it once</strong><span>Your browser downloads and caches the model.</span></div>
+        <div class="runtime-step"><strong>3. Write privately</strong><span>Drafts and samples stay on this device.</span></div>
+      </div>
+    </div>
+
+    <div class="humanizer-controls">
+      <label class="humanizer-control" for="humanizerModel">
+        <span>WRITING BRAIN (RUNS HERE)</span>
+        <select id="humanizerModel">
+          <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">Llama 3.2 3B · better writing · ~2.3 GB</option>
+          <option value="Llama-3.2-1B-Instruct-q4f16_1-MLC">Llama 3.2 1B · lighter · ~0.9 GB</option>
+        </select>
+      </label>
+
+      <div class="humanizer-control">
+        <span>REWRITE STRENGTH</span>
+        <div class="rewrite-levels">
+          <input type="radio" name="rewriteLevel" id="rewriteLight" value="light"><label for="rewriteLight">Light</label>
+          <input type="radio" name="rewriteLevel" id="rewriteBalanced" value="balanced" checked><label for="rewriteBalanced">Balanced</label>
+          <input type="radio" name="rewriteLevel" id="rewriteStrong" value="strong"><label for="rewriteStrong">Strong</label>
+        </div>
+      </div>
+
+      <label class="rough-control"><input type="checkbox" id="roughEdges" checked> Keep my harmless rough edges</label>
+    </div>
+
+    <section class="sample-trainer" id="sampleTrainer" aria-labelledby="sampleTrainerTitle" hidden>
+      <div class="sample-trainer-head">
+        <div>
+          <h3 id="sampleTrainerTitle">Teach it another sample</h3>
+          <p>Paste something you actually wrote. The local model studies presentation, not the topic, then asks before changing your saved voice profile.</p>
+        </div>
+        <button type="button" class="edit-btn" id="closeSampleTrainer">Close</button>
+      </div>
+      <div class="sample-stepper" aria-label="Sample integration progress">
+        <span class="sample-step" id="sampleStepAdd" data-state="active">1. Add sample</span>
+        <span class="sample-step" id="sampleStepTest">2. Testing...</span>
+        <span class="sample-step" id="sampleStepIntegrate">3. Integrate?</span>
+        <span class="sample-step" id="sampleStepReady">4. Ready!</span>
+      </div>
+      <textarea id="writingSample" maxlength="8000" placeholder="Paste your writing sample in Markdown..."></textarea>
+      <div class="humanizer-actions">
+        <button type="button" id="testSampleBtn">Test sample</button>
+        <span class="humanizer-count" id="writingSampleCount">0 / 8,000 chars</span>
+      </div>
+      <pre class="sample-analysis" id="sampleAnalysis" hidden></pre>
+      <div class="sample-confirm" id="sampleConfirm" hidden>
+        <p>Integrate this sample into the local voice profile?</p>
+        <div class="humanizer-actions">
+          <button type="button" id="integrateSampleBtn">Yes, integrate it</button>
+          <button type="button" id="rejectSampleBtn">No, discard it</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="humanizer-grid">
+      <div class="humanizer-pane">
+        <div class="humanizer-pane-head"><label for="humanizerInput">INPUT.md</label><span class="humanizer-count" id="humanizerInputCount">0 chars</span></div>
+        <textarea class="humanizer-text" id="humanizerInput" spellcheck="true" placeholder="Paste the Markdown you want rewritten..."></textarea>
+      </div>
+      <div class="humanizer-pane">
+        <div class="humanizer-pane-head"><label for="humanizerOutput">OUTPUT.md</label><span class="humanizer-count" id="humanizerOutputCount">0 chars</span></div>
+        <textarea class="humanizer-text" id="humanizerOutput" spellcheck="true" placeholder="Your rewritten Markdown will appear here."></textarea>
+      </div>
+    </div>
+
+    <div class="humanizer-actions">
+      <button type="button" id="humanizeBtn">Rewrite in my voice</button>
+      <button type="button" id="addSampleBtn">+ Add sample</button>
+      <button type="button" id="copyHumanizedBtn" disabled>Copy Markdown</button>
+      <button type="button" id="useInEditorBtn" disabled>Use in blog editor</button>
+      <span class="sample-profile-meta" id="sampleProfileMeta">Base voice profile</span>
+      <button type="button" class="secondary-danger" id="resetVoiceBtn" hidden>Reset learned voice</button>
+    </div>
+    <progress id="modelProgress" max="1" value="0" hidden></progress>
+    <p id="humanizerStatus" role="status" aria-live="polite">Local model is not loaded yet.</p>
+  </section>
+
   <section class="admin-panel project-form" id="projectsPanel" role="tabpanel" aria-labelledby="projectsTab" hidden>
     <h2 id="projectFormHeading">New Project</h2>
     <div class="msg" id="projectMsg"></div>
@@ -223,7 +394,7 @@ Leave a blank line between paragraphs."></textarea>
       <button type="submit" class="publish-btn" id="projectSubmitBtn">Add project</button>
       <button type="button" id="cancelProjectEditBtn" style="display:none; margin-left:8px;" class="publish-btn">Cancel edit</button>
     </form>
-    <h2 style="margin-top:50px;">Existing Added Projects</h2>
+    <h2 style="margin-top:50px;">Projects Added Through Admin</h2>
     <div id="projectsList"></div>
   </section>
 </div>
@@ -243,12 +414,17 @@ checkAuth();
 
 function selectAdminPanel(name) {
   const blog = name === 'blog';
+  const humanizer = name === 'humanizer';
+  const projects = name === 'projects';
   document.getElementById('blogPanel').hidden = !blog;
-  document.getElementById('projectsPanel').hidden = blog;
+  document.getElementById('humanizerPanel').hidden = !humanizer;
+  document.getElementById('projectsPanel').hidden = !projects;
   document.getElementById('blogTab').setAttribute('aria-selected', String(blog));
-  document.getElementById('projectsTab').setAttribute('aria-selected', String(!blog));
+  document.getElementById('humanizerTab').setAttribute('aria-selected', String(humanizer));
+  document.getElementById('projectsTab').setAttribute('aria-selected', String(projects));
 }
 document.getElementById('blogTab').addEventListener('click', () => selectAdminPanel('blog'));
+document.getElementById('humanizerTab').addEventListener('click', () => selectAdminPanel('humanizer'));
 document.getElementById('projectsTab').addEventListener('click', () => selectAdminPanel('projects'));
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
@@ -462,7 +638,7 @@ async function loadProjects() {
   const projects = res.ok ? await res.json() : [];
   updateCategoryOptions(projects);
   const list = document.getElementById('projectsList');
-  list.innerHTML = projects.length ? '' : '<p style="color:var(--muted);">No added projects yet.</p>';
+  list.innerHTML = projects.length ? '' : '<p style="color:var(--muted);">No projects have been added through this admin form yet. Your existing hardcoded projects remain on the public Projects page.</p>';
   projects.forEach(project => {
     const row = document.createElement('div'); row.className = 'post-row';
     const label = document.createElement('span'); label.textContent = project.name + ' ';
@@ -509,5 +685,6 @@ projectForm.addEventListener('submit', async (event) => {
 });
 loadProjects();
 </script>
+<script type="module" src="/admin/humanizer.js"></script>
 </body>
 </html>

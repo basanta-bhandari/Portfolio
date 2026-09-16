@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Post</title>
+<link rel="icon" type="image/png" href="/favicon.png">
 <script src="/theme.js?v=2"></script>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="/theme-toggle.css?v=2">
@@ -80,6 +81,25 @@
 
 @media (max-width: 620px) {
     .post-wrap { padding: 28px 18px 42px; }
+}
+
+@media (max-width: 560px) {
+    .post-wrap { padding: 20px 12px 34px; }
+    .post-terminal { border-width: 1px; border-radius: 20px; }
+    .post-terminal-bar { padding: 10px 13px; }
+    .post-terminal-content { padding: 22px 18px 26px; }
+    .post-terminal .term-path {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .post-wrap h1 { font-size: clamp(1.7rem, 10vw, 2.2rem); }
+    .post-date { margin-bottom: 18px; }
+    .post-content { font-size: .9rem; line-height: 1.72; }
+    .post-content h1,
+    .post-content h2,
+    .post-content h3 { margin-top: 24px; }
 }
 
 </style>

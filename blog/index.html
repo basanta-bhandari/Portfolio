@@ -1,5 +1,10 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
     <script src="/theme.js?v=2"></script>
     <link rel="stylesheet" href="/blog/styles.css">
     <link rel="stylesheet" href="/theme-toggle.css?v=2">
@@ -25,10 +30,14 @@
 
     <div class="blog-shell">
         <label class="search-label" for="blogSearch">Search posts</label>
-        <input id="blogSearch" class="search-input" type="search" placeholder="Title, excerpt, or slug" autocomplete="off">
+        <input id="blogSearch" class="search-input" type="search" placeholder="Title, excerpt, or slug" autocomplete="off" disabled>
+        <div id="blogLoader" class="blog-loader" role="status" aria-live="polite">
+            <span>Loading posts</span>
+            <output id="blogProgress">[::::::::::::] 0%</output>
+        </div>
         <p id="searchEmpty" class="search-empty" hidden>No posts match that search.</p>
         <div id="postsList" class="posts-list"></div>
-        <p class="blog-note" id="blogNote">First real post is coming soon - check back later.</p>
+        <p class="blog-note" id="blogNote" hidden></p>
     </div>
 
     <footer>
@@ -40,16 +49,43 @@
 
     <script>
     async function loadPosts() {
+        const loader = document.getElementById('blogLoader');
+        const progressOutput = document.getElementById('blogProgress');
+        const note = document.getElementById('blogNote');
+        const search = document.getElementById('blogSearch');
+        let progress = 0;
+
+        const drawProgress = value => {
+            progress = Math.max(0, Math.min(100, Math.round(value)));
+            const filled = Math.round(progress / 100 * 12);
+            progressOutput.textContent = '[' + '#'.repeat(filled) + ':'.repeat(12 - filled) + '] ' + progress + '%';
+        };
+
+        const progressTimer = setInterval(() => {
+            const step = Math.max(1, Math.ceil((92 - progress) / 10));
+            drawProgress(Math.min(92, progress + step));
+        }, 140);
+
+        const finishLoading = async () => {
+            clearInterval(progressTimer);
+            drawProgress(100);
+            await new Promise(resolve => setTimeout(resolve, 180));
+            loader.hidden = true;
+        };
+
         try {
             const res = await fetch('/api/posts');
-            if (!res.ok) return; // leave the fallback terminal showing
+            if (!res.ok) throw new Error('Post request failed');
             const posts = await res.json();
-            if (!posts.length) return;
-
-            document.getElementById('blogNote').style.display = 'none';
+            await finishLoading();
+            search.disabled = false;
+            if (!posts.length) {
+                note.textContent = 'No posts yet.';
+                note.hidden = false;
+                return;
+            }
 
             const list = document.getElementById('postsList');
-            const search = document.getElementById('blogSearch');
             const empty = document.getElementById('searchEmpty');
             const fuzzyMatch = (query, value) => {
                 const words = value.toLowerCase().match(/[\p{L}\p{N}]+/gu) || [];
@@ -106,7 +142,9 @@
             });
             search.addEventListener('input', filter);
         } catch {
-            // API/DB not set up yet (e.g. local static preview) - fallback stays visible
+            await finishLoading();
+            note.textContent = 'Could not load posts. Please try again.';
+            note.hidden = false;
         }
     }
     loadPosts();
