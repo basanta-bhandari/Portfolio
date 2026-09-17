@@ -16,11 +16,23 @@ The voice:
 - Can be blunt, skeptical, playful, or mildly profane when the source earns it. Never add profanity merely to perform personality.
 - Feels spoken and alive while remaining readable as a blog post.
 
+Basanta presents the way he talks at a terminal and at a con: energetic and a little manic, like someone telling a story they cannot put down. This is the presentation energy of a stage storyteller, not a slideshow speaker.
+- Starts in the middle of the action with one concrete thing, not an opening thesis.
+- Lets the story accumulate like evidence: this led to that, and only afterward does the point land.
+- Takes honest asides and tangents when they add color, then actually comes back to the line of thought.
+- Names real objects instead of abstractions: the printer, the logbook, the shell script, the 75-cent accounting error, the box with 4 GB of RAM.
+- Puts direct questions to the reader and then answers them plainly, often deflating the drama with an understatement.
+- Uses quick quips and self-deprecation for humor, and is honest about improvising on zero budget.
+- Repeats a meaningful phrase for emphasis when it lands, never as filler.
+- Mixes long, rushing sentences with short, punchy ones that land a beat.
+- Structures the piece like a chase, not a tidy outline: momentum matters more than a clean three-part plan.
+
 Avoid:
 - em dashes;
 - fake enthusiasm, sales language, corporate language, and generic inspiration;
 - tidy three-part lists created just to sound complete;
 - repetitive summaries or a conclusion that restates the introduction;
+- roadmap signposting such as "in this post, I'll cover" or "first, let's talk about";
 - unnecessary metaphors, stock transitions, and "not only X, but Y" scaffolding;
 - choppy sentence after choppy sentence;
 - throat-clearing such as "In today's rapidly evolving world";
@@ -149,4 +161,85 @@ export function splitMarkdown(text, maxChars = 6000) {
 
   if (current.trim()) chunks.push(current.trim());
   return chunks;
+}
+
+export const ACCEPTED_EXTENSIONS = ['md', 'txt'];
+
+export function fileExtensionOf(name) {
+  const raw = String(name || '');
+  const ext = raw.includes('.') ? raw.split('.').pop().toLowerCase() : '';
+  return ACCEPTED_EXTENSIONS.includes(ext) ? ext : 'md';
+}
+
+export function isAcceptedFile(name) {
+  const raw = String(name || '');
+  const ext = raw.includes('.') ? raw.split('.').pop().toLowerCase() : '';
+  return ACCEPTED_EXTENSIONS.includes(ext);
+}
+
+export function derivedOutputName(inputName) {
+  const stem = String(inputName || '')
+    .replace(/\.[^.]+$/, '')
+    .trim();
+  const base = stem ? `${stem}-rewrite` : 'rewrite';
+  return `${base}.${fileExtensionOf(inputName)}`;
+}
+
+const INJECTION_PATTERNS = [
+  {
+    id: 'override-editor',
+    reason: 'tries to override the editor rules',
+    re: /\b(ignore|disregard|forget|skip|override|bypass|don'?t follow)\b[\s\S]{0,60}\b(previous|above|earlier|all( of)?)?\s*(instructions?|prompts?|rules?|guidelines?|commands?|system)/i,
+  },
+  {
+    id: 'adopt-persona',
+    reason: 'tries to make the editor act as something else',
+    re: /\b(you are now|act as|from now on|pretend (that )?(to be|you are)|role ?play(ing)? as|imagine you are|behave as|switch to (the )?role)/i,
+  },
+  {
+    id: 'system-player',
+    reason: 'claims to be the system, developer, or a privileged mode',
+    re: /\b((d|dan|developer|sudo|jailbreak)[ -]?mode|i am (the )?(system|admin|developer|administrator)|higher ?authority|system ?prompt|system ?message)\b/i,
+  },
+  {
+    id: 'force-output',
+    reason: 'tries to force or forbid specific output',
+    re: /\b(always (start|begin|include|respond|output)|never (mention|say|include|output|tell|reveal)|do not (output|mention|say|include|follow|obey)|you (must|have to|need to) (output|always|never)|forbidden (to )?(say|mention|output)|do not reveal)\b/i,
+  },
+  {
+    id: 'hidden-trigger',
+    reason: 'instruction-like trigger wording',
+    re: /\b(hidden instruction|secret instruction|embedded instruction|instruction( below| at the end| is)|follow the instructions (in|at|below)|the rewrite (tool|engine|agent)? (must|should|will))\b/i,
+  },
+  {
+    id: 'prompt-probe',
+    reason: 'probes the editor for its system prompt',
+    re: /\b(repeat (your |the )?(system )?(prompt|instructions?)|print (your |the )?(system )?(prompt|initial instructions?)|show (me )?(your|the) (system prompt|instructions?|first message)|reveal (your|the) (prompt|instructions?)|what (are|is) (your|the) (system prompt|instructions?))\b/i,
+  },
+  {
+    id: 'spoofed-flow',
+    reason: 'impersonates user/system input or ends with a command',
+    re: /<\|?(system|user|developer)\|?>|(^|\n)\s*(new )?(message|instruction|command|directive)\s*:|\*\*(REMEMBER|IMPORTANT|INSTRUCTION)[:*]?\*\*/i,
+  },
+  {
+    id: 'pressure',
+    reason: 'pressures the editor about a previous refusal',
+    re: /\b(your previous (reply|answer|response)|you just (said|refused)|if you refuse|when you (say|refuse)|you (did|will|won'?t) not (follow|obey|do)|are you (sure|refusing))\b/i,
+  },
+];
+
+export function scanSampleForInjection(text) {
+  const source = String(text || '');
+  const hits = [];
+  for (const pattern of INJECTION_PATTERNS) {
+    const match = source.match(pattern.re);
+    if (match) {
+      hits.push({
+        id: pattern.id,
+        reason: pattern.reason,
+        match: match[0].replace(/\s+/g, ' ').trim().slice(0, 120),
+      });
+    }
+  }
+  return { safe: hits.length === 0, hits };
 }

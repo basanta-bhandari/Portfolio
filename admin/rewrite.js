@@ -7,36 +7,54 @@ import {
   restoreMarkdown,
   splitMarkdown,
   stripResponseWrapper,
-} from './humanizer-prompt.js';
+  scanSampleForInjection,
+  isAcceptedFile,
+  fileExtensionOf,
+  derivedOutputName,
+} from './rewrite-prompt.js';
 
-const input = document.getElementById('humanizerInput');
-const output = document.getElementById('humanizerOutput');
-const runButton = document.getElementById('humanizeBtn');
-const copyButton = document.getElementById('copyHumanizedBtn');
+const input = document.getElementById('rewriteInput');
+const output = document.getElementById('rewriteOutput');
+const runButton = document.getElementById('rewriteBtn');
+const copyButton = document.getElementById('copyRewriteBtn');
 const editorButton = document.getElementById('useInEditorBtn');
-const status = document.getElementById('humanizerStatus');
+const downloadButton = document.getElementById('downloadRewriteBtn');
+const status = document.getElementById('rewriteStatus');
 const progress = document.getElementById('modelProgress');
-const modelSelect = document.getElementById('humanizerModel');
+const modelSelect = document.getElementById('rewriteModel');
 const roughEdges = document.getElementById('roughEdges');
 const sampleTrainer = document.getElementById('sampleTrainer');
 const writingSample = document.getElementById('writingSample');
 const sampleAnalysis = document.getElementById('sampleAnalysis');
 const sampleConfirm = document.getElementById('sampleConfirm');
+const samplePostIntegrate = document.getElementById('samplePostIntegrate');
 const testSampleButton = document.getElementById('testSampleBtn');
 const integrateSampleButton = document.getElementById('integrateSampleBtn');
+const restartAgentButton = document.getElementById('restartAgentBtn');
+const recalibrateAgentButton = document.getElementById('recalibrateAgentBtn');
 const profileMeta = document.getElementById('sampleProfileMeta');
 const resetVoiceButton = document.getElementById('resetVoiceBtn');
 const runtimeDot = document.getElementById('runtimeDot');
 const runtimeReadiness = document.getElementById('runtimeReadiness');
 const runtimeDetail = document.getElementById('runtimeDetail');
+const rewriteFile = document.getElementById('rewriteFile');
+const rewriteFileBtn = document.getElementById('rewriteFileBtn');
+const rewriteDrop = document.getElementById('rewriteDrop');
+const rewriteFileChip = document.getElementById('rewriteFileChip');
+const sampleFile = document.getElementById('sampleFile');
+const sampleFileBtn = document.getElementById('sampleFileBtn');
+const sampleFileChip = document.getElementById('sampleFileChip');
 
-const PROFILE_STORAGE_KEY = 'basanta-humanizer-voice-profile-v1';
+const PROFILE_STORAGE_KEY = 'basanta-rewrite-voice-profile-v1';
 
 let engine = null;
 let loadedModel = null;
+let activeWorker = null;
 let running = false;
 let sampleRunning = false;
 let pendingSampleAnalysis = '';
+let activeInputName = '';
+let activeInputExt = 'md';
 let learnedProfile = readLearnedProfile();
 
 function readLearnedProfile() {
@@ -71,8 +89,8 @@ function setStatus(message, type = '') {
 }
 
 function updateCounts() {
-  document.getElementById('humanizerInputCount').textContent = `${input.value.length.toLocaleString()} chars`;
-  document.getElementById('humanizerOutputCount').textContent = `${output.value.length.toLocaleString()} chars`;
+  document.getElementById('rewriteInputCount').textContent = `${input.value.length.toLocaleString()} chars`;
+  document.getElementById('rewriteOutputCount').textContent = `${output.value.length.toLocaleString()} chars`;
 }
 
 function updateSampleCount() {
@@ -95,15 +113,21 @@ function resetSampleTrainer() {
   writingSample.value = '';
   writingSample.disabled = false;
   pendingSampleAnalysis = '';
+  delete sampleAnalysis.dataset.type;
   sampleAnalysis.textContent = '';
   sampleAnalysis.hidden = true;
   sampleConfirm.hidden = true;
+  samplePostIntegrate.hidden = true;
+  sampleFile.value = '';
+  sampleFileChip.hidden = true;
+  sampleFileBtn.hidden = false;
   testSampleButton.hidden = false;
   testSampleButton.disabled = false;
   testSampleButton.textContent = 'Test sample';
   integrateSampleButton.disabled = false;
+  integrateSampleButton.textContent = 'Yes, integrate it';
   document.getElementById('rejectSampleBtn').disabled = false;
-  document.getElementById('sampleStepIntegrate').textContent = '3. Integrate?';
+  document.getElementById('sampleStepIntegrate').textContent = '3. Passes safety checks, Integrate?';
   setSampleStep(1);
   updateSampleCount();
 }
@@ -146,7 +170,8 @@ async function getEngine() {
   progress.hidden = false;
   progress.value = 0;
 
-  const worker = new Worker(new URL('./humanizer-worker.js', import.meta.url), { type: 'module' });
+  const worker = new Worker(new URL('./rewrite-worker.js', import.meta.url), { type: 'module' });
+  activeWorker = worker;
   engine = await CreateWebWorkerMLCEngine(worker, requestedModel, {
     initProgressCallback: (report) => {
       const amount = Number(report.progress || 0);
@@ -197,8 +222,28 @@ async function testWritingSample() {
   setSampleStep(2, 1);
 
   try {
+    setStatus('Running safety checks...');
+    const safety = scanSampleForInjection(sample);
+    if (!safety.safe) {
+      pendingSampleAnalysis = '';
+      document.getElementById('sampleStepIntegrate').textContent = '3. Blocked';
+      setSampleStep(3, 2);
+      sampleAnalysis.dataset.type = 'blocked';
+      sampleAnalysis.textContent =
+        'Did not pass safety checks. This sample looks like prompt injection, so it was not integrated.\n\n' +
+        safety.hits.map((hit, index) => `${index + 1}. ${hit.reason}${hit.match ? `: "${hit.match}"` : ''}`).join('\n');
+      sampleAnalysis.hidden = false;
+      sampleConfirm.hidden = true;
+      testSampleButton.hidden = false;
+      testSampleButton.disabled = false;
+      testSampleButton.textContent = 'Test again';
+      writingSample.disabled = false;
+      setStatus('Sample flagged: it looks like prompt injection. Nothing was integrated.', 'error');
+      return;
+    }
+
     const localEngine = await getEngine();
-    setStatus('Testing the sample for reusable presentation traits...');
+    setStatus('Safety checks passed. Studying the sample for reusable presentation traits...');
     const response = await localEngine.chat.completions.create({
       messages: [
         {
@@ -214,17 +259,19 @@ async function testWritingSample() {
 
     pendingSampleAnalysis = stripResponseWrapper(response.choices[0]?.message?.content || '');
     if (!pendingSampleAnalysis) throw new Error('The local model did not return a style analysis.');
+    delete sampleAnalysis.dataset.type;
     sampleAnalysis.textContent = pendingSampleAnalysis;
     sampleAnalysis.hidden = false;
     sampleConfirm.hidden = false;
     testSampleButton.hidden = true;
     setSampleStep(3, 2);
-    setStatus('Sample tested. Review the traits, then choose whether to integrate them.', 'success');
+    setStatus('Passes safety checks. Review the traits, then choose whether to integrate them.', 'success');
   } catch (error) {
     console.error(error);
     writingSample.disabled = false;
     testSampleButton.disabled = false;
     testSampleButton.textContent = 'Test sample';
+    delete sampleAnalysis.dataset.type;
     setSampleStep(1);
     setStatus(error?.message || 'The sample could not be tested.', 'error');
   } finally {
@@ -238,8 +285,8 @@ async function integrateWritingSample() {
   integrateSampleButton.disabled = true;
   document.getElementById('rejectSampleBtn').disabled = true;
   setSampleStep(3, 2);
-  document.getElementById('sampleStepIntegrate').textContent = '3. Reworking...';
-  setStatus('Reworking the local voice profile with the approved sample...');
+  document.getElementById('sampleStepIntegrate').textContent = '3. Integrating...';
+  setStatus('Integrating the approved sample into the agent\'s voice...');
 
   try {
     const localEngine = await getEngine();
@@ -267,12 +314,13 @@ async function integrateWritingSample() {
     sampleAnalysis.textContent = mergedProfile;
     document.getElementById('sampleStepIntegrate').textContent = '3. Integrated';
     setSampleStep(4, 3);
-    setStatus('Ready! The approved sample now influences future rewrites.', 'success');
+    samplePostIntegrate.hidden = false;
+    setStatus('Done! The approved sample is now part of the agent\'s voice.', 'success');
   } catch (error) {
     console.error(error);
     integrateSampleButton.disabled = false;
     document.getElementById('rejectSampleBtn').disabled = false;
-    document.getElementById('sampleStepIntegrate').textContent = '3. Integrate?';
+    document.getElementById('sampleStepIntegrate').textContent = '3. Passes safety checks, Integrate?';
     setSampleStep(3, 2);
     setStatus(error?.message || 'The voice profile could not be rebuilt.', 'error');
   } finally {
@@ -280,10 +328,10 @@ async function integrateWritingSample() {
   }
 }
 
-async function humanize() {
+async function rewrite() {
   const markdown = input.value.trim();
   if (!markdown) {
-    setStatus('Paste some Markdown first.', 'error');
+    setStatus('Paste some Markdown or plain text first.', 'error');
     input.focus();
     return;
   }
@@ -293,6 +341,7 @@ async function humanize() {
   runButton.disabled = true;
   copyButton.disabled = true;
   editorButton.disabled = true;
+  downloadButton.disabled = true;
   output.value = '';
   updateCounts();
 
@@ -310,8 +359,10 @@ async function humanize() {
 
     output.value = restoreMarkdown(rewritten.join('\n\n'), protectedMarkdown.values);
     updateCounts();
+    updateOutputExt();
     copyButton.disabled = false;
     editorButton.disabled = false;
+    downloadButton.disabled = false;
     setStatus('Done. Read it before publishing; the tool edits voice, not truth.', 'success');
   } catch (error) {
     console.error(error);
@@ -322,7 +373,126 @@ async function humanize() {
   }
 }
 
-runButton.addEventListener('click', humanize);
+function updateOutputExt() {
+  document.getElementById('rewriteInputExt').textContent = `.${activeInputExt}`;
+  document.getElementById('rewriteOutputExt').textContent = `.${activeInputExt}`;
+  downloadButton.textContent = activeInputExt === 'txt' ? 'Download .txt' : 'Download .md';
+}
+
+function renderInputFileChip(name) {
+  rewriteFileChip.replaceChildren();
+  if (!name) {
+    rewriteFileChip.hidden = true;
+    return;
+  }
+  rewriteFileChip.hidden = false;
+  const text = document.createElement('span');
+  text.textContent = name;
+  const clear = document.createElement('button');
+  clear.type = 'button';
+  clear.textContent = 'x';
+  clear.setAttribute('aria-label', 'Clear loaded file');
+  clear.addEventListener('click', () => {
+    activeInputName = '';
+    activeInputExt = 'md';
+    rewriteFile.value = '';
+    renderInputFileChip();
+    updateOutputExt();
+  });
+  rewriteFileChip.append(text, clear);
+}
+
+function setInputFile(file) {
+  if (!file) return;
+  if (!isAcceptedFile(file.name)) {
+    setStatus('Only .md and .txt files are accepted.', 'error');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    input.value = String(reader.result || '');
+    activeInputName = file.name;
+    activeInputExt = fileExtensionOf(file.name);
+    renderInputFileChip(file.name);
+    updateOutputExt();
+    output.value = '';
+    copyButton.disabled = true;
+    editorButton.disabled = true;
+    downloadButton.disabled = true;
+    updateCounts();
+    setStatus(`Loaded ${file.name}. Nothing is rewritten until you ask.`, 'success');
+  };
+  reader.onerror = () => setStatus('The file could not be read.', 'error');
+  reader.readAsText(file);
+}
+
+function downloadOutput() {
+  if (!output.value.trim()) {
+    setStatus('Nothing to download yet.', 'error');
+    return;
+  }
+  const name = derivedOutputName(activeInputName);
+  const mime = activeInputExt === 'txt' ? 'text/plain' : 'text/markdown';
+  const blob = new Blob([output.value], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = name;
+  anchor.click();
+  URL.revokeObjectURL(url);
+  setStatus(`Saved ${name}.`, 'success');
+}
+
+function setSampleFile(file) {
+  if (!file) return;
+  if (!isAcceptedFile(file.name)) {
+    setStatus('Only .md and .txt files are accepted for samples.', 'error');
+    return;
+  }
+  if (sampleRunning) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    writingSample.value = String(reader.result || '');
+    sampleFileChip.hidden = false;
+    sampleFileChip.textContent = `Sample: ${file.name}`;
+    updateSampleCount();
+    setStatus(`Sample loaded from ${file.name}. Now test it.`, 'success');
+  };
+  reader.onerror = () => setStatus('The sample file could not be read.', 'error');
+  reader.readAsText(file);
+}
+
+async function restartAgent() {
+  if (running || sampleRunning) return;
+  sampleRunning = true;
+  sampleTrainer.hidden = true;
+  samplePostIntegrate.hidden = true;
+  setStatus('Restarting the writing brain to pick up the updated voice...');
+  try {
+    activeWorker?.terminate();
+    activeWorker = null;
+    engine = null;
+    loadedModel = null;
+    await getEngine();
+    setStatus('Done! Agent restarted with the updated voice profile.', 'success');
+  } catch (error) {
+    console.error(error);
+    setStatus(error?.message || 'The agent could not be restarted.', 'error');
+  } finally {
+    sampleRunning = false;
+  }
+}
+
+function recalibrateAgent() {
+  if (sampleRunning) return;
+  resetSampleTrainer();
+  sampleTrainer.hidden = false;
+  sampleTrainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  writingSample.focus();
+  setStatus('Calibrating again. Add another sample to sharpen the voice.', 'success');
+}
+
+runButton.addEventListener('click', rewrite);
 input.addEventListener('input', updateCounts);
 output.addEventListener('input', updateCounts);
 
@@ -371,6 +541,36 @@ resetVoiceButton.addEventListener('click', () => {
   updateProfileMeta();
   setStatus('Learned samples removed. The base voice profile is still active.', 'success');
 });
+rewriteFileBtn.addEventListener('click', () => rewriteFile.click());
+rewriteFile.addEventListener('change', () => {
+  const file = rewriteFile.files[0];
+  rewriteFile.value = '';
+  setInputFile(file);
+});
+['dragover', 'dragenter'].forEach((eventName) => {
+  rewriteDrop.addEventListener(eventName, (event) => {
+    event.preventDefault();
+    rewriteDrop.dataset.dragging = 'true';
+  });
+});
+['dragleave', 'dragend', 'drop'].forEach((eventName) => {
+  rewriteDrop.addEventListener(eventName, () => {
+    rewriteDrop.dataset.dragging = 'false';
+  });
+});
+rewriteDrop.addEventListener('drop', (event) => {
+  event.preventDefault();
+  setInputFile(event.dataTransfer?.files?.[0] || null);
+});
+downloadButton.addEventListener('click', downloadOutput);
+sampleFileBtn.addEventListener('click', () => sampleFile.click());
+sampleFile.addEventListener('change', () => {
+  const file = sampleFile.files[0];
+  sampleFile.value = '';
+  setSampleFile(file);
+});
+restartAgentButton.addEventListener('click', restartAgent);
+recalibrateAgentButton.addEventListener('click', recalibrateAgent);
 updateProfileMeta();
 updateSampleCount();
 updateCounts();
