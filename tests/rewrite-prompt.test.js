@@ -11,7 +11,15 @@ import {
   isAcceptedFile,
   fileExtensionOf,
   derivedOutputName,
+  DEFAULT_CPU_MODEL,
+  CPU_MODEL_OPTIONS,
 } from '../admin/rewrite-prompt.js';
+
+test('exposes a CPU fallback model for browsers without WebGPU', () => {
+  assert.ok(DEFAULT_CPU_MODEL.includes('ONNX'));
+  assert.ok(CPU_MODEL_OPTIONS.length > 0);
+  assert.ok(CPU_MODEL_OPTIONS.some((option) => option.value === DEFAULT_CPU_MODEL));
+});
 
 test('protects and restores Markdown that must not be rewritten', () => {
   const source = 'Read [the docs](https://example.com/docs) and run `cargo test`.\n\n```rust\nfn main() {}\n```';

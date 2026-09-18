@@ -1,5 +1,12 @@
 export const DEFAULT_MODEL = 'Llama-3.2-3B-Instruct-q4f16_1-MLC';
 
+export const DEFAULT_CPU_MODEL = 'onnx-community/Llama-3.2-1B-Instruct-ONNX';
+
+export const CPU_MODEL_OPTIONS = [
+  { value: 'onnx-community/Llama-3.2-3B-Instruct-ONNX', label: 'Llama 3.2 3B · CPU · ~1.9 GB · slower' },
+  { value: DEFAULT_CPU_MODEL, label: 'Llama 3.2 1B · CPU · ~0.7 GB · recommended' },
+];
+
 export const VOICE_PROFILE = `
 Write in Basanta's personal blog voice.
 

@@ -1,6 +1,8 @@
 import { CreateWebWorkerMLCEngine } from 'https://esm.run/@mlc-ai/web-llm@0.2.85';
 import {
   DEFAULT_MODEL,
+  DEFAULT_CPU_MODEL,
+  CPU_MODEL_OPTIONS,
   VOICE_PROFILE,
   buildMessages,
   protectMarkdown,
@@ -56,6 +58,11 @@ let pendingSampleAnalysis = '';
 let activeInputName = '';
 let activeInputExt = 'md';
 let learnedProfile = readLearnedProfile();
+let backend = 'cpu';
+let cpuWorker = null;
+let cpuReady = null;
+let cpuRequestSeq = 0;
+const cpuPending = new Map();
 
 function readLearnedProfile() {
   try {
@@ -132,25 +139,136 @@ function resetSampleTrainer() {
   updateSampleCount();
 }
 
+function browserFamily() {
+  const ua = navigator.userAgent || '';
+  if (/Firefox\//.test(ua)) return 'gecko';
+  if (/Edg\//.test(ua) || /Chrome\//.test(ua) || /Chromium\//.test(ua)) return 'chromium';
+  if (/Safari\//.test(ua)) return 'webkit';
+  return 'other';
+}
+
+function gpuUnavailableDetail(family) {
+  switch (family) {
+    case 'gecko':
+      return 'Firefox ships WebGPU enabled on Windows (141+) and Apple Silicon Mac (147+). On Linux or older builds, open about:config, set dom.webgpu.enabled (and gfx.webgpu.ignore-blocklist if needed) to true, then restart Firefox. Without a working WebGPU adapter the model cannot load in this browser.';
+    case 'chromium':
+      return 'Chrome is not exposing a usable GPU. Open chrome://gpu and confirm WebGPU and hardware acceleration are active; install the GPU driver; on a laptop with an NVIDIA MX230, force Chrome onto it (Windows Settings > System > Display > Graphics > Chrome > High performance).';
+    case 'webkit':
+      return 'Safari needs macOS 26+ to expose WebGPU; older systems cannot load the in-browser model.';
+    default:
+      return 'This browser does not expose a usable GPU for in-browser inference. A current Chrome, Edge, or recent Firefox is required.';
+  }
+}
+
+async function detectWebGPU() {
+  const support = { family: browserFamily(), api: 'gpu' in navigator, adapter: null, f16: false };
+  if (support.api) {
+    try {
+      support.adapter = await navigator.gpu.requestAdapter();
+    } catch {
+      support.adapter = null;
+    }
+  }
+  if (support.adapter) {
+    support.f16 = Boolean(support.adapter.features?.has('shader-f16'));
+  }
+  return support;
+}
+
 async function checkLocalRuntime() {
-  if (!('gpu' in navigator)) {
-    runtimeDot.dataset.state = 'error';
-    runtimeReadiness.textContent = 'Local AI is unavailable here';
-    runtimeDetail.textContent = 'Open this page in a current Chrome or Edge browser with hardware acceleration enabled.';
+  const support = await detectWebGPU();
+
+  if (!support.api || !support.adapter || !support.f16) {
+    backend = 'cpu';
+    runtimeDot.dataset.state = 'ready';
+    runtimeReadiness.textContent = 'GPU not found';
+    runtimeDetail.textContent =
+      (support.adapter && !support.f16
+        ? support.family === 'gecko'
+          ? 'A GPU adapter exists, but it lacks shader-f16, which the WebGPU model requires. '
+          : 'The detected adapter lacks shader-f16, which the WebGPU model requires. '
+        : '') +
+      gpuUnavailableDetail(support.family) +
+      ' The writing brain will use the CPU fallback: slower, but it works in any browser, Firefox included.';
+    configureModelSelectForCpu();
     return;
   }
 
-  try {
-    const adapter = await navigator.gpu.requestAdapter();
-    if (!adapter) throw new Error('No graphics adapter');
-    runtimeDot.dataset.state = 'ready';
-    runtimeReadiness.textContent = 'This browser can run the writing brain';
-    runtimeDetail.textContent = 'Start a rewrite or test a sample to load it. The 3B model uses about 2.3 GB of graphics memory; switch to 1B if it does not fit.';
-  } catch {
-    runtimeDot.dataset.state = 'error';
-    runtimeReadiness.textContent = 'No usable graphics device found';
-    runtimeDetail.textContent = 'Try enabling browser hardware acceleration, or open the page in a current Chrome or Edge browser.';
+  backend = 'gpu';
+  runtimeDot.dataset.state = 'ready';
+  runtimeReadiness.textContent = 'This browser can run the writing brain';
+  runtimeDetail.textContent = 'Start a rewrite or test a sample to load it. The 3B model uses about 2.3 GB of graphics memory; switch to 1B if it does not fit.';
+}
+
+function configureModelSelectForCpu() {
+  modelSelect.replaceChildren();
+  for (const option of CPU_MODEL_OPTIONS) {
+    const el = document.createElement('option');
+    el.value = option.value;
+    el.textContent = option.label;
+    modelSelect.append(el);
   }
+  modelSelect.value = DEFAULT_CPU_MODEL;
+}
+
+function cpuRequest(type, payload) {
+  return new Promise((resolve, reject) => {
+    const id = ++cpuRequestSeq;
+    cpuPending.set(id, { resolve, reject });
+    cpuWorker.postMessage({ id, type, ...payload });
+  });
+}
+
+async function createCpuEngine() {
+  if (cpuReady) return cpuReady;
+
+  cpuWorker = new Worker(new URL('./rewrite-cpu-worker.js', import.meta.url), { type: 'module' });
+  cpuWorker.onmessage = (event) => {
+    const message = event.data || {};
+    if (message.type === 'progress') {
+      if (typeof message.progress === 'number') {
+        progress.hidden = false;
+        progress.value = Math.max(0, Math.min(1, message.progress));
+      }
+      if (message.text) setStatus(message.text);
+      return;
+    }
+    const pending = cpuPending.get(message.id);
+    if (!pending) return;
+    cpuPending.delete(message.id);
+    if (message.ok === false) pending.reject(new Error(message.error || 'The CPU fallback model failed.'));
+    else pending.resolve(message);
+  };
+
+  setStatus('Loading the CPU fallback brain. First download is about 0.7 GB; later loads use the browser cache.');
+  progress.hidden = false;
+  progress.value = 0;
+  await cpuRequest('load', { model: modelSelect.value || DEFAULT_CPU_MODEL });
+  progress.hidden = true;
+
+  cpuReady = {
+    chat: {
+      completions: {
+        create: async (request) => {
+          const reply = await cpuRequest('generate', {
+            messages: request.messages,
+            options: {
+              temperature: request.temperature,
+              top_p: request.top_p,
+              repetition_penalty: request.repetition_penalty,
+              max_tokens: request.max_tokens,
+            },
+          });
+          return { choices: [{ message: { content: reply.text } }] };
+        },
+      },
+    },
+  };
+  runtimeDot.dataset.state = 'ready';
+  runtimeReadiness.textContent = 'Writing brain ready (CPU mode)';
+  runtimeDetail.textContent = 'The model is cached in this browser. Rewrites run on the CPU: slower, but no GPU is needed.';
+  setStatus('Model ready. Everything runs in this browser.', 'success');
+  return cpuReady;
 }
 
 function selectedLevel() {
@@ -158,8 +276,17 @@ function selectedLevel() {
 }
 
 async function getEngine() {
+  if (backend === 'cpu') return createCpuEngine();
+
   if (!('gpu' in navigator)) {
-    throw new Error('This browser does not expose WebGPU. Use a current Chrome, Edge, or another WebGPU-enabled browser.');
+    throw new Error(`GPU not found. ${gpuUnavailableDetail(browserFamily())}`);
+  }
+  const adapter = await navigator.gpu.requestAdapter().catch(() => null);
+  if (!adapter) {
+    throw new Error(`GPU not found. ${gpuUnavailableDetail(browserFamily())}`);
+  }
+  if (!adapter.features?.has('shader-f16')) {
+    throw new Error('GPU not found for this model: the detected adapter lacks shader-f16, which this quantized model needs.');
   }
 
   const requestedModel = modelSelect.value || DEFAULT_MODEL;
@@ -469,10 +596,16 @@ async function restartAgent() {
   samplePostIntegrate.hidden = true;
   setStatus('Restarting the writing brain to pick up the updated voice...');
   try {
-    activeWorker?.terminate();
-    activeWorker = null;
-    engine = null;
-    loadedModel = null;
+activeWorker?.terminate();
+  activeWorker = null;
+  if (cpuWorker) {
+    cpuWorker.terminate();
+    cpuWorker = null;
+  }
+  cpuReady = null;
+  cpuPending.clear();
+  engine = null;
+  loadedModel = null;
     await getEngine();
     setStatus('Done! Agent restarted with the updated voice profile.', 'success');
   } catch (error) {
