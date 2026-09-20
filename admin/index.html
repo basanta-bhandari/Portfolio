@@ -27,8 +27,11 @@
     z-index: 2;
     padding: 40px 20px 70px;
   }
+  body > .topnav { display: none; }
   .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
   .topbar h2 { font-family: Arial, Helvetica, sans-serif; margin: 0; }
+  .topbar-actions { display: flex; align-items: center; gap: 10px; }
+  .topbar-actions a { padding: 8px 13px; border: 1px solid var(--line); border-radius: 8px; color: var(--fg); font: .75rem var(--mono); text-decoration: none; }
   #logoutBtn {
     background: var(--muted);
     color: #fff;
@@ -140,33 +143,40 @@
   .category-chip-list { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
   .category-chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 7px 5px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: .78rem; }
   .category-chip button { padding: 1px 5px; }
-  .rewrite-intro { max-width: 760px; color: var(--muted); line-height: 1.65; margin: -4px 0 24px; }
-  .local-runtime-card { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 1.2fr); gap: 18px; align-items: center; padding: 17px 18px; margin-bottom: 18px; border: 1px solid var(--line); border-radius: 14px; }
+  .rewrite-header { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 18px; }
+  .rewrite-header h2 { margin: 0 0 6px; }
+  .rewrite-intro { max-width: 680px; color: var(--muted); line-height: 1.55; margin: 0; }
+  .profile-summary { display: grid; justify-items: end; gap: 8px; flex: 0 0 auto; }
+  .profile-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+  .profile-actions button { padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--fg); font: .68rem var(--mono); cursor: pointer; }
+  .profile-actions button:hover { background: var(--fg); color: var(--bg); }
+  .local-runtime-card { display: flex; justify-content: space-between; gap: 18px; align-items: center; padding: 12px 14px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 12px; background: color-mix(in srgb, var(--bg) 92%, var(--fg)); }
   .local-runtime-title { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; font: 600 .95rem Arial, Helvetica, sans-serif; }
   .runtime-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); box-shadow: 0 0 0 4px color-mix(in srgb, var(--muted) 14%, transparent); }
   .runtime-dot[data-state="ready"] { background: #27834b; box-shadow: 0 0 0 4px color-mix(in srgb, #27834b 14%, transparent); }
   .runtime-dot[data-state="error"] { background: #c0392b; box-shadow: 0 0 0 4px color-mix(in srgb, #c0392b 14%, transparent); }
   .local-runtime-copy p { margin: 0; color: var(--muted); font-size: .74rem; line-height: 1.55; }
-  .runtime-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .runtime-step { min-width: 0; padding: 10px; border: 1px solid var(--hair); border-radius: 10px; }
-  .runtime-step strong { display: block; margin-bottom: 3px; font-size: .74rem; }
-  .runtime-step span { display: block; color: var(--muted); font-size: .66rem; line-height: 1.4; }
-  .rewrite-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 16px 24px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; margin-bottom: 18px; }
+  .rewrite-controls { display: grid; grid-template-columns: minmax(170px, .8fr) minmax(240px, 1.25fr) minmax(240px, 1fr); align-items: end; gap: 14px 18px; padding: 14px; border: 1px solid var(--hair); border-radius: 12px; margin-bottom: 10px; }
   .rewrite-control { display: grid; gap: 7px; }
   .rewrite-control > span { color: var(--muted); font-size: .72rem; letter-spacing: .5px; }
-  .rewrite-control select { min-width: 250px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); color: var(--fg); font: .78rem var(--mono); }
+  .rewrite-control select { min-width: 0; width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg); color: var(--fg); font: .78rem var(--mono); }
+  #localConnection { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px 9px; }
+  #localConnection > label, #localConnection > small { grid-column: 1 / -1; }
+  #localConnection input { min-width: 0; }
   .rewrite-levels { display: flex; gap: 6px; }
   .rewrite-levels input { position: absolute; opacity: 0; pointer-events: none; }
   .rewrite-levels label { padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .76rem; cursor: pointer; }
   .rewrite-levels input:checked + label { background: var(--fg); color: var(--bg); }
-  .rough-control { display: flex; align-items: center; gap: 9px; font-size: .78rem; cursor: pointer; padding-bottom: 8px; }
+  .rough-control { display: flex; align-items: center; gap: 9px; font-size: .74rem; cursor: pointer; padding: 1px 0; }
   .rough-control input { accent-color: var(--fg); }
   .rewrite-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
-  .rewrite-pane { min-width: 0; }
+  .rewrite-pane { display: flex; flex-direction: column; min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: color-mix(in srgb, var(--bg) 96%, var(--fg)); }
   .rewrite-pane-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
   .rewrite-pane-head label { font-size: .76rem; letter-spacing: .5px; color: var(--muted); }
   .rewrite-count { font-size: .68rem; color: var(--muted); }
-  .rewrite-text { min-height: 480px; resize: vertical; line-height: 1.58; }
+  .rewrite-text { min-height: 520px; resize: vertical; line-height: 1.62; border-color: var(--hair) !important; }
+  .pane-actions { margin-top: 10px; }
+  .rewrite-feedback { margin: 0 0 10px; }
   .rewrite-file-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; padding: 8px 11px; border: 1px dashed var(--line); border-radius: 10px; font-size: .72rem; color: var(--muted); }
   .rewrite-file-row code { font-size: .68rem; }
   .rewrite-file-row button { padding: 5px 11px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--fg); font: .7rem var(--mono); cursor: pointer; }
@@ -198,12 +208,12 @@
   .sample-analysis[hidden], .sample-confirm[hidden] { display: none; }
   .sample-confirm { margin-top: 14px; }
   .sample-confirm p { margin: 0 0 9px; font-size: .82rem; }
-  .sample-profile-meta { margin-left: auto; color: var(--muted); font-size: .72rem; }
+  .sample-profile-meta { color: var(--muted); font-size: .68rem; }
   .secondary-danger { color: #c0392b !important; }
-  #rewriteStatus { min-height: 1.4em; margin: 13px 0 0; color: var(--muted); font-size: .78rem; }
+  #rewriteStatus { min-height: 1.2em; margin: 6px 2px 0; color: var(--muted); font-size: .72rem; }
   #rewriteStatus[data-type="error"] { color: #c0392b; }
   #rewriteStatus[data-type="success"] { color: #27834b; }
-  #modelProgress { width: 100%; height: 7px; margin-top: 10px; accent-color: var(--fg); }
+  #modelProgress { width: 100%; height: 5px; margin-top: 4px; accent-color: var(--fg); }
   @media (max-width: 620px) {
     .admin-wrap { padding: 24px 18px 50px; }
     .topbar, .post-row { align-items: flex-start; gap: 12px; flex-direction: column; }
@@ -217,12 +227,17 @@
     .content-toolbar { flex-wrap: wrap; }
     .admin-tabs { display: flex; width: 100%; margin-bottom: 24px; }
     .admin-tabs button { flex: 1; min-width: 0; }
+    .rewrite-header { align-items: flex-start; flex-direction: column; }
+    .profile-summary { justify-items: start; }
+    .profile-actions { justify-content: flex-start; }
+    .rewrite-controls { grid-template-columns: 1fr; }
+    #localConnection { grid-column: 1; grid-template-columns: 1fr; }
+    #localConnection > label, #localConnection > small { grid-column: 1; }
     .rewrite-grid { grid-template-columns: 1fr; }
     .rewrite-text { min-height: 330px; }
     .rewrite-control, .rewrite-control select { width: 100%; }
     .rewrite-levels { flex-wrap: wrap; }
-    .local-runtime-card { grid-template-columns: 1fr; }
-    .runtime-steps { grid-template-columns: 1fr; }
+    .local-runtime-card { align-items: flex-start; }
     .sample-stepper { grid-template-columns: 1fr 1fr; }
     .sample-trainer-head { flex-direction: column; }
     .category-control { align-items: stretch; flex-wrap: wrap; }
@@ -257,7 +272,10 @@
 <div class="admin-wrap">
   <div class="topbar">
     <h2>Admin Dashboard</h2>
-    <button id="logoutBtn">Log out</button>
+    <div class="topbar-actions">
+      <a href="../index.html">View site</a>
+      <button id="logoutBtn">Log out</button>
+    </div>
   </div>
 
   <div class="admin-tabs" role="tablist" aria-label="Admin sections">
@@ -316,18 +334,26 @@ Leave a blank line between paragraphs."></textarea>
   </section>
 
   <section class="admin-panel" id="rewritePanel" role="tabpanel" aria-labelledby="rewriteTab" hidden>
-    <h2>Voice editor</h2>
-    <p class="rewrite-intro">Rewrite Markdown or plain text in your voice. Connect a model running on your computer, or choose a browser model. No API key required. Local-server mode sends drafts and samples to the server address you connect below.</p>
+    <div class="rewrite-header">
+      <div>
+        <h2>Voice editor</h2>
+        <p class="rewrite-intro">Drop in a draft, choose how strongly to edit it, and keep the result as Markdown. Your local model handles the writing; drafts and samples stay on this machine.</p>
+      </div>
+      <div class="profile-summary">
+        <span class="sample-profile-meta" id="sampleProfileMeta">Base voice profile</span>
+        <div class="profile-actions">
+          <button type="button" id="importVoiceBtn">Import profile</button>
+          <button type="button" id="exportVoiceBtn" hidden>Export profile</button>
+          <button type="button" class="secondary-danger" id="resetVoiceBtn" hidden>Reset profile</button>
+          <input type="file" id="profileFile" accept=".md,text/markdown" hidden>
+        </div>
+      </div>
+    </div>
 
     <div class="local-runtime-card">
       <div class="local-runtime-copy">
         <div class="local-runtime-title"><span class="runtime-dot" id="runtimeDot"></span><span id="runtimeReadiness">Checking this browser...</span></div>
         <p id="runtimeDetail">The 3B option needs about 2.3 GB of graphics memory, so it fits comfortably in 4 GB of VRAM. Choose the lighter model if loading fails.</p>
-      </div>
-      <div class="runtime-steps" aria-label="How the local writing model works">
-        <div class="runtime-step"><strong>1. Connect</strong><span>Use your local model server or a browser model.</span></div>
-        <div class="runtime-step"><strong>2. Add your voice</strong><span>Test a writing sample and approve its traits.</span></div>
-        <div class="runtime-step"><strong>3. Rewrite</strong><span>Review, copy, or download the result.</span></div>
       </div>
     </div>
 
@@ -363,6 +389,11 @@ Leave a blank line between paragraphs."></textarea>
       </div>
 
       <label class="rough-control"><input type="checkbox" id="roughEdges" checked> Keep my harmless rough edges</label>
+    </div>
+
+    <div class="rewrite-feedback">
+      <progress id="modelProgress" max="1" value="0" hidden></progress>
+      <p id="rewriteStatus" role="status" aria-live="polite">Connect the local model, then add a draft.</p>
     </div>
 
     <section class="sample-trainer" id="sampleTrainer" aria-labelledby="sampleTrainerTitle" hidden>
@@ -417,27 +448,21 @@ Leave a blank line between paragraphs."></textarea>
         </div>
         <span class="rewrite-file-chip" id="rewriteFileChip" hidden></span>
         <textarea class="rewrite-text" id="rewriteInput" spellcheck="true" placeholder="Paste the Markdown or plain text you want rewritten..."></textarea>
+        <div class="rewrite-actions pane-actions">
+          <button type="button" id="rewriteBtn">Rewrite in my voice</button>
+          <button type="button" id="addSampleBtn">+ Add sample</button>
+        </div>
       </div>
       <div class="rewrite-pane">
         <div class="rewrite-pane-head"><label for="rewriteOutput">OUTPUT<span id="rewriteOutputExt">.md</span></label><span class="rewrite-count" id="rewriteOutputCount">0 chars</span></div>
         <textarea class="rewrite-text" id="rewriteOutput" spellcheck="true" placeholder="Your rewritten text will appear here."></textarea>
+        <div class="rewrite-actions pane-actions">
+          <button type="button" id="copyRewriteBtn" disabled>Copy Markdown</button>
+          <button type="button" id="downloadRewriteBtn" disabled>Download .md</button>
+          <button type="button" id="useInEditorBtn" disabled>Use in blog editor</button>
+        </div>
       </div>
     </div>
-
-    <div class="rewrite-actions">
-      <button type="button" id="rewriteBtn">Rewrite in my voice</button>
-      <button type="button" id="addSampleBtn">+ Add sample</button>
-      <button type="button" id="copyRewriteBtn" disabled>Copy Markdown</button>
-      <button type="button" id="downloadRewriteBtn" disabled>Download .md</button>
-      <button type="button" id="useInEditorBtn" disabled>Use in blog editor</button>
-      <button type="button" id="importVoiceBtn">Import profile</button>
-      <button type="button" id="exportVoiceBtn" hidden>Export profile</button>
-      <input type="file" id="profileFile" accept=".md,text/markdown" hidden>
-      <span class="sample-profile-meta" id="sampleProfileMeta">Base voice profile</span>
-      <button type="button" class="secondary-danger" id="resetVoiceBtn" hidden>Reset learned voice</button>
-    </div>
-    <progress id="modelProgress" max="1" value="0" hidden></progress>
-    <p id="rewriteStatus" role="status" aria-live="polite">Local model is not loaded yet.</p>
   </section>
 
   <section class="admin-panel project-form" id="projectsPanel" role="tabpanel" aria-labelledby="projectsTab" hidden>

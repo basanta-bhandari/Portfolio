@@ -48,6 +48,15 @@ try {
   await page.locator('#rewriteEndpoint').fill(process.env.REWRITE_LIVE_URL || 'http://127.0.0.1:11439/v1');
   await page.locator('#connectRewrite').click();
   await page.waitForFunction(() => document.querySelector('#rewriteModel').options.length > 0);
+  if (process.env.REWRITE_VISUAL_ONLY) {
+    await page.screenshot({ path: '/tmp/rewrite-desktop.png', fullPage: true });
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'Mobile overflow');
+    await page.screenshot({ path: '/tmp/rewrite-mobile.png', fullPage: true });
+    assert.deepEqual(errors, []);
+    console.log(JSON.stringify({ passed: true, checks: ['desktop layout', 'mobile overflow', 'no page errors'] }));
+    await browser.close(); server.close(); process.exit(0);
+  }
   await page.locator('#rewriteFile').setInputFiles({ name: 'draft.md', mimeType: 'text/markdown', buffer: Buffer.from('Linux lets you choose how your computer works. That freedom takes time to learn, but it is worth the effort.') });
   await page.locator('#rewriteBtn').click();
   await page.waitForFunction(() => !document.querySelector('#rewriteBtn').disabled, { }, { timeout: 180000 });
@@ -63,6 +72,7 @@ try {
   await page.locator('#integrateSampleBtn').click();
   await page.locator('#samplePostIntegrate').waitFor({ state: 'visible', timeout: 180000 });
   assert.match(await page.locator('#sampleProfileMeta').textContent(), /1 approved/);
+  await page.locator('#closeSampleTrainer').click();
   await page.screenshot({ path: '/tmp/rewrite-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'Mobile overflow');
