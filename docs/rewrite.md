@@ -12,7 +12,7 @@ No API key is sent. Local mode supports loopback addresses only and has a three-
 
 ## Browser models
 
-GPU mode uses WebLLM and switches to the smaller CPU model if GPU loading fails. CPU mode uses Transformers.js with its matching ONNX runtime. First use downloads the selected model; the quantized Qwen 0.5B CPU fallback is approximately 0.8 GB. Browser caches can be cleared or evicted. Load timeout is ten minutes; generation timeout for CPU is three minutes. Internet access is needed for initial dependencies and uncached model files.
+The recommended GPU mode is **MX230 GPU via local Ollama**. Ollama uses its Vulkan backend and chooses GPU offload automatically. The separate direct browser WebGPU mode uses WebLLM, requires browser WebGPU support, and reports a clear error instead of silently switching to CPU when unavailable. Direct browser CPU mode uses Transformers.js with its matching ONNX runtime. First use downloads the selected browser model; the quantized Qwen 0.5B CPU model is approximately 0.8 GB. Browser caches can be cleared or evicted. Load timeout is ten minutes; generation timeout for CPU is three minutes. Internet access is needed for initial browser dependencies and uncached model files.
 
 ## Samples and output
 
@@ -24,6 +24,6 @@ Input accepts Markdown or TXT up to 1 MB. Samples must be 120–8,000 characters
 
 ## Verification
 
-`node --test` runs regression tests, including mocked GPU fallback. To test Chromium against a real local model, set `PLAYWRIGHT_PATH` to an installed Playwright `index.mjs`, set `REWRITE_LIVE_URL` to the model endpoint, and run `node scripts/rewrite-browser.mjs`. It serves a local fixture on port 8765; only blog authentication/data are mocked, not inference. Screenshots go to `/tmp/rewrite-desktop.png` and `/tmp/rewrite-mobile.png`.
+`node --test` runs regression tests, including the no-silent-fallback behavior for unavailable browser WebGPU. To test Chromium against a real local model, set `PLAYWRIGHT_PATH` to an installed Playwright `index.mjs`, set `REWRITE_LIVE_URL` to the model endpoint, and run `node scripts/rewrite-browser.mjs`. It serves a local fixture on port 8765; only blog authentication/data are mocked, not inference. Screenshots go to `/tmp/rewrite-desktop.png` and `/tmp/rewrite-mobile.png`.
 
 Set `REWRITE_TEST_CPU=only` to download and exercise the actual browser CPU worker. These tests do not publish posts or change the production database.

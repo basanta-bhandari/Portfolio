@@ -51,15 +51,10 @@ test('admin connects, rewrites, and integrates two samples without restarting', 
     assert.equal(el('rewriteBtn').disabled, false);
   }
   Object.defineProperty(globalThis, 'navigator', { configurable: true, value: {} });
-  globalThis.Worker = class {
-    terminate() {}
-    postMessage(message) {
-      queueMicrotask(() => this.onmessage({ data: { id: message.id, ok: true, text: 'CPU fallback edit.' } }));
-    }
-  };
   el('rewriteRuntime').value = 'gpu';
   el('rewriteRuntime').listeners.change();
   await el('rewriteBtn').listeners.click();
-  assert.equal(el('rewriteRuntime').value, 'cpu');
-  assert.equal(el('rewriteOutput').value, 'CPU fallback edit.');
+  assert.equal(el('rewriteRuntime').value, 'gpu');
+  assert.equal(el('rewriteOutput').value, 'Revised draft.');
+  assert.match(el('rewriteStatus').textContent, /Select Local AI server/);
 });

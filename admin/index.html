@@ -360,16 +360,16 @@ Leave a blank line between paragraphs."></textarea>
     <div class="rewrite-controls">
       <label class="rewrite-control">RUN WITH
         <select id="rewriteRuntime">
-          <option value="local">Local AI server</option>
-          <option value="gpu">Browser GPU (experimental on Linux)</option>
-          <option value="cpu">Browser CPU (slower)</option>
+          <option value="local">MX230 GPU via local Ollama (recommended)</option>
+          <option value="gpu">Direct browser WebGPU (experimental)</option>
+          <option value="cpu">Direct browser CPU (slow fallback)</option>
         </select>
       </label>
       <div id="localConnection" class="rewrite-control">
         <label for="rewriteEndpoint">MODEL SERVER ADDRESS</label>
         <input id="rewriteEndpoint" type="url" value="http://127.0.0.1:11434/v1">
         <button type="button" id="connectRewrite">Connect / refresh models</button>
-        <small>Use the model server started by Odysseus, Ollama, or LM Studio. Allow this site's origin in the server's CORS settings.</small>
+        <small>Ollama is configured to use your MX230 through Vulkan. This is the GPU option you normally want.</small>
       </div>
       <label class="rewrite-control" for="rewriteModel">
         <span>WRITING BRAIN (RUNS HERE)</span>

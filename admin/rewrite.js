@@ -1,7 +1,6 @@
 import { localBase, listLocalModels, localEngine } from './rewrite-local.js';
 import {
   DEFAULT_MODEL,
-  DEFAULT_CPU_MODEL,
   CPU_MODEL_OPTIONS,
   VOICE_PROFILE,
   buildMessages,
@@ -215,10 +214,16 @@ function checkLocalRuntime() {
   document.getElementById('localConnection').hidden = runtimeSelect.value !== 'local';
   setModels(runtimeSelect.value === 'local' ? [] : runtimeSelect.value === 'cpu' ? CPU_MODEL_OPTIONS : browserModels);
   runtimeDot.dataset.state = '';
-  runtimeReadiness.textContent = runtimeSelect.value === 'local' ? 'Connect your local AI server' : 'Browser model selected';
+  runtimeReadiness.textContent = runtimeSelect.value === 'local'
+    ? 'Connect Ollama to use your MX230'
+    : runtimeSelect.value === 'gpu'
+      ? 'Direct browser WebGPU selected'
+      : 'Browser CPU selected';
   runtimeDetail.textContent = runtimeSelect.value === 'local'
-    ? 'Start Ollama, LM Studio, or a server launched through Odysseus. Enter its model-server address below.'
-    : 'The first use downloads model files. Browser GPU mode requires WebGPU; CPU mode is slower.';
+    ? 'Ollama chooses Vulkan and uses the MX230 automatically. This is the recommended GPU mode on Firefox and Linux.'
+    : runtimeSelect.value === 'gpu'
+      ? 'This experimental mode needs WebGPU support inside the browser. It is separate from Ollama and may not work in Firefox on Linux.'
+      : 'This fallback runs entirely on the CPU and is considerably slower.';
 }
 async function connectLocal() {
   if (busy()) return;
@@ -231,9 +236,9 @@ async function connectLocal() {
     setModels(models.map(value => ({ value, label: value })));
     modelSelect.value = models.find(value => /(?:^|[:_-])3b(?:$|[:_-])/i.test(value)) || models[0];
     runtimeDot.dataset.state = 'ready';
-    runtimeReadiness.textContent = 'Local server connected';
-    runtimeDetail.textContent = base;
-    setStatus('Choose a model, then rewrite or add a sample.', 'success');
+    runtimeReadiness.textContent = 'Ollama connected';
+    runtimeDetail.textContent = `${base} · Ollama will use the MX230 through Vulkan when the model fits.`;
+    setStatus('Connected. Choose a model, then rewrite or add a sample.', 'success');
   } catch (error) {
     connectedBase = ''; setModels([]);
     runtimeDot.dataset.state = 'error';
@@ -295,7 +300,9 @@ async function getEngine() {
         return { choices: [{ message: { content: reply.text } }] };
       } } } };
     } else {
-      if (!navigator.gpu || !await navigator.gpu.requestAdapter()) throw new Error('Browser GPU mode is unavailable.');
+      if (!navigator.gpu || !await navigator.gpu.requestAdapter()) {
+        throw new Error('Direct browser WebGPU is unavailable here. Select Local AI server to use the MX230 through Ollama.');
+      }
       const { CreateWebWorkerMLCEngine } = await import('https://esm.run/@mlc-ai/web-llm@0.2.85');
       activeWorker = new Worker(new URL('./rewrite-worker.js', import.meta.url), { type: 'module' });
       let timer;
@@ -316,13 +323,6 @@ async function getEngine() {
     return engine;
   } catch (error) {
     releaseWorkers();
-    if (runtimeSelect.value === 'gpu') {
-      runtimeSelect.value = 'cpu';
-      setModels(CPU_MODEL_OPTIONS);
-      modelSelect.value = DEFAULT_CPU_MODEL;
-      setStatus('GPU loading failed. Loading the smaller CPU model...');
-      return getEngine();
-    }
     throw error;
   }
   finally { progress.hidden = true; }
