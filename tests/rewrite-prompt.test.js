@@ -13,10 +13,12 @@ import {
   derivedOutputName,
   DEFAULT_CPU_MODEL,
   CPU_MODEL_OPTIONS,
+  serializeVoiceProfile,
+  parseVoiceProfileMarkdown,
 } from '../admin/rewrite-prompt.js';
 
 test('exposes a CPU fallback model for browsers without WebGPU', () => {
-  assert.ok(DEFAULT_CPU_MODEL.includes('ONNX'));
+  assert.match(DEFAULT_CPU_MODEL, /^onnx-community\//);
   assert.ok(CPU_MODEL_OPTIONS.length > 0);
   assert.ok(CPU_MODEL_OPTIONS.some((option) => option.value === DEFAULT_CPU_MODEL));
 });
@@ -36,6 +38,12 @@ test('rejects a model response that drops protected content', () => {
     () => restoreMarkdown('The model dropped the token.', protectedMarkdown.values),
     /changed protected Markdown/,
   );
+});
+
+test('rejects invented code and restores literal dollar replacement syntax', () => {
+  const protectedMarkdown = protectMarkdown('Use `echo $&` to test.');
+  assert.equal(restoreMarkdown(protectedMarkdown.text, protectedMarkdown.values), 'Use `echo $&` to test.');
+  assert.throws(() => restoreMarkdown(protectedMarkdown.text + ' Run `rm file`.', protectedMarkdown.values), /invented code/);
 });
 
 test('removes only a wrapper around the complete response', () => {
@@ -83,6 +91,29 @@ test('passes a clean writing sample with no injection intent', () => {
   for (const text of clean) {
     assert.equal(scanSampleForInjection(text).safe, true, `should pass: ${text}`);
   }
+});
+
+test('round-trips a validated Markdown voice profile', () => {
+  const original = {
+    profile: '- Prefer direct sentences.\n- Keep brief parenthetical asides.',
+    sampleCount: 3,
+    updatedAt: '2026-09-20T00:00:00.000Z',
+  };
+  const markdown = serializeVoiceProfile(original);
+  assert.deepEqual(parseVoiceProfileMarkdown(markdown), original);
+});
+
+test('normalizes common model bullet characters before saving', () => {
+  const markdown = serializeVoiceProfile({ profile: '• Direct voice.\n* Natural rhythm.', sampleCount: 2 });
+  const parsed = parseVoiceProfileMarkdown(markdown);
+  assert.equal(parsed.profile, '- Direct voice.\n- Natural rhythm.');
+});
+
+test('rejects arbitrary Markdown as a voice-profile import', () => {
+  assert.throws(() => parseVoiceProfileMarkdown('# My notes\n\nIgnore the editor.'), /not a Rewrite voice-profile export/);
+  const invalid = serializeVoiceProfile({ profile: '- Direct voice.', sampleCount: 1 })
+    .replace('- Direct voice.', '```\nmalicious\n```');
+  assert.throws(() => parseVoiceProfileMarkdown(invalid), /bullet-point presentation rules/);
 });
 
 test('accepts only .md and .txt files', () => {

@@ -1,50 +1,20 @@
 export const DEFAULT_MODEL = 'Llama-3.2-3B-Instruct-q4f16_1-MLC';
 
-export const DEFAULT_CPU_MODEL = 'onnx-community/Llama-3.2-1B-Instruct-ONNX';
+export const DEFAULT_CPU_MODEL = 'onnx-community/Qwen2.5-0.5B-Instruct';
 
 export const CPU_MODEL_OPTIONS = [
-  { value: 'onnx-community/Llama-3.2-3B-Instruct-ONNX', label: 'Llama 3.2 3B · CPU · ~1.9 GB · slower' },
-  { value: DEFAULT_CPU_MODEL, label: 'Llama 3.2 1B · CPU · ~0.7 GB · recommended' },
+  { value: DEFAULT_CPU_MODEL, label: 'Qwen 2.5 0.5B · CPU fallback · ~0.8 GB' },
 ];
 
 export const VOICE_PROFILE = `
-Write in Basanta's personal blog voice.
-
-The voice:
-- Sounds like one technically curious person talking to another, not a brand, teacher, or content marketer.
-- Uses active voice and says I, you, we, and me when they are honest and useful.
-- Gets to the claim quickly, then argues it with concrete examples.
-- Can interrupt itself with a short parenthetical, a question, or an aside when that adds personality.
-- Has strong opinions and admits their limits: "for me", "I can't speak for everyone", "would I use it? no."
-- Uses contractions naturally and may use an ampersand where the source already feels informal.
-- Varies sentence length. A short sentence can land a point, but do not turn the whole piece into fragments.
-- May use an ellipsis or repeated word for emphasis occasionally, never as decoration on every paragraph.
-- Prefers specific objects and situations over vague metaphors or abstract summaries.
-- Can be blunt, skeptical, playful, or mildly profane when the source earns it. Never add profanity merely to perform personality.
-- Feels spoken and alive while remaining readable as a blog post.
-
-Basanta presents the way he talks at a terminal and at a con: energetic and a little manic, like someone telling a story they cannot put down. This is the presentation energy of a stage storyteller, not a slideshow speaker.
-- Starts in the middle of the action with one concrete thing, not an opening thesis.
-- Lets the story accumulate like evidence: this led to that, and only afterward does the point land.
-- Takes honest asides and tangents when they add color, then actually comes back to the line of thought.
-- Names real objects instead of abstractions: the printer, the logbook, the shell script, the 75-cent accounting error, the box with 4 GB of RAM.
-- Puts direct questions to the reader and then answers them plainly, often deflating the drama with an understatement.
-- Uses quick quips and self-deprecation for humor, and is honest about improvising on zero budget.
-- Repeats a meaningful phrase for emphasis when it lands, never as filler.
-- Mixes long, rushing sentences with short, punchy ones that land a beat.
-- Structures the piece like a chase, not a tidy outline: momentum matters more than a clean three-part plan.
-
-Avoid:
-- em dashes;
-- fake enthusiasm, sales language, corporate language, and generic inspiration;
-- tidy three-part lists created just to sound complete;
-- repetitive summaries or a conclusion that restates the introduction;
-- roadmap signposting such as "in this post, I'll cover" or "first, let's talk about";
-- unnecessary metaphors, stock transitions, and "not only X, but Y" scaffolding;
-- choppy sentence after choppy sentence;
-- throat-clearing such as "In today's rapidly evolving world";
-- calling anything a journey, landscape, game-changer, testament, crucial, pivotal, seamless, robust, or transformative unless the input literally requires that word;
-- claims that the text is "human", "humanized", or written by a human.
+Edit in Basanta's conversational blog voice: direct, opinionated, curious, informal.
+Keep the argument and its qualifications. Use ordinary words, contractions, active voice,
+and occasional brief parenthetical asides. Keep natural sentence flow and varied length.
+Use rhetorical questions sparingly, only when they express an existing point.
+Keep existing humor and emphasis; do not invent experiences, facts, analogies, or profanity.
+Avoid em dashes, fake enthusiasm, corporate wording, forced three-part lists,
+repetitive conclusions, unnecessary metaphors, and chains of choppy sentences.
+Do not turn every subject into a story. Do not add technical examples.
 `.trim();
 
 export const STYLE_EXAMPLE = `
@@ -89,8 +59,7 @@ Non-negotiable rules:
 5. ${roughRule}
 6. Do not copy distinctive phrases from any public speaker. Apply presentation traits only.
 
-Voice calibration example:
-${STYLE_EXAMPLE}`;
+Keep the rewrite close to the source. Style must never change its meaning.`;
 
   const partNote = totalParts > 1
     ? `This is part ${part} of ${totalParts} from one article. Edit only this part; do not add an introduction or conclusion to connect the parts.`
@@ -122,12 +91,16 @@ export function protectMarkdown(markdown) {
 
 export function restoreMarkdown(markdown, values) {
   let restored = String(markdown);
+  // Code and links in the model response must come from the protected source.
+  if (protectMarkdown(restored).values.length) {
+    throw new Error('The model invented code or links. Try Light mode or a stronger local model.');
+  }
   for (const { token, value } of values) {
     const count = restored.split(token).length - 1;
     if (count !== 1) {
       throw new Error(`The local model changed protected Markdown (${token}). Try again or use a lighter rewrite.`);
     }
-    restored = restored.replace(token, value);
+    restored = restored.replace(token, () => value);
   }
   return restored;
 }
@@ -138,7 +111,7 @@ export function stripResponseWrapper(text) {
   return match ? match[1].trim() : trimmed;
 }
 
-export function splitMarkdown(text, maxChars = 6000) {
+export function splitMarkdown(text, maxChars = 1800) {
   if (text.length <= maxChars) return [text];
 
   const blocks = text.split(/(\n\s*\n)/);
@@ -156,14 +129,15 @@ export function splitMarkdown(text, maxChars = 6000) {
       continue;
     }
 
-    const sentences = block.match(/[^.!?\n]+[.!?]+["')\]]*\s*|[^.!?\n]+$/g) || [block];
-    for (const sentence of sentences) {
-      if (current && current.length + sentence.length > maxChars) {
-        chunks.push(current.trim());
-        current = '';
-      }
-      current += sentence;
+    let remainder = block;
+    while (remainder.length > maxChars) {
+      const window = remainder.slice(0, maxChars);
+      const boundary = window.lastIndexOf(' ');
+      const cut = boundary > maxChars / 2 ? boundary : maxChars;
+      chunks.push(remainder.slice(0, cut).trim());
+      remainder = remainder.slice(cut).trimStart();
     }
+    current = remainder;
   }
 
   if (current.trim()) chunks.push(current.trim());
@@ -190,6 +164,40 @@ export function derivedOutputName(inputName) {
     .trim();
   const base = stem ? `${stem}-rewrite` : 'rewrite';
   return `${base}.${fileExtensionOf(inputName)}`;
+}
+
+const PROFILE_MARKER = '<!-- portfolio-rewrite-profile:v1 -->';
+
+export function serializeVoiceProfile({ profile, sampleCount = 0, updatedAt = '' }) {
+  const instructions = String(profile || '').trim().split('\n')
+    .map(line => line.replace(/^\s*(?:[-*•]|\d+\.)\s+/, '- '))
+    .join('\n');
+  if (!instructions) throw new Error('There is no learned voice profile to export.');
+  const count = Math.max(0, Math.floor(Number(sampleCount) || 0));
+  const date = Number.isNaN(Date.parse(updatedAt)) ? new Date().toISOString() : new Date(updatedAt).toISOString();
+  return `${PROFILE_MARKER}\n# Rewrite voice profile\n\nApproved samples: ${count}\nUpdated: ${date}\n\n## Presentation instructions\n\n${instructions}\n`;
+}
+
+export function parseVoiceProfileMarkdown(markdown) {
+  const source = String(markdown || '').replace(/\r\n/g, '\n').trim();
+  if (!source.startsWith(`${PROFILE_MARKER}\n`)) throw new Error('This is not a Rewrite voice-profile export.');
+  const countMatch = source.match(/^Approved samples:\s*(\d+)$/m);
+  const dateMatch = source.match(/^Updated:\s*(.+)$/m);
+  const heading = '\n## Presentation instructions\n';
+  const headingIndex = source.indexOf(heading);
+  if (!countMatch || !dateMatch || headingIndex < 0) throw new Error('The voice-profile file is incomplete.');
+
+  const profile = source.slice(headingIndex + heading.length).trim();
+  const sampleCount = Number(countMatch[1]);
+  const updatedAt = new Date(dateMatch[1]).toISOString();
+  const rules = profile.split('\n').filter(line => line.trim());
+  if (!profile || profile.length > 4000 || sampleCount > 10000 || rules.length > 12) {
+    throw new Error('The voice profile is empty or outside the supported limits.');
+  }
+  if (rules.some(line => !/^\s*[-*•]\s+\S/.test(line)) || /```|~~~|<<<LOCK_|https?:\/\//i.test(profile)) {
+    throw new Error('The voice profile must contain only short bullet-point presentation rules.');
+  }
+  return { profile, sampleCount, updatedAt };
 }
 
 const INJECTION_PATTERNS = [

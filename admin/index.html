@@ -10,6 +10,16 @@
 <link rel="stylesheet" href="../blog/styles.css">
 <link rel="stylesheet" href="/theme-toggle.css?v=2">
 <style>
+  [hidden] { display: none !important; }
+  #rewritePanel .rewrite-controls { align-items: start; }
+  #rewritePanel .rewrite-control { min-width: 0; flex: 1 1 220px; }
+  #rewritePanel select { min-width: 0; max-width: 100%; width: 100%; }
+  #localConnection { flex-basis: 100%; }
+  #localConnection small { max-width: 65ch; line-height: 1.5; color: var(--muted); }
+  #connectRewrite { padding: 10px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--fg); color: var(--bg); cursor: pointer; }
+  #rewritePanel textarea { box-sizing: border-box; }
+  .sample-analysis { overflow-wrap: anywhere; max-height: 240px; overflow-y: auto; }
+  .rewrite-levels input:focus-visible + label { outline: 2px solid var(--fg); outline-offset: 3px; }
   .admin-wrap {
     max-width: 1180px;
     margin: 0 auto;
@@ -307,7 +317,7 @@ Leave a blank line between paragraphs."></textarea>
 
   <section class="admin-panel" id="rewritePanel" role="tabpanel" aria-labelledby="rewriteTab" hidden>
     <h2>Voice editor</h2>
-    <p class="rewrite-intro">Markdown or plain text goes in, and the same kind of file comes out. Only <code>.md</code> and <code>.txt</code> are accepted, and the result keeps the matching extension. No account, API key, or usage bill. The writing brain runs on this device, and your draft is never sent to an inference server.</p>
+    <p class="rewrite-intro">Rewrite Markdown or plain text in your voice. Connect a model running on your computer, or choose a browser model. No API key required. Local-server mode sends drafts and samples to the server address you connect below.</p>
 
     <div class="local-runtime-card">
       <div class="local-runtime-copy">
@@ -315,13 +325,26 @@ Leave a blank line between paragraphs."></textarea>
         <p id="runtimeDetail">The 3B option needs about 2.3 GB of graphics memory, so it fits comfortably in 4 GB of VRAM. Choose the lighter model if loading fails.</p>
       </div>
       <div class="runtime-steps" aria-label="How the local writing model works">
-        <div class="runtime-step"><strong>1. Pick what fits</strong><span>3B writes better; 1B needs less memory.</span></div>
-        <div class="runtime-step"><strong>2. Load it once</strong><span>Your browser downloads and caches the model.</span></div>
-        <div class="runtime-step"><strong>3. Write privately</strong><span>Drafts and samples stay on this device.</span></div>
+        <div class="runtime-step"><strong>1. Connect</strong><span>Use your local model server or a browser model.</span></div>
+        <div class="runtime-step"><strong>2. Add your voice</strong><span>Test a writing sample and approve its traits.</span></div>
+        <div class="runtime-step"><strong>3. Rewrite</strong><span>Review, copy, or download the result.</span></div>
       </div>
     </div>
 
     <div class="rewrite-controls">
+      <label class="rewrite-control">RUN WITH
+        <select id="rewriteRuntime">
+          <option value="local">Local AI server</option>
+          <option value="gpu">Browser GPU (experimental on Linux)</option>
+          <option value="cpu">Browser CPU (slower)</option>
+        </select>
+      </label>
+      <div id="localConnection" class="rewrite-control">
+        <label for="rewriteEndpoint">MODEL SERVER ADDRESS</label>
+        <input id="rewriteEndpoint" type="url" value="http://127.0.0.1:11434/v1">
+        <button type="button" id="connectRewrite">Connect / refresh models</button>
+        <small>Use the model server started by Odysseus, Ollama, or LM Studio. Allow this site's origin in the server's CORS settings.</small>
+      </div>
       <label class="rewrite-control" for="rewriteModel">
         <span>WRITING BRAIN (RUNS HERE)</span>
         <select id="rewriteModel">
@@ -346,15 +369,15 @@ Leave a blank line between paragraphs."></textarea>
       <div class="sample-trainer-head">
         <div>
           <h3 id="sampleTrainerTitle">Teach it another sample</h3>
-          <p>Paste something you actually wrote. The local model studies presentation, not the topic. Samples get a safety check for prompt injection first, then the model extracts style, and you approve before your saved voice profile changes.</p>
+          <p>Paste something you actually wrote. Review the presentation traits it finds, then approve the update. The profile is saved as a Markdown file on this computer.</p>
         </div>
         <button type="button" class="edit-btn" id="closeSampleTrainer">Close</button>
       </div>
       <div class="sample-stepper" aria-label="Sample integration progress">
         <span class="sample-step" id="sampleStepAdd" data-state="active">1. Add sample</span>
         <span class="sample-step" id="sampleStepTest">2. Testing...</span>
-        <span class="sample-step" id="sampleStepIntegrate">3. Passes safety checks, Integrate?</span>
-        <span class="sample-step" id="sampleStepReady">4. Done!</span>
+        <span class="sample-step" id="sampleStepIntegrate">3. Integrate?</span>
+        <span class="sample-step" id="sampleStepReady">4. Ready!</span>
       </div>
       <div class="sample-file-row">
         <span>Add a sample in <code>.md</code> or <code>.txt</code>:</span>
@@ -369,17 +392,17 @@ Leave a blank line between paragraphs."></textarea>
       </div>
       <pre class="sample-analysis" id="sampleAnalysis" hidden></pre>
       <div class="sample-confirm" id="sampleConfirm" hidden>
-        <p>Passes safety checks, Integrate?</p>
+        <p>Integrate these traits into your voice profile?</p>
         <div class="rewrite-actions">
           <button type="button" id="integrateSampleBtn">Yes, integrate it</button>
           <button type="button" id="rejectSampleBtn">No, discard it</button>
         </div>
       </div>
       <div class="sample-confirm" id="samplePostIntegrate" hidden>
-        <p><strong>Done!</strong> The sample changed the agent's voice. It probably needs a fresh session now.</p>
+        <p><strong>Ready!</strong> The local Markdown voice profile applies to your next rewrite. No restart is needed. This adjusts the editing instructions, not model weights.</p>
         <div class="rewrite-actions">
-          <button type="button" id="restartAgentBtn">Restart agent</button>
-          <button type="button" id="recalibrateAgentBtn">Recalibrate agent</button>
+          <button type="button" id="restartAgentBtn" hidden>Reload model</button>
+          <button type="button" id="recalibrateAgentBtn">Add another sample</button>
         </div>
       </div>
     </section>
@@ -407,6 +430,9 @@ Leave a blank line between paragraphs."></textarea>
       <button type="button" id="copyRewriteBtn" disabled>Copy Markdown</button>
       <button type="button" id="downloadRewriteBtn" disabled>Download .md</button>
       <button type="button" id="useInEditorBtn" disabled>Use in blog editor</button>
+      <button type="button" id="importVoiceBtn">Import profile</button>
+      <button type="button" id="exportVoiceBtn" hidden>Export profile</button>
+      <input type="file" id="profileFile" accept=".md,text/markdown" hidden>
       <span class="sample-profile-meta" id="sampleProfileMeta">Base voice profile</span>
       <button type="button" class="secondary-danger" id="resetVoiceBtn" hidden>Reset learned voice</button>
     </div>
