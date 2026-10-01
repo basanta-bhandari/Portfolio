@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Download Tether, the NeoNet desktop app for private messaging and file sharing across trusted devices.">
+  <title>Tether — download NeoNet</title>
+  <link rel="stylesheet" href="/tether/styles.css">
+  <script src="/tether/releases.js" defer></script>
+</head>
+<body>
+  <div class="grid-background" aria-hidden="true"></div>
+  <nav class="topnav" aria-label="Main navigation">
+    <a class="brand" href="/">HOME?<span class="dot">.</span></a>
+    <div class="links">
+      <a href="/">Home</a><a href="/projects">Projects</a><a href="/tether" aria-current="page">Tether</a>
+    </div>
+  </nav>
+
+  <main class="shell">
+    <section class="hero" aria-labelledby="title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="pulse" aria-hidden="true"></span> NEONET DESKTOP · EARLY ACCESS</p>
+        <h1 id="title">Your devices.<br><em>Your space.</em></h1>
+        <p class="intro">Tether brings private conversation, a lasting inbox, and file exchange into one desktop window. Connect the devices you trust, then let NeoNet handle the routes underneath.</p>
+        <div class="hero-actions"><a class="button primary" href="#downloads">Get Tether <span aria-hidden="true">↘</span></a><a class="button secondary" href="#how-it-works">How it works <span aria-hidden="true">↗</span></a></div>
+      </div>
+      <div class="app-preview" aria-label="Preview of Tether's Slack, Mail, and Cloud sections">
+        <div class="preview-title"><span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span><strong>TETHER</strong><small>PRIVATE SPACE / 01</small></div>
+        <div class="preview-body"><aside><b>01&nbsp; SLACK</b><span>02&nbsp; MAIL</span><span>03&nbsp; CLOUD</span><hr><small>TRUSTED DEVICES</small><span><i class="online-dot"></i> My laptop</span><span><i class="online-dot"></i> Home desktop</span></aside><div class="preview-thread"><div class="thread-head"># private conversation <span>● connected</span></div><p class="message"><b>My laptop</b><br>That file is on its way.</p><p class="message mine"><b>You</b><br>Got it. See you on Tether.</p><div class="composer">Message a trusted device <span>↵</span></div></div></div>
+        <div class="preview-foot">SLACK <span>◆</span> MAIL <span>◆</span> CLOUD</div>
+      </div>
+    </section>
+
+    <section id="downloads" class="downloads" aria-labelledby="download-title">
+      <div class="section-heading"><div><p class="eyebrow">CHOOSE YOUR SYSTEM</p><h2 id="download-title">Download Tether</h2></div><p id="release-status" role="status" aria-live="polite">Checking for published builds…</p></div>
+      <div class="download-grid">
+        <article class="download-card" data-asset="neonet-linux-x86_64.tar.gz"><div class="card-top"><span class="platform-mark">A</span><span>01 / LINUX</span></div><h3>Arch-based Linux</h3><p>A desktop launcher and native x86-64 NeoNet app in a user-installable archive.</p><a class="download-link unavailable" aria-disabled="true">Build not published yet</a><small>Extract, then run <code>./install.sh</code> inside the bundle.</small></article>
+        <article class="download-card" data-asset="neonet-windows-x86_64.zip"><div class="card-top"><span class="platform-mark">⊞</span><span>02 / WINDOWS</span></div><h3>Windows</h3><p>Portable x86-64 desktop app. No developer tools or Rust installation needed.</p><a class="download-link unavailable" aria-disabled="true">Build not published yet</a><small>Extract the ZIP, then open <code>neonet.exe</code>.</small></article>
+        <article class="download-card" data-asset="neonet-macos-arm64.zip"><div class="card-top"><span class="platform-mark">⌘</span><span>03 / MACOS</span></div><h3>Mac · Apple Silicon</h3><p>A native macOS app bundle for M-series Macs, including your M4.</p><a class="download-link unavailable" aria-disabled="true">Build not published yet</a><small>Extract the ZIP, then open <code>NeoNet.app</code>.</small></article>
+        <article class="download-card" data-asset="neonet-macos-x86_64.zip"><div class="card-top"><span class="platform-mark">⌘</span><span>04 / MACOS</span></div><h3>Mac · Intel</h3><p>The same desktop app, built natively for Intel-based Macs.</p><a class="download-link unavailable" aria-disabled="true">Build not published yet</a><small>Extract the ZIP, then open <code>NeoNet.app</code>.</small></article>
+      </div>
+      <p class="download-note">Releases are published only after each platform build passes its checks. These builds are currently unsigned; macOS Gatekeeper and Windows SmartScreen may show a warning. Check <a id="checksum-link">release checksums when available</a> before installing. The source is licensed for noncommercial use under <a href="https://polyformproject.org/licenses/noncommercial/1.0.0" target="_blank" rel="noopener noreferrer">PolyForm Noncommercial 1.0.0</a>.</p>
+    </section>
+
+    <section id="how-it-works" class="explainer" aria-labelledby="how-title"><div><p class="eyebrow">THREE PLACES, ONE PRIVATE SPACE</p><h2 id="how-title">Open it. Connect. Get on with it.</h2><p>Each device has its own identity. Connect using the other device's reachable address and public key; the other person approves the request. After that, the desktop app keeps connections available while it runs.</p></div><ol><li><b>Slack</b><span>Private, live one-to-one messages.</span></li><li><b>Mail</b><span>An inbox and an outgoing queue that keeps messages for retry.</span></li><li><b>Cloud</b><span>Send files directly or use encrypted storage on configured cores.</span></li></ol></section>
+    <div class="endline"><span>TETHER / NEONET</span><a id="source-link">Source &amp; release notes available at launch</a></div>
+  </main>
+  <footer><p>BASANTA BHANDARI · 2026</p><a href="/">Back to portfolio ↑</a></footer>
+</body>
+</html>
