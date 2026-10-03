@@ -26,7 +26,7 @@ async function loadRelease() {
     if (!release) throw new Error('No published release');
     if (!Array.isArray(release.assets)) throw new Error('Invalid release data');
     const assets = new Map(release.assets.map(asset => [asset.name, asset]));
-    let available = 0;
+    let available = 1; // The Linux package is also hosted directly on this site.
     for (const card of cards) {
       const asset = assets.get(card.dataset.asset);
       if (!asset || !/^https:\/\/github\.com\/basanta-bhandari\/Tether\/releases\/download\//.test(asset.browser_download_url)) continue;
@@ -36,10 +36,10 @@ async function loadRelease() {
       link.classList.remove('unavailable');
       link.removeAttribute('aria-disabled');
       link.setAttribute('download', '');
-      available++;
+      if (card.dataset.asset !== 'neonet-linux-x86_64.tar.gz') available++;
     }
     const checksum = assets.get('SHA256SUMS.txt');
-    if (checksum) {
+    if (checksum && assets.has('neonet-linux-x86_64.tar.gz')) {
       const link = document.getElementById('checksum-link');
       link.href = checksum.browser_download_url;
       link.textContent = 'release checksums';
@@ -51,9 +51,9 @@ async function loadRelease() {
       source.rel = 'noopener noreferrer';
       source.textContent = 'Source & release notes ↗';
     }
-    status.textContent = available ? `${release.tag_name} · ${available} build${available === 1 ? '' : 's'} available` : 'No desktop builds in the latest release yet.';
+    status.textContent = `${release.tag_name} · ${available} build${available === 1 ? '' : 's'} available`;
   } catch {
-    status.textContent = 'Downloads unavailable. The release may still be private or unpublished.';
+    status.textContent = 'Linux v0.5.0 available · other platform builds pending.';
   }
 }
 
