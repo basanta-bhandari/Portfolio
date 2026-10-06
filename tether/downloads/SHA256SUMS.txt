@@ -1,1 +1,2 @@
 a560138ebf5e053fadf4ef79c83c75d268147f599cab4e57bf702e7411825ed9  neonet-linux-x86_64-v0.5.0.tar.gz
+6bdbf56f7584f57c66c2020d74a5efd4514b4f1cee3e073b33965c39dcf10e8c  neonet-linux-x86_64-v0.5.1.AppImage
