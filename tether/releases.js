@@ -9,9 +9,9 @@ function highlightPlatform() {
   const isLinux = /linux/i.test(platform);
   const intelMac = isMac && /intel/i.test(navigator.userAgent);
   const match = cards.find(card => isMac
-    ? card.dataset.asset === `neonet-macos-${intelMac ? 'x86_64' : 'arm64'}.zip`
+    ? !intelMac && card.dataset.asset === 'neonet-macos-arm64.zip'
     : isWindows ? card.dataset.asset === 'neonet-windows-x86_64.zip'
-      : isLinux && card.dataset.asset === 'neonet-linux-x86_64.tar.gz');
+      : isLinux && card.dataset.asset === 'neonet-linux-x86_64.AppImage');
   match?.classList.add('suggested');
 }
 
@@ -36,10 +36,10 @@ async function loadRelease() {
       link.classList.remove('unavailable');
       link.removeAttribute('aria-disabled');
       link.setAttribute('download', '');
-      if (card.dataset.asset !== 'neonet-linux-x86_64.tar.gz') available++;
+      if (card.dataset.asset !== 'neonet-linux-x86_64.AppImage') available++;
     }
     const checksum = assets.get('SHA256SUMS.txt');
-    if (checksum && assets.has('neonet-linux-x86_64.tar.gz')) {
+    if (checksum && assets.has('neonet-linux-x86_64.AppImage')) {
       const link = document.getElementById('checksum-link');
       link.href = checksum.browser_download_url;
       link.textContent = 'release checksums';
@@ -53,7 +53,7 @@ async function loadRelease() {
     }
     status.textContent = `${release.tag_name} · ${available} build${available === 1 ? '' : 's'} available`;
   } catch {
-    status.textContent = 'Linux v0.5.0 available · other platform builds pending.';
+    status.textContent = 'Linux v0.5.1 available · other platform builds pending.';
   }
 }
 

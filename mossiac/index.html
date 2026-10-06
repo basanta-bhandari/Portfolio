@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101414">
+  <meta name="description" content="A local-first music discovery notebook that connects the sounds you love to what you want to hear next.">
+  <title>Music Mosaic — find your next sound</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="Music Mosaic home"><span class="brand-mark" aria-hidden="true">✳</span><span>music<span class="brand-light">mosaic</span></span></a>
+    <nav class="header-nav" aria-label="Main navigation">
+      <a href="#discover">Discover</a><a href="#taste">Your taste</a><a href="#privacy">Your data</a>
+    </nav>
+    <div class="header-actions"><span class="local-pill"><span class="status-dot"></span> LOCAL FIRST</span><button class="icon-button" id="settingsButton" type="button" aria-label="Open your data settings">↗</button></div>
+  </header>
+
+  <main id="top">
+    <section class="hero wrap" aria-labelledby="heroTitle">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="eyebrow-line"></span> A BETTER KIND OF DISCOVERY <span class="eyebrow-no">01 / 03</span></div>
+        <h1 id="heroTitle">Your taste has<br><em>more than one</em><br>side.</h1>
+        <p>Music taste changes with the moment. Start with the artists you love, then explore songs connected through listening patterns, musical tags, and your feedback.</p>
+        <a class="primary-button" href="#discover">Find my next listen <span aria-hidden="true">↘</span></a>
+        <div class="hero-note"><span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span> BUILT AROUND YOU. KEPT BY YOU.</div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="visual-grid"></div><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit orbit-three"></div>
+        <div class="vinyl"><div class="vinyl-label"><span>MM / 001</span><b>the sound<br>between</b><span>SIDE A · 33 RPM</span></div></div>
+        <div class="float-label label-top">SOUND <span>↗</span></div><div class="float-label label-bottom">FEELING <span>↗</span></div><div class="visual-caption">NO SINGLE GENRE CAN EXPLAIN YOU. <span>↗</span></div>
+      </div>
+    </section>
+
+    <section class="ticker" aria-label="How discovery works"><div class="ticker-inner">PICK YOUR STARTING POINTS <span>✳</span> FIND THE CONNECTIONS <span>✳</span> FOLLOW YOUR CURIOSITY <span>✳</span> KEEP YOUR DATA <span>✳</span> PICK YOUR STARTING POINTS <span>✳</span> FIND THE CONNECTIONS <span>✳</span> FOLLOW YOUR CURIOSITY</div></section>
+
+    <section class="studio wrap" id="discover" aria-labelledby="studioTitle">
+      <div class="section-top"><div><div class="eyebrow"><span class="eyebrow-line"></span> THE LISTENING ROOM <span class="eyebrow-no">02 / 03</span></div><h2 id="studioTitle">Where are you <em>right now?</em></h2></div><p>Good music is personal. Great timing is everything. Tell us what you’re after and we’ll shift the lens.</p></div>
+      <div class="studio-layout">
+        <aside class="control-panel" aria-label="Recommendation controls">
+          <div class="panel-block"><div class="control-label"><span>01</span> WHAT ARE YOU DOING?</div><div class="context-grid" id="contextGrid"></div></div>
+          <div class="panel-block"><div class="control-label"><span>02</span> HOW FAR OUT?</div><div class="range-head"><span>Familiar</span><strong id="adventureValue">A little curious</strong><span>Surprise me</span></div><input id="adventureRange" type="range" min="0" max="100" value="45" aria-label="Discovery level"><div class="range-track-labels"><span>COMFORT ZONE</span><span>NEW TERRITORY</span></div></div>
+          <div class="panel-block"><div class="control-label"><span>03</span> WHAT SHOULD LEAD?</div><div class="lens-buttons" id="lensButtons"><button type="button" data-lens="balanced" class="active">A balanced mix</button><button type="button" data-lens="listeners">Shared listening paths</button><button type="button" data-lens="tags">Musical tags</button></div><p class="hint">Lyrics and voice need separate data; this version does not pretend to measure them.</p></div>
+          <button class="refresh-button" id="refreshButton" type="button">Reshuffle the mix <span aria-hidden="true">↗</span></button>
+        </aside>
+        <div class="results-panel">
+          <div class="results-head"><div><span class="result-kicker">MADE FOR THIS MOMENT</span><h3>Your next <em>listen.</em></h3></div><span class="results-count" id="resultsCount">00—00</span></div>
+          <div class="view-switch" role="group" aria-label="Discovery view"><button id="listViewButton" type="button" class="active" aria-pressed="true">☷ &nbsp; List</button><button id="graphViewButton" type="button" aria-pressed="false">✳ &nbsp; Graph</button><span>FOLLOW THE CONNECTIONS</span></div>
+          <div class="recommendations" id="recommendations" aria-live="polite"></div>
+          <div class="graph-panel" id="graphPanel" hidden><div class="graph-toolbar"><div class="graph-legend"><span><i class="legend-seed"></i> Artists you added</span><span><i class="legend-track"></i> Discoveries</span><span><i class="legend-tag"></i> Tags</span></div><button id="graphReset" type="button">Reset view ⌖</button></div><div class="graph-stage"><svg id="graphSvg" viewBox="0 0 900 560" role="img" aria-label="Interactive music connection graph. Select a node to inspect it."></svg><div class="graph-hint">SCROLL TO ZOOM · DRAG THE SPACE TO PAN · CLICK A NODE TO EXPLORE</div></div><div id="graphInfo" class="graph-info" aria-live="polite">Select a node to see its connections.</div></div>
+          <div class="results-foot"><span id="resultStatus">Add an artist below to begin.</span><button type="button" id="moreButton" hidden>Show another six <span aria-hidden="true">↗</span></button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="taste-section" id="taste" aria-labelledby="tasteTitle"><div class="wrap taste-wrap"><div class="taste-header"><div><div class="eyebrow"><span class="eyebrow-line"></span> YOUR STARTING POINT <span class="eyebrow-no">03 / 03</span></div><h2 id="tasteTitle">A taste that<br><em>won’t sit still.</em></h2></div><p>Add any artist. Your profile starts empty and grows only from the choices you make here.</p></div><div class="taste-content"><div><div class="subhead"><span>YOUR ARTISTS</span><span id="selectedCount">0 SELECTED</span></div><form id="artistForm" class="artist-form"><label for="artistInput">Search for an artist</label><div><input id="artistInput" name="artist" type="search" autocomplete="off" placeholder="Type an artist name" required><button type="submit">Search ↗</button></div></form><div id="artistSearchResults" class="artist-search-results" role="status"></div><div id="seedGrid" class="seed-grid"></div><p class="micro-note">Search results come from MusicBrainz. Recommendations use ListenBrainz listening patterns and tags. Searches go to those services; your saved profile stays here.</p></div><div class="taste-map"><div class="subhead"><span>YOUR CURRENT MIX</span><span>LIVE PROFILE</span></div><div class="map-intro">Different sounds can coexist.</div><div id="tasteBars" class="taste-bars"></div><div class="map-note"><span class="asterisk">✳</span><p>Tags are community metadata, not a verdict on your taste. Context changes ranking when relevant tags are available.</p></div></div></div></div></section>
+
+    <section class="privacy-section wrap" id="privacy" aria-labelledby="privacyTitle"><div class="privacy-symbol" aria-hidden="true">◎</div><div class="privacy-main"><div class="eyebrow"><span class="eyebrow-line"></span> YOUR MUSIC, YOUR MEMORY</div><h2 id="privacyTitle">Your history lives<br><em>with you.</em></h2><p>We can remember your likes, skips, and listening context on this device to improve your picks. You can see it, move it, pause it, or erase it whenever you want.</p><div class="privacy-actions"><button class="primary-button" id="dataButton" type="button">Manage my data <span aria-hidden="true">↗</span></button><a href="./source.html" id="sourceLink">How it works & source <span aria-hidden="true">↗</span></a></div></div><div class="privacy-stamp">NO ACCOUNT<br>REQUIRED <span>✳</span></div></section>
+  </main>
+  <footer class="site-footer"><span class="footer-brand">music<span>mosaic</span><i>✳</i></span><span>GOOD MUSIC FINDS A WAY.</span><a href="#top">BACK TO TOP ↑</a></footer>
+
+  <dialog id="dataDialog" class="data-dialog" aria-labelledby="dialogTitle"><div class="dialog-top"><span>YOUR DATA / YOUR CALL</span><button type="button" id="closeDialog" aria-label="Close dialog">✕</button></div><h2 id="dialogTitle">Keep the<br><em>good stuff.</em></h2><p id="privacyCopy">If you enable local history, this browser saves your artist choices, likes, skips, and context to improve recommendations. Artist searches go to MusicBrainz and candidate requests go to ListenBrainz; your activity log stays on this device. You can export, pause, or delete it at any time.</p><div class="consent-row"><div><strong>Local listening history</strong><span id="historyStatus">Off — this session only</span></div><button type="button" id="historyToggle" class="toggle-button" aria-pressed="false">Enable</button></div><div class="data-stats"><div><strong id="eventCount">0</strong><span>saved actions</span></div><div><strong id="savedCount">0</strong><span>saved tracks</span></div></div><div class="data-actions"><button type="button" id="exportButton">Export JSON ↓</button><label class="file-label" for="importFile">Import JSON ↑</label><input id="importFile" type="file" accept="application/json,.json" hidden><button type="button" id="clearButton" class="danger-button">Delete local history</button></div><p class="dialog-note">Exports contain your taste choices and activity, never music account tokens. Clearing browser data may remove this profile, so export a copy if you want to keep it.</p><p class="dialog-feedback" id="dialogFeedback" role="status"></p></dialog>
+  <script src="./app.js" defer></script>
+  <script src="./graph.js" defer></script>
+</body>
+</html>
