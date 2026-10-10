@@ -1,0 +1,89 @@
+.topnav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    padding: 0 40px;
+    border-bottom: 1px solid var(--hair);
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--mono);
+}
+
+.topnav .brand {
+    flex: 0 0 auto;
+    color: var(--fg);
+    font-size: .95rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.topnav .brand .dot { color: var(--muted); }
+
+.topnav .links {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 28px;
+    color: var(--fg);
+    font-size: .78rem;
+    letter-spacing: .4px;
+}
+
+.topnav .links a {
+    flex: 0 0 auto;
+    padding: 7px 0;
+    border-bottom: 1px solid transparent;
+    color: inherit;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.topnav .links a:hover,
+.topnav .links a:focus-visible,
+.topnav .links a[aria-current="page"] {
+    border-bottom-color: currentColor;
+}
+
+.topnav .links a:focus-visible,
+.topnav .brand:focus-visible,
+.topnav .theme-toggle:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.topnav .theme-toggle { flex: 0 0 auto; }
+
+@media (max-width: 820px) {
+    .topnav {
+        min-height: 0;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 14px 18px 12px;
+    }
+
+    .topnav .links {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 20px;
+        overflow-x: auto;
+        padding: 0 0 3px;
+        white-space: nowrap;
+        scrollbar-width: none;
+    }
+
+    .topnav .links::-webkit-scrollbar { display: none; }
+}
+
+@media (max-width: 560px) {
+    .topnav { padding-inline: 16px; }
+    .topnav .brand { font-size: .9rem; }
+    .topnav .links { gap: 16px; font-size: .74rem; }
+}

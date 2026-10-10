@@ -8,6 +8,7 @@
 <script src="/theme.js?v=2"></script>
 <script src="/project-categories.js"></script>
 <link rel="stylesheet" href="../blog/styles.css">
+<link rel="stylesheet" href="/navbar.css?v=1">
 <link rel="stylesheet" href="/theme-toggle.css?v=2">
 <style>
   [hidden] { display: none !important; }
@@ -18,7 +19,6 @@
     z-index: 2;
     padding: 40px 20px 70px;
   }
-  body > .topnav { display: none; }
   .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
   .topbar h2 { font-family: Arial, Helvetica, sans-serif; margin: 0; }
   .topbar-actions { display: flex; align-items: center; gap: 10px; }
@@ -165,14 +165,15 @@
 <body class="admin-pending">
 <div class="grid-background"></div>
 
-<nav class="topnav">
-    <a href="../index.html" class="brand">Home?<span class="dot">.</span></a>
+<nav class="topnav" aria-label="Main navigation">
+    <a href="/" class="brand">HOME?<span class="dot">.</span></a>
     <div class="links">
-        <a href="../index.html">Home</a>
-        <a href="../projects/">Projects</a>
-        <a href="../blog/index.html">Blog</a>
-        <a href="https://github.com/basanta-bhandari" target="_blank">GitHub</a>
-        <button type="button" class="theme-toggle" data-theme-toggle><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
+        <a href="/">Home</a>
+        <a href="/projects">Projects</a>
+        <a href="/tether">Tether</a>
+        <a href="/blog">Blog</a>
+        <a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch theme"><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
     </div>
 </nav>
 
