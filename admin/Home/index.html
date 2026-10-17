@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#eef0e9">
+  <title>Room Quest</title>
+  <link rel="stylesheet" href="v1.css">
+  <script>
+    if (/^\/admin\/Home(?:\/|$)/.test(location.pathname)) {
+      document.documentElement.classList.add('auth-pending');
+      fetch('/api/session', { credentials: 'include', cache: 'no-store' })
+        .then(response => response.ok ? response.json() : {})
+        .then(session => {
+          if (!session.loggedIn) location.replace(`/login/?next=${encodeURIComponent(location.pathname)}`);
+          else document.documentElement.classList.remove('auth-pending');
+        })
+        .catch(() => location.replace(`/login/?next=${encodeURIComponent(location.pathname)}`));
+    }
+  </script>
+</head>
+<body>
+  <header>
+    <button class="mobile-menu" id="mobile-menu" aria-label="Open menu">Menu</button>
+    <div class="brand">ROOM QUEST</div>
+    <div class="header-actions"><span id="today-label" class="hidden"></span><button onclick="showPage('connections')">Connections</button></div>
+  </header>
+
+  <div class="layout">
+    <nav id="sidebar">
+      <div class="eyebrow">NAVIGATION</div>
+      <button class="nav-item active" data-page="room" onclick="showPage('room')">My room</button>
+      <button class="nav-item" data-page="quests" onclick="showPage('quests')">Daily quests <em id="nav-count">0</em></button>
+      <button class="nav-item" data-page="calendar" onclick="showPage('calendar')">Calendar</button>
+      <button class="nav-item" data-page="notes" onclick="showPage('notes')">Notebook</button>
+      <button class="nav-item" data-page="daily" onclick="showPage('daily')">Daily history</button>
+      <button class="nav-item" data-page="problems" onclick="showPage('problems')">Study desk</button>
+      <button class="nav-item" data-page="achievements" onclick="showPage('achievements')">Achievements</button>
+      <button class="nav-item" data-page="connections" onclick="showPage('connections')">Connections</button>
+      <div class="profile"><strong>Level <span id="level">1</span></strong><div class="progress"><i id="xpbar" style="width:0%"></i></div><span class="mini" id="xpcount">0 / 100 XP</span></div>
+    </nav>
+
+    <main>
+      <div class="top">
+        <div><h1 id="heading">Room</h1><div class="hidden" id="daily-line"></div></div>
+        <div class="top-controls"><label class="scheme-control">Room mood<select aria-label="Room mood" id="mood" onchange="setMood(this.value)"><option value="morning">Morning</option><option value="rain">Rain</option><option value="sunset">Sunset</option><option value="night">Night</option></select></label></div>
+      </div>
+
+      <section id="room" class="page">
+        <div class="room-stage" id="scene">
+          <iframe id="little-room-frame" src="little-room.html" title="Interactive isometric room"></iframe>
+          <div id="room-name" class="hidden">My room</div><div id="speech" class="hidden"><span></span></div>
+        </div>
+        <div class="grid">
+          <div class="card"><h2>Daily quests <span class="muted" id="done-count"></span></h2><div id="home-quests"></div><button class="full" onclick="showPage('quests')">Edit quests</button></div>
+          <div class="card"><h2>Alcumus</h2><p class="muted">Problem sets are opened and tracked through AoPS Alcumus.</p><div class="action-row"><button class="primary" onclick="openAlcumus()">Open Alcumus</button><button onclick="openStudyStation()">Study options</button></div></div>
+        </div>
+      </section>
+
+      <section id="quests" class="page hidden"><div class="card"><h2>Daily quests</h2><div id="all-quests"></div><form class="add quest-form" onsubmit="addTask(event)"><input id="new-quest" placeholder="Quest name" aria-label="New quest"><input id="new-quest-xp" type="number" min="0" max="1000" value="20" aria-label="Quest XP"><button class="primary" type="submit">Add quest</button></form></div></section>
+      <section id="calendar" class="page hidden"><div class="card calendar-card"><div class="section-head"><h2>Calendar</h2><div class="action-row compact-row"><span id="calendar-provider-status" class="mini muted">No provider</span><button onclick="openCalendarSetup()">Add provider</button><button onclick="openCalendarProvider()">Open provider</button><button onclick="exportCalendar()">Export ICS</button></div></div><div class="calendar-toolbar"><button aria-label="Previous month" onclick="changeCalendarMonth(-1)">Previous</button><h3 id="calendar-month"></h3><button aria-label="Next month" onclick="changeCalendarMonth(1)">Next</button><button onclick="goToCurrentMonth()">Today</button></div><div class="calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div><div id="events" class="calendar-grid" aria-label="Month calendar"></div><form class="add calendar-form" onsubmit="addEvent(event)"><input id="event-name" placeholder="Event name" aria-label="Event name"><input id="event-date" type="datetime-local" aria-label="Event time"><input id="event-duration" type="number" min="5" step="5" value="60" aria-label="Duration in minutes"><button type="submit">Add event</button></form></div></section>
+      <section id="notes" class="page hidden"><div class="card"><div class="section-head"><h2>Journal and notes</h2><span id="save-state" class="mini muted">Saved locally</span></div><div class="tabs"><button class="active" data-note-tab="journal" onclick="showNoteTab('journal')">Daily journal</button><button data-note-tab="notes" onclick="showNoteTab('notes')">Scratchpad</button><button data-note-tab="vault" onclick="showNoteTab('vault')">Obsidian vault</button></div><div class="note-panel" id="note-journal"><div class="add"><input id="journal-date" type="date" aria-label="Journal date"><input id="journal-title" placeholder="Title" aria-label="Journal title"></div><textarea id="journal-text" placeholder="Journal entry" aria-label="Daily journal"></textarea><div class="action-row"><button class="primary" onclick="saveJournal()">Save journal</button></div></div><div class="note-panel hidden" id="note-notes"><textarea id="notepad" placeholder="Notes" aria-label="Notebook"></textarea></div><div class="note-panel hidden" id="note-vault"><div class="action-row"><button class="primary" onclick="connectVault()">Choose vault folder</button><button onclick="forgetVault()">Forget folder</button><span id="vault-status" class="mini muted">No vault connected</span></div><div id="vault-files" class="vault-files"></div></div></div></section>
+      <section id="daily" class="page hidden"><div class="card"><div class="section-head"><h2>Daily history</h2><input id="history-date" type="date" onchange="renderDailyHistory(this.value)" aria-label="History date"></div><div id="daily-summary" class="daily-summary"></div></div></section>
+      <section id="problems" class="page hidden"><div class="grid study-grid"><div class="card"><h2>AoPS Alcumus</h2><div class="action-row"><button class="primary" onclick="openAlcumus()">Open Alcumus</button><button onclick="openAoPSSetup()">Account settings</button></div><div class="action-row"><button onclick="recordAlcumusResult(true)">Record solved</button><button onclick="recordAlcumusResult(false)">Record attempt</button><span id="aops-status" class="mini muted">No account saved</span></div></div><div class="card"><h2>Document viewer</h2><div class="action-row"><label class="file-button">Open document<input id="study-document" type="file" accept=".pdf,.txt,.md,.html,image/*" onchange="openStudyDocument(this.files)"></label><button onclick="clearStudyDocument()">Close document</button><span id="document-name" class="mini muted"></span></div></div></div><div class="card document-card"><div id="document-viewer" class="document-viewer"></div></div></section>
+      <section id="achievements" class="page hidden"><div class="card"><h2>Achievements</h2><form class="add achievement-form" onsubmit="addAchievement(event)"><input id="achievement-name" placeholder="Achievement name" aria-label="Achievement name"><input id="achievement-description" placeholder="Description" aria-label="Achievement description"><button class="primary" type="submit">Add achievement</button></form></div><div class="grid" id="badges"></div></section>
+      <section id="connections" class="page hidden">
+        <div class="connections-grid">
+          <div class="card"><h2>Connections</h2><div id="integrations"></div></div>
+          <div class="card sync-card">
+            <div class="section-head"><div><h2>Tailscale sync</h2><p class="muted">Sync encrypted Room Quest data through your own Tailscale device.</p></div><span id="sync-status" class="status-badge">Not connected</span></div>
+            <div class="sync-fields">
+              <label class="field-label">Companion HTTPS URL<input id="sync-endpoint" type="url" inputmode="url" placeholder="https://mini-pc.your-tailnet.ts.net"></label>
+              <label class="field-label">This device name<input id="sync-device-name" autocomplete="off" placeholder="Phone, Mac, laptop"></label>
+              <label class="field-label">Access token<input id="sync-token" type="password" autocomplete="new-password" placeholder="Saved only on this device"></label>
+              <label class="field-label">Shared encryption passphrase<input id="sync-passphrase" type="password" autocomplete="off" placeholder="Entered each browser session"></label>
+            </div>
+            <div class="action-row"><button class="primary" onclick="syncNow()">Sync now</button><button onclick="testSyncConnection()">Test connection</button><button onclick="saveSyncSettings()">Save settings</button></div>
+            <p class="mini muted">The token stays in this browser. The passphrase is not saved. Photos and records are encrypted before they leave this device.</p><p id="sync-seed" class="mini muted">No sync seed trusted.</p>
+            <div id="sync-devices" class="device-list"></div>
+          </div>
+          <div class="card ssh-card">
+            <div class="section-head"><div><h2>SSH devices</h2><p class="muted">Save a Tailscale hostname or LAN address and copy a terminal command.</p></div><button onclick="openSSHSetup()">Add device</button></div>
+            <div id="ssh-presets" class="device-list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside><div class="card coffee-card"><h2>Coffee limit</h2><p class="muted" id="cups">No coffee logged</p><button class="primary full" onclick="openCoffeeDialog()">Log coffee</button></div><div class="card focus-card"><h2>Focus timer</h2><strong id="clock">25:00</strong><div id="timer-ring"><button id="timer-button" onclick="toggleTimer()">Start</button><button onclick="resetTimer()">Reset</button></div></div><div class="aside-section"><h2>Activity</h2><div id="feed" class="muted"></div></div></aside>
+  </div>
+
+  <dialog id="modal"><button class="dialog-close" onclick="closeModal()" aria-label="Close">Close</button><div class="eyebrow" id="modal-label"></div><h2 id="modal-title"></h2><div id="modal-body"></div><button id="modal-action" class="primary dialog-action" onclick="closeModal()">Done</button></dialog>
+  <dialog id="coffee-dialog"><button class="dialog-close" onclick="closeCoffeeDialog()" aria-label="Close">Close</button><h2>Log coffee</h2><form onsubmit="saveCoffee(event)"><label class="field-label">Drink<input id="coffee-drink" required placeholder="Drink"></label><label class="field-label">Time<input id="coffee-time" required type="datetime-local"></label><label class="field-label">Photo<input id="coffee-photo" type="file" accept="image/*" capture="environment"></label><div id="coffee-preview" class="coffee-preview"></div><button class="primary full" type="submit">Save</button></form></dialog>
+  <div id="offline-banner" class="offline-banner hidden" role="status">Dashboard offline <button onclick="setDashboardOffline(false)">Resume</button></div><div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  <script src="storage.js"></script><script src="app.js"></script>
+</body>
+</html>

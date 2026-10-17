@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/admin/Home",
+      "destination": "/admin/Home/",
+      "permanent": false
+    }
+  ]
+}
