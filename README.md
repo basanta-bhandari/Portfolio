@@ -4,7 +4,7 @@ This is my home on the vast internet, a place to show my work who I am, what I d
 
 ## About
 
-I made this site after realizing, despite owning a domain(through **[Hackclub][https://hackclub.com]**, :] ), I didn't have a proper site to give to people who wanted to learn more about me or my projects.
+I made this site after realizing, despite owning a domain(through  **[Hackclub](https://hackclub.com)**, :] ), I didn't have a proper site to give to people who wanted to learn more about me or my projects.
 
 So..... I decided to build one!
 
