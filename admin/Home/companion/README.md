@@ -9,7 +9,7 @@ Generate a long random token, then run:
 ```sh
 ROOMQUEST_TOKEN="replace-with-a-long-random-token" \
 ROOMQUEST_NODE_NAME="Home mini PC" \
-ROOMQUEST_ORIGINS="https://basanta.space,https://room-quest-workspace.lucky-lemon-0693.chatgpt.site" \
+ROOMQUEST_ORIGINS="https://basanta.space,https://www.basanta.space,https://room-quest-workspace.lucky-lemon-0693.chatgpt.site" \
 node companion/server.mjs
 ```
 
