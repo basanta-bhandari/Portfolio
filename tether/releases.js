@@ -1,6 +1,29 @@
 const status = document.getElementById('release-status');
 const cards = [...document.querySelectorAll('[data-asset]')];
 
+async function loadTetherSettings() {
+  try {
+    const response = await fetch('/api/tether-settings', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Settings unavailable');
+    return await response.json();
+  } catch {
+    return { pageEnabled: true, navEnabled: true, downloadsEnabled: true };
+  }
+}
+
+function applyTetherSettings(settings) {
+  const shell = document.querySelector('.shell');
+  const comingSoon = document.getElementById('tether-coming-soon');
+  const downloads = document.getElementById('downloads');
+  if (settings.pageEnabled === false) {
+    shell.hidden = true;
+    comingSoon.hidden = false;
+    return false;
+  }
+  if (settings.downloadsEnabled === false) downloads.hidden = true;
+  return true;
+}
+
 function highlightPlatform() {
   const platform = navigator.userAgentData?.platform || navigator.platform || '';
   const isMac = /mac/i.test(platform);
@@ -45,5 +68,9 @@ async function loadRelease() {
   }
 }
 
-highlightPlatform();
-loadRelease();
+(async () => {
+  const settings = await loadTetherSettings();
+  if (!applyTetherSettings(settings) || settings.downloadsEnabled === false) return;
+  highlightPlatform();
+  loadRelease();
+})();

@@ -6,6 +6,7 @@
 <title>Admin Dashboard</title>
 <link rel="icon" type="image/png" href="/favicon.png">
 <script src="/theme.js?v=2"></script>
+<script src="/site-settings.js" defer></script>
 <script src="/project-categories.js"></script>
 <link rel="stylesheet" href="../blog/styles.css">
 <link rel="stylesheet" href="/navbar.css?v=1">
@@ -306,6 +307,19 @@ Leave a blank line between paragraphs."></textarea>
   <section class="admin-panel feature-panel" id="tetherPanel" role="tabpanel" aria-labelledby="tetherTab" hidden>
     <h2>Tether / NeoNet Downloads</h2>
     <p class="feature-intro">View the currently published desktop builds and download them directly. This tab can be granted to a normal admin without giving access to posts, projects, or user management.</p>
+    <div class="admin-form-card" id="tetherSettingsControls" hidden>
+      <h3>Public Tether controls</h3>
+      <p class="feature-intro">These switches affect the public page and are available to super admins only.</p>
+      <div class="permission-grid">
+        <label><input type="checkbox" id="tetherPageEnabled"> Show the Tether page</label>
+        <label><input type="checkbox" id="tetherNavEnabled"> Show Tether in the navbar</label>
+        <label><input type="checkbox" id="tetherDownloadsEnabled"> Show downloadable builds</label>
+      </div>
+      <div class="form-actions" style="margin-top:18px;">
+        <button type="button" class="publish-btn" id="saveTetherSettings">Save Tether settings</button>
+        <span class="msg" id="tetherSettingsMsg" aria-live="polite"></span>
+      </div>
+    </div>
     <div class="form-actions">
       <a class="secondary-btn" href="/tether/" target="_blank" rel="noopener">Open public Tether page</a>
       <a class="secondary-btn" href="/tether/downloads/SHA256SUMS.txt" target="_blank" rel="noopener">View checksums</a>

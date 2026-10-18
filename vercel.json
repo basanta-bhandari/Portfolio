@@ -1,4 +1,15 @@
 {
+  "functions": {
+    "api/tether-download.js": {
+      "includeFiles": ["tether/downloads/**"]
+    }
+  },
+  "routes": [
+    {
+      "src": "^/tether/downloads/(.*)$",
+      "dest": "/api/tether-download?path=$1"
+    }
+  ],
   "redirects": [
     {
       "source": "/admin/Home",

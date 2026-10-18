@@ -153,6 +153,35 @@
     }
   }
 
+  async function loadPublicTetherSettings() {
+    try {
+      const settings = await apiJson('/api/tether-settings');
+      document.getElementById('tetherPageEnabled').checked = settings.pageEnabled !== false;
+      document.getElementById('tetherNavEnabled').checked = settings.navEnabled !== false;
+      document.getElementById('tetherDownloadsEnabled').checked = settings.downloadsEnabled !== false;
+      document.getElementById('tetherSettingsControls').hidden = false;
+    } catch (error) {
+      setMessage(document.getElementById('tetherSettingsMsg'), error.message);
+    }
+  }
+
+  async function savePublicTetherSettings() {
+    const message = document.getElementById('tetherSettingsMsg');
+    try {
+      await apiJson('/api/tether-settings', {
+        method: 'PUT',
+        body: JSON.stringify({
+          pageEnabled: document.getElementById('tetherPageEnabled').checked,
+          navEnabled: document.getElementById('tetherNavEnabled').checked,
+          downloadsEnabled: document.getElementById('tetherDownloadsEnabled').checked
+        })
+      });
+      setMessage(message, 'Tether settings saved.', true);
+    } catch (error) {
+      setMessage(message, error.message);
+    }
+  }
+
   async function loadTetherRelease() {
     const list = document.getElementById('tetherReleaseList');
     try {
@@ -203,6 +232,7 @@
 
   document.getElementById('adminRole').addEventListener('change', syncRoleControls);
   document.getElementById('cancelAdminEdit').addEventListener('click', resetAdminForm);
+  document.getElementById('saveTetherSettings').addEventListener('click', savePublicTetherSettings);
 
   document.getElementById('adminUserForm').addEventListener('submit', async event => {
     event.preventDefault();
@@ -282,7 +312,10 @@
 
     const tasks = [];
     if (allowed.includes('tether')) tasks.push(loadTetherRelease());
-    if (data.role === 'super') tasks.push(loadAdmins());
+    if (data.role === 'super') {
+      tasks.push(loadAdmins());
+      tasks.push(loadPublicTetherSettings());
+    }
     await Promise.all(tasks);
   };
 

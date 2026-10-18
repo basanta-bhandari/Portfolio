@@ -1,0 +1,16 @@
+(() => {
+  const tetherLinks = [...document.querySelectorAll('a[href="/tether"], a[href="/tether/"]')];
+  if (!tetherLinks.length) return;
+
+  fetch('/api/tether-settings', { cache: 'no-store' })
+    .then(response => response.ok ? response.json() : null)
+    .then(settings => {
+      if (settings?.navEnabled === false) {
+        tetherLinks.forEach(link => {
+          link.hidden = true;
+          link.setAttribute('aria-hidden', 'true');
+        });
+      }
+    })
+    .catch(() => {});
+})();
