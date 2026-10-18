@@ -1,16 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "functions": {
-    "api/tether-download.js": {
-      "includeFiles": "tether/downloads/**"
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/tether/downloads/:path*",
-      "destination": "/api/tether-download?path=:path*"
-    }
-  ],
   "redirects": [
     {
       "source": "/admin/Home",
