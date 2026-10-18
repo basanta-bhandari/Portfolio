@@ -1,0 +1,11 @@
+{
+  "name": "basanta-blog-image-upload",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-18",
+  "r2_buckets": [
+    {
+      "binding": "BLOG_IMAGES",
+      "bucket_name": "basanta-blog-images"
+    }
+  ]
+}

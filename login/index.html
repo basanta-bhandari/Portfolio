@@ -60,6 +60,20 @@
     outline: none;
     border-color: var(--fg);
   }
+  .remember-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 4px 0 16px;
+    color: var(--muted);
+    font-size: .78rem;
+    cursor: pointer;
+  }
+  .remember-row input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--fg);
+  }
   .login-box button {
     width: 100%;
     padding: 12px;
@@ -111,7 +125,7 @@
 <div class="login-shell">
   <div class="login-box">
     <h1>Admin Login</h1>
-    <p class="sub">Sign in to write a post.</p>
+    <p class="sub">Sign in to your permitted admin tools.</p>
     <div class="error" id="errorMsg"></div>
     <form id="loginForm">
       <div class="field">
@@ -122,6 +136,10 @@
         <label for="password">Password</label>
         <input type="password" id="password" autocomplete="current-password" required>
       </div>
+      <label class="remember-row" for="remember">
+        <input type="checkbox" id="remember">
+        <span>Remember me for 30 days</span>
+      </label>
       <button type="submit">Log in</button>
     </form>
   </div>
@@ -136,6 +154,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
+  const remember = document.getElementById('remember').checked;
   const errorMsg = document.getElementById('errorMsg');
   errorMsg.textContent = '';
   try {
@@ -143,7 +162,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ username, password, remember })
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));

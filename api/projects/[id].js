@@ -1,5 +1,6 @@
 import { sql } from '../../lib/db.js';
-import { verifyRequest } from '../../lib/auth.js';
+import { hasPermission } from '../../lib/auth.js';
+import { authenticateRequest } from '../../lib/admin-users.js';
 
 export default async function handler(req, res) {
   const id = Number(req.query.id);
@@ -11,7 +12,9 @@ export default async function handler(req, res) {
     return res.status(200).json(rows[0]);
   }
 
-  if (!verifyRequest(req)) return res.status(401).json({ error: 'Unauthorized' });
+  const session = await authenticateRequest(req);
+  if (!session) return res.status(401).json({ error: 'Unauthorized' });
+  if (!hasPermission(session, 'projects')) return res.status(403).json({ error: 'Projects access required' });
   if (req.method === 'DELETE') {
     await sql`DELETE FROM projects WHERE id = ${id}`;
     return res.status(200).json({ ok: true });

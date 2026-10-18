@@ -1,5 +1,6 @@
 import { sql } from '../../lib/db.js';
-import { verifyRequest } from '../../lib/auth.js';
+import { hasPermission } from '../../lib/auth.js';
+import { authenticateRequest } from '../../lib/admin-users.js';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -11,7 +12,9 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    if (!verifyRequest(req)) return res.status(401).json({ error: 'Unauthorized' });
+    const session = await authenticateRequest(req);
+    if (!session) return res.status(401).json({ error: 'Unauthorized' });
+    if (!hasPermission(session, 'projects')) return res.status(403).json({ error: 'Projects access required' });
     const { name, subtitle, githubUrl, additionalLinks = [], categories = [] } = req.body || {};
     if (!name || !subtitle) return res.status(400).json({ error: 'name and subtitle are required' });
     if (!Array.isArray(additionalLinks) || !Array.isArray(categories)) {

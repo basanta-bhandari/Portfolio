@@ -269,8 +269,8 @@ Reject request bodies over 64 KiB. Create the parent directory as `0700`, write 
 Allow only these origins plus explicitly configured local development origins:
 
 ```text
-https://basanta.space
-https://www.basanta.space
+https://basanta.cc
+https://www.basanta.cc
 http(s)://localhost[:port]
 http(s)://127.0.0.1[:port]
 http(s)://[::1][:port]

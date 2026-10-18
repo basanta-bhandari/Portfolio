@@ -22,6 +22,7 @@
   .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
   .topbar h2 { font-family: Arial, Helvetica, sans-serif; margin: 0; }
   .topbar-actions { display: flex; align-items: center; gap: 10px; }
+  .account-label { color: var(--muted); font-size: .72rem; }
   .topbar-actions a { padding: 8px 13px; border: 1px solid var(--line); border-radius: 8px; color: var(--fg); font: .75rem var(--mono); text-decoration: none; }
   #logoutBtn {
     background: var(--muted);
@@ -47,8 +48,10 @@
     margin-top: 4px;
   }
   .admin-wrap input[type="text"],
+  .admin-wrap input[type="password"],
   .admin-wrap input[type="url"],
-  .admin-wrap textarea {
+  .admin-wrap textarea,
+  .admin-wrap select {
     width: 100%;
     padding: 11px 12px;
     font-family: var(--mono);
@@ -60,6 +63,7 @@
   }
 
   .content-toolbar { display: flex; gap: 10px; margin-bottom: 8px; }
+  .upload-status { align-self: center; color: var(--muted); font-size: .72rem; }
   .content-toolbar button {
     font-family: var(--mono);
     font-size: .75rem;
@@ -71,6 +75,18 @@
     cursor: pointer;
   }
   .content-toolbar button:hover { background: var(--fg); color: #fff; }
+  .storage-safety {
+    margin-top: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--fg) 4%, transparent);
+    font-size: .74rem;
+    line-height: 1.55;
+  }
+  .storage-safety strong { display: block; margin-bottom: 5px; color: var(--fg); }
+  .storage-safety ul { margin: 0 0 8px; padding-left: 19px; color: var(--muted); }
+  .storage-safety a { color: var(--fg); }
 
   #content {
     width: 100%;
@@ -134,18 +150,32 @@
   .category-chip-list { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
   .category-chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 7px 5px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: .78rem; }
   .category-chip button { padding: 1px 5px; }
+  .feature-panel { padding-top: 8px; }
+  .feature-intro { max-width: 74ch; margin: 8px 0 24px; color: var(--muted); font-size: .84rem; }
+  .permission-grid { display: flex; flex-wrap: wrap; gap: 9px 18px; margin-top: 8px; }
+  .permission-grid label { display: inline-flex; align-items: center; gap: 7px; color: var(--fg); font-size: .8rem; }
+  .permission-grid input { width: 16px; height: 16px; accent-color: var(--fg); }
+  .admin-form-card { border: 1px solid var(--hair); border-radius: 16px; padding: 22px; margin: 18px 0 32px; }
+  .admin-form-card h3 { margin: 0 0 18px; font-family: Arial, Helvetica, sans-serif; }
+  .form-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .secondary-btn { padding: 11px 18px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--fg); font: .85rem var(--mono); cursor: pointer; }
+  .release-links { display: flex; flex-wrap: wrap; gap: 8px; }
+  .release-links a { padding: 8px 11px; border: 1px solid var(--line); border-radius: 8px; color: var(--fg); font-size: .76rem; text-decoration: none; }
+  .status-pill { display: inline-block; margin-left: 8px; padding: 2px 7px; border: 1px solid var(--hair); border-radius: 999px; color: var(--muted); font-size: .68rem; }
+  .status-pill.inactive { color: #c0392b; border-color: #c0392b; }
   @media (max-width: 620px) {
     .admin-wrap { padding: 24px 18px 50px; }
     .topbar, .post-row { align-items: flex-start; gap: 12px; flex-direction: column; }
     .post-actions, .project-actions { flex-wrap: wrap; }
     .post-row button, .post-row .download-btn { padding: 8px 10px; }
     .admin-wrap input[type="text"],
+    .admin-wrap input[type="password"],
     .admin-wrap input[type="url"],
     .admin-wrap textarea,
     #content,
     .category-control select { font-size: 16px; }
     .content-toolbar { flex-wrap: wrap; }
-    .admin-tabs { display: flex; width: 100%; margin-bottom: 24px; }
+    .admin-tabs { display: flex; flex-wrap: wrap; width: 100%; margin-bottom: 24px; border-radius: 18px; }
     .admin-tabs button { flex: 1; min-width: 0; }
     .category-control { align-items: stretch; flex-wrap: wrap; }
     .category-control select { flex-basis: 100%; }
@@ -156,6 +186,7 @@
   @media (max-width: 420px) {
     .admin-wrap { padding-left: 14px; padding-right: 14px; }
     .topbar h2, .admin-wrap h2 { font-size: 1.35rem; }
+    .topbar-actions { align-items: flex-start; flex-wrap: wrap; }
     .post-actions, .project-actions { width: 100%; }
     .post-actions > *, .project-actions > * { flex: 1 1 auto; text-align: center; }
     #cancelEditBtn, #cancelProjectEditBtn { margin-left: 0 !important; margin-top: 8px; }
@@ -181,14 +212,17 @@
   <div class="topbar">
     <h2>Admin Dashboard</h2>
     <div class="topbar-actions">
+      <span class="account-label" id="accountLabel"></span>
       <a href="../index.html">View site</a>
       <button id="logoutBtn">Log out</button>
     </div>
   </div>
 
   <div class="admin-tabs" role="tablist" aria-label="Admin sections">
-    <button type="button" role="tab" id="blogTab" aria-controls="blogPanel" aria-selected="true">Blog</button>
-    <button type="button" role="tab" id="projectsTab" aria-controls="projectsPanel" aria-selected="false">Projects</button>
+    <button type="button" role="tab" id="blogTab" data-panel="blog" aria-controls="blogPanel" aria-selected="true">Blog</button>
+    <button type="button" role="tab" id="projectsTab" data-panel="projects" aria-controls="projectsPanel" aria-selected="false">Projects</button>
+    <button type="button" role="tab" id="tetherTab" data-panel="tether" aria-controls="tetherPanel" aria-selected="false">Tether</button>
+    <button type="button" role="tab" id="usersTab" data-panel="users" aria-controls="usersPanel" aria-selected="false">Admin users</button>
   </div>
 
   <section class="admin-panel" id="blogPanel" role="tabpanel" aria-labelledby="blogTab">
@@ -203,7 +237,7 @@
     <div class="field">
       <label for="slug">Slug</label>
       <input type="text" id="slug" required>
-      <div class="hint">The part of the URL for this post. For example, a post titled "My First Post" might use the slug <code>my-first-post</code>, giving you basanta.space/blog/post.html?slug=my-first-post. Auto-filled from the title, edit if you want something different. Letters, numbers, and hyphens only.</div>
+      <div class="hint">The part of the URL for this post. For example, a post titled "My First Post" might use the slug <code>my-first-post</code>, giving you basanta.cc/blog/post.html?slug=my-first-post. Auto-filled from the title, edit if you want something different. Letters, numbers, and hyphens only.</div>
     </div>
 
     <div class="field">
@@ -217,6 +251,7 @@
       <div class="content-toolbar">
         <button type="button" id="insertImageBtn">+ Image</button>
         <button type="button" id="insertLinkBtn">+ Link</button>
+        <span class="upload-status" id="imageUploadStatus" aria-live="polite"></span>
         <input class="image-picker" id="imagePicker" type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif">
       </div>
       <textarea id="content" required placeholder="Write your post here.
@@ -229,7 +264,19 @@ Supports:
 ![alt text](uploaded-image.png)
 
 Leave a blank line between paragraphs."></textarea>
-      <div class="hint">Click "+ Image" to choose an image from your device. It is saved with this post, so no image URL is needed. PNG, JPG, GIF, WebP, and AVIF up to 3 MB are supported.</div>
+      <div class="hint">Click "+ Image" to upload directly to the site's image storage. No image URL is needed. PNG, JPG, GIF, WebP, and AVIF up to 3 MB are supported.</div>
+      <aside class="storage-safety" aria-label="Cloudflare R2 cost safety guidelines">
+        <strong>R2 cost safety</strong>
+        <ul>
+          <li>Use Standard storage only. Infrequent Access storage is not covered by the free allowance.</li>
+          <li>The monthly free allowance is 10 GB-month of storage, 1 million writes, and 10 million reads. It resets monthly and does not accumulate.</li>
+          <li>Upload final, compressed blog images only. This site rejects files over 3 MB.</li>
+          <li>Cloudflare does not provide a hard spending stop. Check usage monthly and keep a low budget alert enabled.</li>
+        </ul>
+        <a href="https://dash.cloudflare.com/277390b48649ae27e093823dcc38eca6/r2/overview" target="_blank" rel="noopener noreferrer">Check R2 usage</a>
+        &nbsp;|&nbsp;
+        <a href="https://dash.cloudflare.com/277390b48649ae27e093823dcc38eca6/billing" target="_blank" rel="noopener noreferrer">Check billing</a>
+      </aside>
     </div>
 
     <button type="submit" class="publish-btn" id="submitBtn">Publish</button>
@@ -255,14 +302,74 @@ Leave a blank line between paragraphs."></textarea>
     <h2 style="margin-top:50px;">Projects Added Through Admin</h2>
     <div id="projectsList"></div>
   </section>
+
+  <section class="admin-panel feature-panel" id="tetherPanel" role="tabpanel" aria-labelledby="tetherTab" hidden>
+    <h2>Tether / NeoNet Downloads</h2>
+    <p class="feature-intro">View the currently published desktop builds and download them directly. This tab can be granted to a normal admin without giving access to posts, projects, or user management.</p>
+    <div class="form-actions">
+      <a class="secondary-btn" href="/tether/" target="_blank" rel="noopener">Open public Tether page</a>
+      <a class="secondary-btn" href="/tether/downloads/SHA256SUMS.txt" target="_blank" rel="noopener">View checksums</a>
+    </div>
+    <div id="tetherReleaseList" style="margin-top:24px;"><p style="color:var(--muted);">Loading release manifest...</p></div>
+  </section>
+
+  <section class="admin-panel feature-panel" id="usersPanel" role="tabpanel" aria-labelledby="usersTab" hidden>
+    <h2>Admin Users</h2>
+    <p class="feature-intro">Super admins have full access. Normal admins receive only the selected features, and those limits are enforced by the server APIs.</p>
+
+    <div class="admin-form-card">
+      <h3 id="adminUserFormHeading">Create admin account</h3>
+      <div class="msg" id="adminUserMsg"></div>
+      <form id="adminUserForm">
+        <div class="field"><label for="adminUsername">Username</label><input type="text" id="adminUsername" minlength="3" maxlength="32" autocomplete="off" required></div>
+        <div class="field"><label for="adminPassword">Password <span id="adminPasswordHint">(minimum 10 characters)</span></label><input type="password" id="adminPassword" minlength="10" autocomplete="new-password" required></div>
+        <div class="field">
+          <label for="adminRole">Role</label>
+          <select id="adminRole">
+            <option value="admin">Normal admin</option>
+            <option value="super">Super admin</option>
+          </select>
+          <div class="hint">Super admins always have every feature and can manage accounts.</div>
+        </div>
+        <fieldset class="field" id="adminPermissions" style="border:0; padding:0;">
+          <legend style="font-size:.72rem; color:var(--muted); margin-bottom:6px;">Allowed features</legend>
+          <div class="permission-grid">
+            <label><input type="checkbox" name="adminPermission" value="blog"> Blog posts</label>
+            <label><input type="checkbox" name="adminPermission" value="projects"> Projects</label>
+            <label><input type="checkbox" name="adminPermission" value="tether"> Tether / NeoNet downloads</label>
+          </div>
+        </fieldset>
+        <div class="form-actions">
+          <button type="submit" class="publish-btn" id="adminUserSubmit">Create account</button>
+          <button type="button" class="secondary-btn" id="cancelAdminEdit" hidden>Cancel edit</button>
+        </div>
+      </form>
+    </div>
+
+    <h3>Existing accounts</h3>
+    <div id="adminUsersList"></div>
+
+    <div class="admin-form-card" style="margin-top:48px;">
+      <h3>Change my super admin password</h3>
+      <div class="msg" id="passwordMsg"></div>
+      <form id="passwordForm">
+        <div class="field"><label for="currentPassword">Current password</label><input type="password" id="currentPassword" autocomplete="current-password" required></div>
+        <div class="field"><label for="newPassword">New password</label><input type="password" id="newPassword" minlength="10" autocomplete="new-password" required></div>
+        <div class="field"><label for="confirmPassword">Confirm new password</label><input type="password" id="confirmPassword" minlength="10" autocomplete="new-password" required></div>
+        <button type="submit" class="publish-btn">Change password</button>
+      </form>
+    </div>
+  </section>
 </div>
 
+<script src="/admin/admin-access.js"></script>
 <script>
 async function checkAuth() {
   try {
     const res = await fetch('/api/session', { credentials: 'include' });
     const data = res.ok ? await res.json() : {};
     if (!data.loggedIn) return window.location.replace('/login/');
+    await window.configureAdminAccess(data);
     document.body.classList.remove('admin-pending');
   } catch {
     window.location.replace('/login/');
@@ -271,15 +378,16 @@ async function checkAuth() {
 checkAuth();
 
 function selectAdminPanel(name) {
-  const blog = name === 'blog';
-  const projects = name === 'projects';
-  document.getElementById('blogPanel').hidden = !blog;
-  document.getElementById('projectsPanel').hidden = !projects;
-  document.getElementById('blogTab').setAttribute('aria-selected', String(blog));
-  document.getElementById('projectsTab').setAttribute('aria-selected', String(projects));
+  document.querySelectorAll('.admin-panel').forEach(panel => {
+    panel.hidden = panel.id !== name + 'Panel';
+  });
+  document.querySelectorAll('.admin-tabs [data-panel]').forEach(tab => {
+    tab.setAttribute('aria-selected', String(tab.dataset.panel === name));
+  });
 }
-document.getElementById('blogTab').addEventListener('click', () => selectAdminPanel('blog'));
-document.getElementById('projectsTab').addEventListener('click', () => selectAdminPanel('projects'));
+document.querySelectorAll('.admin-tabs [data-panel]').forEach(tab => {
+  tab.addEventListener('click', () => selectAdminPanel(tab.dataset.panel));
+});
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await fetch('/api/logout', { method: 'POST', credentials: 'include' });
@@ -325,10 +433,43 @@ imagePicker.addEventListener('change', () => {
     return;
   }
   const alt = prompt('Alt text (short description of the image):', file.name.replace(/\.[^.]+$/, '')) || '';
-  const reader = new FileReader();
-  reader.onload = () => insertAtCursor('\n![' + alt + '](' + reader.result + ')\n');
-  reader.readAsDataURL(file);
+  uploadBlogImage(file, alt);
 });
+
+async function uploadBlogImage(file, alt) {
+  const status = document.getElementById('imageUploadStatus');
+  const button = document.getElementById('insertImageBtn');
+  button.disabled = true;
+  status.textContent = 'Preparing upload...';
+  try {
+    const prepare = await fetch('/api/uploads/blog-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size })
+    });
+    const upload = await prepare.json().catch(() => ({}));
+    if (!prepare.ok) throw new Error(upload.error || 'Could not prepare image upload');
+
+    status.textContent = 'Uploading image...';
+    const sent = await fetch(upload.uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type },
+      body: file
+    });
+    if (!sent.ok) throw new Error('Image upload failed');
+
+    const safeAlt = String(alt).replace(/[\[\]]/g, '');
+    insertAtCursor('\n![' + safeAlt + '](' + upload.publicUrl + ')\n');
+    status.textContent = 'Image added.';
+  } catch (error) {
+    status.textContent = '';
+    alert(error.message);
+  } finally {
+    button.disabled = false;
+    window.setTimeout(() => { status.textContent = ''; }, 2500);
+  }
+}
 
 document.getElementById('insertLinkBtn').addEventListener('click', () => {
   const url = prompt('Link URL:');

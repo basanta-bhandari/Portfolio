@@ -1,5 +1,6 @@
 import { sql } from '../../lib/db.js';
-import { verifyRequest } from '../../lib/auth.js';
+import { hasPermission } from '../../lib/auth.js';
+import { authenticateRequest } from '../../lib/admin-users.js';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -12,8 +13,9 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    const session = verifyRequest(req);
+    const session = await authenticateRequest(req);
     if (!session) return res.status(401).json({ error: 'Unauthorized' });
+    if (!hasPermission(session, 'blog')) return res.status(403).json({ error: 'Blog access required' });
 
     const { title, slug, content, excerpt } = req.body || {};
     if (!title || !slug || !content) {

@@ -1,5 +1,6 @@
 import { sql } from '../../lib/db.js';
-import { verifyRequest } from '../../lib/auth.js';
+import { hasPermission } from '../../lib/auth.js';
+import { authenticateRequest } from '../../lib/admin-users.js';
 
 export default async function handler(req, res) {
   const { slug } = req.query;
@@ -9,8 +10,9 @@ export default async function handler(req, res) {
     if (!rows[0]) return res.status(404).json({ error: 'Not found' });
 
     if (req.query.format === 'markdown') {
-      const session = verifyRequest(req);
+      const session = await authenticateRequest(req);
       if (!session) return res.status(401).json({ error: 'Unauthorized' });
+      if (!hasPermission(session, 'blog')) return res.status(403).json({ error: 'Blog access required' });
 
       const post = rows[0];
       const filename = `${post.slug}.md`.replace(/[^a-z0-9._-]/gi, '-');
@@ -33,8 +35,9 @@ export default async function handler(req, res) {
   }
 
   // Everything below this line requires a logged-in session.
-  const session = verifyRequest(req);
+  const session = await authenticateRequest(req);
   if (!session) return res.status(401).json({ error: 'Unauthorized' });
+  if (!hasPermission(session, 'blog')) return res.status(403).json({ error: 'Blog access required' });
 
   if (req.method === 'DELETE') {
     await sql`DELETE FROM posts WHERE slug = ${slug}`;
