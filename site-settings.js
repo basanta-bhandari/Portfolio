@@ -1,5 +1,5 @@
 (() => {
-  const tetherLinks = [...document.querySelectorAll('a[href="/tether"], a[href="/tether/"]')];
+  const tetherLinks = [...document.querySelectorAll('.topnav .links a[href="/tether"], .topnav .links a[href="/tether/"]')];
   if (!tetherLinks.length) return;
 
   fetch('/api/tether-settings', { cache: 'no-store' })
