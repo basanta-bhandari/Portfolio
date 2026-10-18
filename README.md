@@ -4,7 +4,7 @@ This is my home on the vast internet, a place to show my work who I am, what I d
 
 ## About
 
-I made this site after realizing, despite owning a domain(through **[Hackclub][https://hackclub.com]**, :] ), I didn't have a proper site to give to people who wanted to learn more about me or my projects.
+I made this site after realizing, despite owning a domain(through **[Hackclub](https://hackclub.com)**, :] ), I didn't have a proper site to give to people who wanted to learn more about me or my projects.
 
 So..... I decided to build one!
 
@@ -15,7 +15,7 @@ The site serves as my personal home on the internet,bundling my work, projects, 
 Built primarily with vanilla webdev stuff, keeping things simple.
 
 - **Frontend:** HTML, CSS, and JavaScript (Vanilla)
-- **Backend / Database:** Neon,(Upcoming: Cloudflare, free teir & sql)
+- **Backend / Database:** Neon, Vercel,Cloudflare R2 and a bit of sql
 - **Hosting:** Vercel (Free Tier)
 
 ## Explore
