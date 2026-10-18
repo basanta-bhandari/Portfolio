@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/tether-download.js": {
-      "includeFiles": ["tether/downloads/**"]
+      "includeFiles": "tether/downloads/**"
     }
   },
   "rewrites": [
