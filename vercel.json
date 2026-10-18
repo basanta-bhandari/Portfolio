@@ -1,13 +1,14 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/tether-download.js": {
       "includeFiles": ["tether/downloads/**"]
     }
   },
-  "routes": [
+  "rewrites": [
     {
-      "src": "^/tether/downloads/(.*)$",
-      "dest": "/api/tether-download?path=$1"
+      "source": "/tether/downloads/:path*",
+      "destination": "/api/tether-download?path=:path*"
     }
   ],
   "redirects": [
