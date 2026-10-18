@@ -14,13 +14,24 @@ async function loadTetherSettings() {
 function applyTetherSettings(settings) {
   const shell = document.querySelector('.shell');
   const comingSoon = document.getElementById('tether-coming-soon');
-  const downloads = document.getElementById('downloads');
   if (settings.pageEnabled === false) {
     shell.hidden = true;
     comingSoon.hidden = false;
     return false;
   }
-  if (settings.downloadsEnabled === false) downloads.hidden = true;
+  if (settings.downloadsEnabled === false) {
+    cards.forEach(card => {
+      const link = card.querySelector('.download-link');
+      link.removeAttribute('href');
+      link.removeAttribute('download');
+      link.classList.add('unavailable');
+      link.setAttribute('aria-disabled', 'true');
+      link.textContent = 'No support';
+    });
+    status.textContent = 'Downloads disabled · 0 builds available';
+    const note = document.querySelector('.download-note');
+    note.textContent = 'Platform support is shown for debugging. Downloads are currently disabled for every operating system.';
+  }
   return true;
 }
 
