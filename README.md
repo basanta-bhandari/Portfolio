@@ -20,7 +20,7 @@ Built primarily with vanilla webdev stuff, keeping things simple.
 
 ## Explore
 
-The website is live at **[basanta.space](https://basanta.space)**.
+The website is live at **[basanta.space](https://basanta.space)** or **[basanta.cc](https://basanta.cc)**.
 
 Everything is accessible through the navbar, except the admin panel(ofc).
 
