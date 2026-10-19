@@ -81,11 +81,24 @@
         const tags = document.createElement('div'); tags.className = 'tech-tags'; asArray(project.categories).forEach(category => text(tags, 'span', category, 'tech-tag')); card.appendChild(tags);
         const links = document.createElement('div'); links.className = 'project-links';
         const addLink = (url, label) => { const valid = safeUrl(url); if (!valid) return; const link = document.createElement('a'); link.href = valid; link.target = '_blank'; link.rel = 'noopener'; link.textContent = label; links.appendChild(link); };
-        addLink(project.github_url, 'GitHub'); asArray(project.additional_links).forEach((link, index) => addLink(link, `Link ${index + 1}`));
+        addLink(project.github_url, 'GitHub'); asArray(project.additional_links).forEach((link, index) => {
+            if (typeof link === 'string') addLink(link, `Link ${index + 1}`);
+            else addLink(link?.url, link?.label || `Link ${index + 1}`);
+        });
         if (links.childElementCount) card.appendChild(links); grid.prepend(card);
     }
     search.addEventListener('input', filterProjects);
-    fetch('/api/projects').then(res => res.ok ? res.json() : []).then(projects => { projects.reverse().forEach(addProject); filterProjects(); }).catch(() => {});
+    fetch('/api/projects').then(res => {
+        if (!res.ok) throw new Error('Could not load projects');
+        return res.json();
+    }).then(projects => {
+        grid.replaceChildren();
+        projects.forEach(addProject);
+        filterProjects();
+    }).catch(() => {
+        // Keep the built-in HTML cards visible if the database is unavailable.
+        filterProjects();
+    });
     </script>
 </body>
 </html>

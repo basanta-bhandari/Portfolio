@@ -41,3 +41,8 @@ CREATE TABLE IF NOT EXISTS site_settings (
   value JSONB NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS admin_presence (
+  admin_id INTEGER PRIMARY KEY REFERENCES admin_users(id) ON DELETE CASCADE,
+  last_seen TIMESTAMPTZ NOT NULL DEFAULT now()
+);

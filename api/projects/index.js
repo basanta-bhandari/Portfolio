@@ -1,12 +1,14 @@
 import { sql } from '../../lib/db.js';
 import { hasPermission } from '../../lib/auth.js';
 import { authenticateRequest } from '../../lib/admin-users.js';
+import { ensureDefaultProjects } from '../../lib/default-projects.js';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
+    await ensureDefaultProjects();
     const rows = await sql`
       SELECT id, name, subtitle, github_url, additional_links, categories, created_at, updated_at
-      FROM projects ORDER BY created_at DESC
+      FROM projects ORDER BY created_at DESC, id DESC
     `;
     return res.status(200).json(rows);
   }
