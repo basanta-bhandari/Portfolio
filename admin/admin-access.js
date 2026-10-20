@@ -13,6 +13,11 @@
   let session = null;
   let admins = [];
   let editingAdminId = null;
+  let presenceTimer = null;
+  let chatTimer = null;
+  let chatLoading = false;
+  let renderedMessageIds = '';
+  let chatMessages = [];
 
   function setMessage(element, text, ok = false) {
     element.textContent = text;
@@ -230,9 +235,158 @@
     }
   }
 
+  function renderPresence(adminList) {
+    const list = document.getElementById('presenceList');
+    list.replaceChildren();
+    adminList.forEach(admin => {
+      const person = document.createElement('div');
+      person.className = 'presence-person' + (admin.online ? ' online' : '');
+      const dot = document.createElement('span');
+      dot.className = 'presence-dot';
+      dot.setAttribute('aria-hidden', 'true');
+      const details = document.createElement('span');
+      const name = document.createElement('strong');
+      name.textContent = admin.username + (admin.id === session.id ? ' (you)' : '');
+      const status = document.createElement('small');
+      status.textContent = admin.online
+        ? 'Online now'
+        : admin.lastSeen
+          ? 'Offline, last seen ' + new Date(admin.lastSeen).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
+          : 'Offline';
+      details.append(name, status);
+      person.append(dot, details);
+      list.appendChild(person);
+    });
+  }
+
+  async function refreshPresence(showError = false) {
+    if (document.visibilityState === 'hidden') return;
+    try {
+      const data = await apiJson('/api/admin-presence', { method: 'POST' });
+      renderPresence(data.admins || []);
+    } catch (error) {
+      if (showError) setMessage(document.getElementById('chatMsg'), error.message);
+    }
+  }
+
+  function renderChat() {
+    const log = document.getElementById('chatLog');
+    const query = document.getElementById('chatSearch').value.trim().toLocaleLowerCase();
+    const messages = query
+      ? chatMessages.filter(message =>
+          message.username.toLocaleLowerCase().includes(query) ||
+          message.message.toLocaleLowerCase().includes(query))
+      : chatMessages;
+    const messageIds = query + ':' + messages.map(message => message.id).join(',');
+    if (messageIds === renderedMessageIds) return;
+    const keepAtBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 70;
+    renderedMessageIds = messageIds;
+    log.replaceChildren();
+    if (!messages.length) {
+      const empty = document.createElement('p');
+      empty.className = 'chat-empty';
+      empty.textContent = query ? 'No messages match that search.' : 'No messages yet. Say hello.';
+      log.appendChild(empty);
+      return;
+    }
+    messages.forEach(message => {
+      const item = document.createElement('article');
+      item.className = 'chat-message' + (message.adminId === session.id ? ' own' : '');
+      const head = document.createElement('div');
+      head.className = 'chat-message-head';
+      const author = document.createElement('strong');
+      author.textContent = message.username;
+      const time = document.createElement('time');
+      const sentAt = new Date(message.createdAt);
+      time.dateTime = sentAt.toISOString();
+      time.textContent = sentAt.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+      const body = document.createElement('p');
+      body.textContent = message.message;
+      head.append(author, time);
+      item.append(head, body);
+      log.appendChild(item);
+    });
+    if (keepAtBottom) log.scrollTop = log.scrollHeight;
+  }
+
+  async function loadChat(showError = false) {
+    if (chatLoading || document.visibilityState === 'hidden') return;
+    chatLoading = true;
+    try {
+      const data = await apiJson('/api/admin-chat', { cache: 'no-store' });
+      chatMessages = data.messages || [];
+      renderChat();
+      document.getElementById('chatMsg').textContent = '';
+    } catch (error) {
+      if (showError) setMessage(document.getElementById('chatMsg'), error.message);
+    } finally {
+      chatLoading = false;
+    }
+  }
+
+  function stopChatPolling() {
+    if (chatTimer) window.clearInterval(chatTimer);
+    chatTimer = null;
+  }
+
+  function startChatPolling() {
+    stopChatPolling();
+    loadChat(true);
+    refreshPresence(true);
+    chatTimer = window.setInterval(() => loadChat(false), 6000);
+  }
+
+  function startPresenceHeartbeat() {
+    if (presenceTimer) window.clearInterval(presenceTimer);
+    refreshPresence(true);
+    presenceTimer = window.setInterval(() => refreshPresence(false), 25000);
+  }
+
+  window.onAdminPanelSelected = name => {
+    if (name === 'chat') startChatPolling();
+    else stopChatPolling();
+  };
+
   document.getElementById('adminRole').addEventListener('change', syncRoleControls);
   document.getElementById('cancelAdminEdit').addEventListener('click', resetAdminForm);
   document.getElementById('saveTetherSettings').addEventListener('click', savePublicTetherSettings);
+  document.getElementById('chatForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const input = document.getElementById('chatInput');
+    const button = document.getElementById('chatSendBtn');
+    const message = input.value.trim();
+    if (!message) return;
+    button.disabled = true;
+    try {
+      await apiJson('/api/admin-chat', {
+        method: 'POST',
+        body: JSON.stringify({ message })
+      });
+      input.value = '';
+      renderedMessageIds = '';
+      await loadChat(true);
+    } catch (error) {
+      setMessage(document.getElementById('chatMsg'), error.message);
+    } finally {
+      button.disabled = false;
+      input.focus();
+    }
+  });
+  document.getElementById('chatInput').addEventListener('keydown', event => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      document.getElementById('chatForm').requestSubmit();
+    }
+  });
+  document.getElementById('chatSearch').addEventListener('input', () => {
+    renderedMessageIds = '';
+    renderChat();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    refreshPresence(false);
+    if (document.getElementById('chatTab').getAttribute('aria-selected') === 'true') loadChat(false);
+  });
 
   document.getElementById('adminUserForm').addEventListener('submit', async event => {
     event.preventDefault();
@@ -296,8 +450,8 @@
       data.username + ' / ' + (data.role === 'super' ? 'super admin' : 'normal admin');
 
     const allowed = data.role === 'super'
-      ? ['blog', 'projects', 'tether', 'users']
-      : data.permissions;
+      ? ['blog', 'projects', 'tether', 'chat', 'users']
+      : [...new Set([...data.permissions, 'chat'])];
     document.querySelectorAll('.admin-tabs [data-panel]').forEach(tab => {
       tab.hidden = !allowed.includes(tab.dataset.panel);
     });
@@ -306,7 +460,7 @@
       panel.hidden = !allowed.includes(name);
     });
 
-    const firstPanel = ['blog', 'projects', 'tether', 'users'].find(name => allowed.includes(name));
+    const firstPanel = ['blog', 'projects', 'tether', 'chat', 'users'].find(name => allowed.includes(name));
     if (!firstPanel) throw new Error('This account has no enabled admin features');
     window.selectAdminPanel(firstPanel);
 
@@ -317,6 +471,7 @@
       tasks.push(loadPublicTetherSettings());
     }
     await Promise.all(tasks);
+    startPresenceHeartbeat();
   };
 
   syncRoleControls();

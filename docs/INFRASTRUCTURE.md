@@ -1,0 +1,472 @@
+# Portfolio Backend and Infrastructure Guide
+
+This document describes how the portfolio works from the browser through DNS, Vercel, Neon, and Cloudflare. It is the operational reference for deploying, maintaining, backing up, and troubleshooting the site.
+
+`README.md` is intentionally separate and is not replaced by this guide.
+
+## 1. System overview
+
+The public site is mostly HTML, CSS, and browser JavaScript. Vercel serves those files and runs the server-side JavaScript files under `api/` as serverless functions. Neon stores structured text and settings. Cloudflare provides authoritative DNS and R2 object storage. Porkbun remains the registrar for the domain.
+
+```mermaid
+flowchart LR
+    Visitor[Browser] -->|HTTPS| CF[Cloudflare DNS]
+    CF --> V[Vercel]
+    V --> Static[HTML, CSS and browser JS]
+    V --> API[Serverless API functions]
+    API --> N[(Neon PostgreSQL)]
+    API -->|Signed internal request| W[Cloudflare Worker]
+    W --> R2[(Cloudflare R2)]
+    R2 -->|Public blog images only| Visitor
+```
+
+The main responsibilities are:
+
+| Service | Responsibility |
+| --- | --- |
+| Porkbun | Domain registration and renewal for `basanta.cc` |
+| Cloudflare DNS | Authoritative DNS for the domain |
+| Vercel | Static hosting, serverless API functions, HTTPS, redirects, and GitHub deployments |
+| Neon | PostgreSQL data for posts, projects, users, settings, and admin presence |
+| Cloudflare Worker | Validates signed image uploads and handles encrypted admin chat storage |
+| Cloudflare R2 | Stores blog images and encrypted admin-chat ciphertext |
+| GitHub | Source history and the deployment source used by Vercel |
+
+## 2. Domains and DNS
+
+### Registrar
+
+`basanta.cc` is registered at Porkbun. Porkbun controls ownership and renewal, but it is not the active DNS host. The authoritative nameservers at Porkbun must remain:
+
+- `dora.ns.cloudflare.com`
+- `elliot.ns.cloudflare.com`
+
+Changing the nameservers back to Porkbun would bypass the Cloudflare DNS records and could show Porkbun's parking page.
+
+### Public hostnames
+
+| Hostname | Purpose |
+| --- | --- |
+| `www.basanta.cc` | Canonical website address on Vercel |
+| `basanta.cc` | Redirects to `https://www.basanta.cc/` |
+| `media.basanta.cc` | Public custom domain for the R2 bucket used by blog images |
+| `basanta.space` and `www.basanta.space` | Legacy addresses that should redirect to `www.basanta.cc` |
+
+Use the DNS values currently shown by Vercel when changing Vercel records. Do not copy old IP addresses from this document because Vercel can change its recommended records.
+
+The R2 custom-domain record is managed by Cloudflare and remains proxied. Vercel DNS records should follow Vercel's current instructions. When Vercel says a CNAME must be DNS-only, do not enable the Cloudflare proxy for that record.
+
+### Preventing migration cache problems
+
+When moving DNS providers, create equivalent records at the old and new providers before changing nameservers, then keep both configurations valid for at least 48 hours. DNS and TLS are resolved before website code runs, so no HTML or JavaScript can repair a stale resolver.
+
+This workstation's wired connection is configured to ignore the router's DNS and use Cloudflare resolvers directly:
+
+- IPv4: `1.1.1.1`, `1.0.0.1`
+- IPv6: `2606:4700:4700::1111`, `2606:4700:4700::1001`
+
+## 3. Repository and deployment flow
+
+There are two local copies:
+
+| Location | Purpose |
+| --- | --- |
+| `~/Desktop/Codex-Prjs/Portfolio` | Working copy where Codex changes are made |
+| `~/Desktop/Submitted- Prjs/Portfolio` | Main Git checkout connected to GitHub and Vercel |
+
+`~/port.sh` copies the working copy into the main checkout with `rsync --delete`, then asks for a commit message, commits, and pushes.
+
+The script deliberately preserves:
+
+- `.git/`
+- `.vercel/`
+- `node_modules/`
+- `.env`
+- `.env.local`
+- `.env*.local`
+
+Because it uses `--delete`, a file that exists only in the main checkout would normally be removed. Before syncing after independent edits or GitHub changes, pull and run a dry comparison:
+
+```bash
+cd "$HOME/Desktop/Submitted- Prjs/Portfolio"
+git pull --ff-only
+
+rsync -rcni --delete --itemize-changes \
+  --exclude='.git/' \
+  --exclude='.vercel/' \
+  --exclude='node_modules/' \
+  --exclude='.env' \
+  --exclude='.env.local' \
+  --exclude='.env*.local' \
+  "$HOME/Desktop/Codex-Prjs/Portfolio/" \
+  "$HOME/Desktop/Submitted- Prjs/Portfolio/"
+```
+
+Any output beginning with `*deleting` needs review before running `port.sh`.
+
+After `git push`, Vercel automatically creates a deployment from the GitHub repository. Production should use `www.basanta.cc` as its primary domain and redirect the apex domain to it.
+
+## 4. Vercel
+
+Vercel has two jobs:
+
+1. Serve the static pages and assets.
+2. Execute JavaScript files inside `api/` as serverless functions.
+
+The repository uses native ES modules. `package.json` contains one runtime dependency, `@neondatabase/serverless`, which provides the Neon SQL client. Vercel installs this dependency during deployment. Normal maintenance for this project does not require running npm, pnpm, bun, or npx locally.
+
+`vercel.json` currently contains the route normalization for `/admin/Home`. Domain redirects are managed through Vercel's project-domain settings.
+
+### Vercel environment variables
+
+These values belong in Vercel Project Settings under Environment Variables. Add them to Production and any Preview environment that should support the backend.
+
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Neon PostgreSQL connection string |
+| `JWT_SECRET` | Signs admin session cookies |
+| `ADMIN_USERNAME` | Bootstrap username for the first super admin |
+| `ADMIN_PASSWORD_HASH` | Scrypt hash for the bootstrap super-admin password |
+| `R2_UPLOAD_URL` | Base URL of the Cloudflare upload Worker |
+| `R2_UPLOAD_SECRET` | Shared HMAC secret for signed blog-image uploads |
+| `R2_PUBLIC_BASE_URL` | Public R2 domain, normally `https://media.basanta.cc` |
+| `R2_CHAT_API_URL` | Base URL of the Worker that handles encrypted admin chat |
+| `R2_CHAT_API_SECRET` | Shared HMAC secret used only between Vercel and the Worker |
+
+Never put the raw admin password, database password, session secret, upload secret, chat API secret, or chat encryption key in Git.
+
+## 5. Neon PostgreSQL
+
+`lib/db.js` creates the Neon client from `DATABASE_URL`. SQL calls use tagged templates so user-supplied values are sent as parameters instead of being joined into query strings.
+
+`sql/schema.sql` documents the database schema. Several server modules also create their required tables safely with `CREATE TABLE IF NOT EXISTS`, which allows existing deployments to gain new tables without destructive migrations.
+
+### Tables
+
+#### `posts`
+
+Stores blog text:
+
+- title
+- unique slug
+- excerpt
+- Markdown content
+- publication timestamp
+- last-edited timestamp
+
+Images are not stored in this table. Markdown content contains the public R2 image URL.
+
+#### `projects`
+
+Stores all public projects:
+
+- name
+- subtitle or short description
+- optional GitHub URL
+- optional additional links as JSON
+- categories as JSON
+- creation and edit timestamps
+
+The entries that originally lived only in `projects/index.html` are imported once by `lib/default-projects.js`. A marker named `default_projects_v1` in `site_settings` prevents deleted projects from being recreated. After import, every old and new project can be edited or deleted from the admin dashboard.
+
+The original HTML cards remain only as a public fallback when the API or database is unavailable. When the API succeeds, browser JavaScript replaces those cards with the database response.
+
+#### `admin_users`
+
+Stores admin identities:
+
+- unique username
+- scrypt password hash
+- role: `super` or `admin`
+- feature permissions as JSON
+- enabled or disabled state
+- authentication version
+- timestamps
+
+Incrementing `auth_version` invalidates older sessions after a password change.
+
+#### `site_settings`
+
+Stores JSON settings by key. It currently holds the Tether visibility/download controls and the one-time project-import marker.
+
+#### `admin_presence`
+
+Stores one last-seen timestamp per admin account. A dashboard heartbeat updates it every 25 seconds. An account is shown online for 75 seconds after its most recent heartbeat. Logging out removes the presence row immediately. Closing a browser without logging out can therefore take about a minute to appear offline.
+
+Chat message content is not stored in Neon.
+
+## 6. Authentication and authorization
+
+### Passwords
+
+Passwords are hashed with Node's built-in scrypt implementation and a random salt. The database and environment variables contain only the encoded salt and hash.
+
+### Sessions
+
+Successful login creates an HMAC-signed session token in an `HttpOnly`, `Secure`, `SameSite=Strict` cookie. Browser JavaScript cannot read that cookie.
+
+- Standard session: 12 hours and ends with the browser session cookie.
+- “Remember me”: persistent cookie for 30 days.
+
+Every protected API request reloads the admin account from Neon and verifies that it is enabled and that its authentication version still matches the token.
+
+### Roles
+
+Super admins can:
+
+- manage blog posts
+- manage projects
+- view Tether downloads
+- change public Tether settings
+- create, edit, disable, and delete admin accounts
+- change their own password
+- use admin chat
+
+Normal admins receive selected permissions for blog posts, projects, and Tether. API functions enforce those permissions on the server; hiding a tab in the browser is only a usability feature. All authenticated admins can use the private admin chat and presence list.
+
+The API prevents deleting the account currently in use and prevents removing the final active super admin.
+
+## 7. Blog system
+
+The public blog page calls `GET /api/posts`. Individual pages call `GET /api/posts/[slug]` and render stored Markdown safely into the terminal-style layout.
+
+Authorized blog admins can:
+
+- publish a post
+- edit a post while keeping its slug
+- delete a post
+- download a post as a Markdown file with front matter
+- upload an image without manually finding a URL
+
+An edited post receives `updated_at = now()`, which is displayed next to its original publication date.
+
+### Image-upload flow
+
+```mermaid
+sequenceDiagram
+    participant A as Admin browser
+    participant V as Vercel API
+    participant W as Cloudflare Worker
+    participant R as R2 bucket
+
+    A->>V: Request image upload
+    V->>V: Verify session and blog permission
+    V-->>A: Signed five-minute upload URL
+    A->>W: PUT image with signed URL
+    W->>W: Verify origin, HMAC, type and size
+    W->>R: Store object
+    W-->>A: Upload complete
+    A->>A: Insert public image URL into Markdown
+```
+
+Allowed image formats are PNG, JPEG, GIF, WebP, and AVIF. The maximum accepted size is 3 MB. Object names contain a random UUID and receive an immutable one-year public cache header.
+
+## 8. Project system
+
+The public page calls `GET /api/projects`, then builds project cards using DOM methods and `textContent`. Search matches names, descriptions, categories, and links.
+
+Authorized project admins can create, edit, and delete projects. New projects require one to three categories. Previously used and built-in categories are offered in the category selector.
+
+Project links are validated before being placed in the public page. Only HTTP and HTTPS links are rendered.
+
+## 9. Tether and NeoNet controls
+
+The release manifest lives at `tether/downloads/latest.json`. The public page uses it to show platform support and downloads.
+
+Super admins control three independent settings:
+
+1. Show or replace the Tether page with “Coming soon.”
+2. Show or hide Tether in every navbar.
+3. Enable or disable downloads while still showing every platform and its support status.
+
+Normal admins with Tether permission can view the release information but cannot change the public switches.
+
+## 10. Encrypted admin chat
+
+The admin dashboard provides a chat tab for every authenticated admin. The browser never talks directly to R2 and never receives an encryption key.
+
+```mermaid
+sequenceDiagram
+    participant B as Admin browser
+    participant V as Vercel API
+    participant W as Cloudflare Worker
+    participant R as R2 bucket
+
+    B->>V: Send or fetch chat messages
+    V->>V: Authenticate admin session
+    V->>W: HMAC-signed internal request
+    W->>W: Verify signature and timestamp
+    W->>W: Encrypt or decrypt with AES-256-GCM
+    W->>R: Conditional read or write
+    W-->>V: Plain JSON over HTTPS
+    V-->>B: Authorized chat response
+```
+
+The Worker stores one encrypted rolling chat object at `admin-chat/messages-v1.enc`. The R2 object contains ciphertext, a random AES-GCM nonce, and an authentication tag. R2 never receives plaintext through its storage API.
+
+The internal Worker endpoint requires an HMAC signature containing the method, path, timestamp, and request-body hash. Requests older than 60 seconds are rejected. Conditional R2 writes use the previous ETag and retry when two admins send at the same moment, preventing silent overwrites.
+
+The chat keeps the latest 100 messages from the last 90 days. Each message is limited to 1,000 characters. Admins can search the loaded history by sender or message text. Enter sends, Shift+Enter inserts a newline, and a failed send leaves the draft in the composer so it can be retried. The UI always inserts text with `textContent`, so a message cannot inject HTML or JavaScript.
+
+### Cloudflare Worker secrets
+
+These belong only in the Cloudflare Worker settings:
+
+| Secret | Purpose |
+| --- | --- |
+| `UPLOAD_SECRET` | Existing HMAC secret for image uploads |
+| `CHAT_API_SECRET` | Must match Vercel's `R2_CHAT_API_SECRET` |
+| `CHAT_ENCRYPTION_KEY` | A 32-byte AES key encoded as 64 hexadecimal characters |
+
+Generate independent values with `openssl rand -hex 32`. Never reuse `JWT_SECRET`, a password, or the database password.
+
+Back up `CHAT_ENCRYPTION_KEY` in a trusted password manager. Losing it makes existing chat ciphertext permanently unreadable. Changing it without first migrating the encrypted object has the same effect.
+
+## 11. Cloudflare R2 and cost control
+
+The bucket binding is named `BLOG_IMAGES` and currently points to `basanta-blog-images`. It stores both public blog images and the private encrypted chat object.
+
+The current free R2 Standard allowance shown for this account is:
+
+- 10 GB-month of Standard storage
+- 1 million Class A operations per month
+- 10 million Class B operations per month
+- zero Internet egress fees
+
+These allowances reset monthly and do not accumulate. Confirm current limits in the Cloudflare dashboard because provider pricing can change.
+
+Use Standard storage. The free allowance does not apply to Infrequent Access storage. Keep images compressed, retain the 3 MB upload limit, and check the R2 usage dashboard monthly. Cloudflare does not provide a guaranteed hard spending stop, so keep a low billing alert configured.
+
+The chat uses one rolling encrypted object, which bounds storage and requires one object read per refresh rather than reading a separate R2 object for every message.
+
+## 12. Browser JavaScript
+
+The site deliberately uses browser-native JavaScript instead of a frontend framework.
+
+Important files include:
+
+| File | Responsibility |
+| --- | --- |
+| `theme.js` | Dark/light theme state and toggle behavior |
+| `site-settings.js` | Applies the public Tether navbar setting |
+| `project-categories.js` | Built-in category suggestions |
+| `admin/admin-access.js` | Admin roles, user management, Tether controls, presence, and chat |
+| `blog/index.html` scripts | Post loading, progress display, and fuzzy search |
+| `blog/post.html` scripts | Individual post loading and Markdown rendering |
+| `projects/index.html` scripts | Database project cards and fuzzy search |
+| `tether/releases.js` | Release/platform display and public Tether controls |
+
+Dynamic user content is placed into the page using DOM creation and `textContent`. URLs are parsed and protocol-checked before they become links.
+
+## 13. API inventory
+
+| Route | Main methods | Access |
+| --- | --- | --- |
+| `/api/login` | POST | Public credentials endpoint |
+| `/api/logout` | POST | Logged-in session; also clears presence |
+| `/api/session` | GET | Returns current session status |
+| `/api/change-password` | POST | Super admin |
+| `/api/admin-users` | GET, POST | Super admin |
+| `/api/admin-users/[id]` | PUT, DELETE | Super admin |
+| `/api/posts` | GET, POST | GET public; POST requires blog permission |
+| `/api/posts/[slug]` | GET, PUT, DELETE | Reading public; changes require blog permission |
+| `/api/projects` | GET, POST | GET public; POST requires project permission |
+| `/api/projects/[id]` | GET, PUT, DELETE | Reading public; changes require project permission |
+| `/api/uploads/blog-image` | POST | Blog permission |
+| `/api/tether-settings` | GET, PUT | GET public; PUT requires super admin |
+| `/api/admin-presence` | POST | Any authenticated admin |
+| `/api/admin-chat` | GET, POST | Any authenticated admin |
+
+## 14. Backups and recovery
+
+### Git and static files
+
+GitHub is the backup and history for source code and static assets. R2 objects and Neon data are not stored in Git.
+
+### Neon
+
+Periodically export the following tables:
+
+- `posts`
+- `projects`
+- `admin_users`
+- `site_settings`
+
+`admin_presence` is temporary and does not need backup.
+
+Treat a database export as sensitive because it contains password hashes and admin metadata. Store it privately and encrypted.
+
+### Cloudflare R2
+
+Blog images should be backed up if they cannot be recreated. The encrypted chat object is useful only together with `CHAT_ENCRYPTION_KEY`.
+
+### Secret recovery
+
+- Losing `JWT_SECRET` logs everyone out after replacement but does not delete content.
+- Losing `R2_UPLOAD_SECRET` stops new image uploads until the same replacement is installed in Vercel and Cloudflare.
+- Losing `R2_CHAT_API_SECRET` stops chat until the same replacement is installed in Vercel and Cloudflare.
+- Losing `CHAT_ENCRYPTION_KEY` makes existing encrypted chat history unrecoverable.
+- Losing the bootstrap password does not matter after a database super admin exists, provided another super admin can reset the account.
+
+## 15. Safe deployment checklist
+
+1. Pull the main Git checkout with `git pull --ff-only`.
+2. Run the deletion-aware `rsync` dry run shown earlier.
+3. Confirm `README.md` and any files edited directly in the main checkout are preserved.
+4. Run `node --test` in the working copy.
+5. Run `~/port.sh` and provide a short commit message.
+6. Watch the Vercel production deployment until it succeeds.
+7. If Worker code changed, deploy `cloudflare/blog-image-worker/src/index.js` to `basanta-blog-image-upload` and preserve its `BLOG_IMAGES` binding.
+8. Confirm all Worker secrets are present.
+9. Test login, blog loading, project loading, image upload, admin presence, chat, and logout.
+10. Test both `https://basanta.cc/` and `https://www.basanta.cc/` in a clean browser session.
+
+## 16. Troubleshooting
+
+### Porkbun parking page or TLS errors
+
+Check authoritative nameservers first:
+
+```bash
+dig NS basanta.cc +short
+```
+
+The result should be the Cloudflare nameservers, not Porkbun nameservers. Then compare the default resolver with a public resolver:
+
+```bash
+dig A www.basanta.cc +short
+dig @1.1.1.1 A www.basanta.cc +short
+```
+
+If Cloudflare is correct but the default result is old, the device, router, or ISP resolver has stale DNS.
+
+### Admin redirects to login
+
+Check that the session cookie exists, `JWT_SECRET` has not changed, the account is enabled, and its `auth_version` still matches. A password change intentionally invalidates old sessions.
+
+### Blog or projects do not load
+
+Check the Vercel function logs and the `DATABASE_URL` environment variable. Confirm the Neon database is awake and the required tables exist.
+
+### Images do not upload
+
+Confirm `R2_UPLOAD_URL`, `R2_UPLOAD_SECRET`, and `R2_PUBLIC_BASE_URL` in Vercel. Confirm the Worker has the matching `UPLOAD_SECRET` and the `BLOG_IMAGES` R2 binding.
+
+### Chat says encrypted storage is not configured
+
+Confirm `R2_CHAT_API_URL` and `R2_CHAT_API_SECRET` in Vercel. Confirm the Worker has matching `CHAT_API_SECRET`, a valid 64-character hexadecimal `CHAT_ENCRYPTION_KEY`, and the R2 binding.
+
+### Admin incorrectly appears online
+
+Presence expires automatically after 75 seconds. Logging out clears it immediately, while closing the tab without logging out waits for expiration.
+
+## 17. Security rules
+
+- Never commit `.env`, `.env.local`, database URLs, API secrets, encryption keys, or raw passwords.
+- Never send secrets through chat, screenshots, issue trackers, or commit messages.
+- Use separate random values for every secret.
+- Keep at least one active super admin.
+- Give normal admins only the features they need.
+- Rotate a shared secret in both services during the same maintenance window.
+- Treat database exports and encrypted R2 backups as private.
+- Review Vercel and Cloudflare logs after unexplained authentication or upload failures.

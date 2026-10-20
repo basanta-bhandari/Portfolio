@@ -5,7 +5,7 @@ import { ADMIN_CHAT_MESSAGE_LIMIT, touchAdminPresence } from '../lib/admin-commu
 const CHAT_PATH = '/internal/admin-chat';
 
 function chatConfig() {
-  const baseUrl = String(process.env.R2_CHAT_API_URL || '').replace(/\/+$/, '');
+  const baseUrl = String(process.env.R2_CHAT_API_URL || process.env.R2_UPLOAD_URL || '').replace(/\/+$/, '');
   const secret = process.env.R2_CHAT_API_SECRET;
   return baseUrl && secret ? { baseUrl, secret } : null;
 }
