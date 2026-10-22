@@ -1,11 +1,11 @@
 /* Page integration for the supplied CRTMonitor model; its shell CSS stays intact. */
 .stats-stage { min-height:calc(100svh - 70px); padding:42px 24px 56px; background:radial-gradient(ellipse at 50% 50%,#fcf8ec,transparent 75%),#e3e4d9; color:#303c33; }
 :root[data-theme="dark"] .stats-stage { background:radial-gradient(ellipse at 50% 55%,#23452c55,transparent 65%),#0c120f; color:#d5dfd3; }
-.stats-intro { max-width:900px; margin:0 auto 34px; display:flex; justify-content:space-between; align-items:end; gap:20px; }
+.stats-intro { max-width:720px; margin:0 auto 34px; display:flex; justify-content:space-between; align-items:end; gap:20px; }
 .eyebrow { font-size:10px; letter-spacing:2px; opacity:.7; }
 .stats-intro h1 { font:400 clamp(24px,4vw,36px) var(--mono); margin-top:10px; }
 .stats-intro > p { font-size:12px; }
-.crt-monitor { margin:0 auto; --crt-content-padding:6%; --terminal-muted:#80c991; --terminal-line:#518a6066; --terminal-error:#ebc488; }
+.crt-monitor { max-width:720px; margin:0 auto; padding-bottom:min(2.3%,16.56px); --crt-content-padding:7%; --terminal-muted:#80c991; --terminal-line:#518a6066; --terminal-error:#ebc488; }
 .crt-monitor[data-theme="light"] { --terminal-muted:#536a59; --terminal-line:#526f5e55; --terminal-error:#85401c; }
 .crt-monitor__content { display:flex; flex-direction:column; }
 .screen-header,.screen-footer { display:flex; justify-content:space-between; gap:10px; font-size:10px; letter-spacing:.5px; color:var(--terminal-muted); flex:none; }
@@ -48,21 +48,15 @@
 .crt-monitor.power-off .crt-monitor__glass { background:#0c120f; box-shadow:inset 0 0 18px #0009; }
 .crt-monitor.power-off .crt-monitor__glass > * { visibility:hidden; }
 .crt-monitor.power-off .crt-monitor__power > span { background:#344236; box-shadow:none; }
-.command-shortcuts { display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin:28px auto 0; max-width:900px; }
-.command-shortcuts button { min-height:40px; padding:8px 14px; font:12px var(--mono); color:inherit; background:transparent; border:1px solid currentColor; border-radius:4px; cursor:pointer; }
-.command-shortcuts button:hover { background:#79977d22; }
 .stats-stage noscript p { text-align:center; padding:24px; }
 @keyframes cursor-blink { 50% { opacity:0; } }
 @media(max-width:600px) {
   .stats-stage { padding:28px 10px 40px; }
   .stats-intro { padding:0 10px; flex-direction:column; align-items:start; gap:10px; margin-bottom:24px; }
-  .crt-monitor__glass { aspect-ratio:auto; height:390px; width:100%; }
-  .crt-monitor__chin { aspect-ratio:auto; height:44px; width:100%; }
-  .crt-monitor__controls { height:24px; }
-  .crt-monitor__vents { height:20px; }
-  .crt-monitor__badge { font-size:7px; }
+  .screen-header { padding-bottom:6px; }
+  .screen-footer { padding-top:6px; }
   .screen-header,.screen-footer { font-size:8px; letter-spacing:0; }
-  .terminal-scroll { font-size:11px; }
+  .terminal-scroll { font-size:11px; padding-block:10px; }
   .stat-columns { grid-template-columns:1fr; gap:0; }
   .command-form { flex-wrap:wrap; gap:4px; }
   .command-form label { font-size:10px; }
