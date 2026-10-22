@@ -2,42 +2,53 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore Basanta's public GitHub and deployment stats through a vintage terminal.">
   <title>Stats | Basanta Bhandari</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <script src="/theme.js?v=2"></script><script src="/site-settings.js" defer></script>
-  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/navbar.css?v=1"><link rel="stylesheet" href="/theme-toggle.css?v=2"><link rel="stylesheet" href="/stats/styles.css?v=2">
+  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/navbar.css?v=1"><link rel="stylesheet" href="/theme-toggle.css?v=2"><link rel="stylesheet" href="/stats/styles.css?v=3">
+  <script src="/stats/terminal.js?v=3" defer></script>
 </head>
 <body>
-  <div class="grid-background" aria-hidden="true"></div>
   <nav class="topnav" aria-label="Main navigation"><a href="/" class="brand">HOME?<span class="dot">.</span></a><div class="links">
     <a href="/">Home</a><a href="/projects">Projects</a><a href="/stats" aria-current="page">Stats</a><a href="/tether">Tether</a><a href="/blog">Blog</a><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener noreferrer">GitHub</a>
-    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch theme"><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l-1.41-1.41M17.66 6.34l-1.41-1.41"/></svg><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
+    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch theme"><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
   </div></nav>
-  <main class="crt-page">
-    <header class="crt-intro"><p class="crt-kicker">PORTFOLIO TELEMETRY // TERMINAL ACCESS</p><h1>Stats</h1><p>Public signals from the code repository and the deployment pipeline. The machine checks live data when the screen boots.</p></header>
-    <section class="desk" aria-label="CRT stats terminal">
-      <div class="monitor">
-        <div class="monitor-top"><span class="monitor-brand">BASANTA SYSTEMS</span><span class="monitor-model">MODEL 86 // ONLINE</span></div>
-        <div class="bezel"><div class="screen"><div class="screen-glass"><div class="scanlines" aria-hidden="true"></div><div class="terminal-bar"><span class="led"></span><span>stats://portfolio</span><span id="terminalClock">--:--:--</span></div><div class="terminal-body">
-          <p class="prompt"><span>basanta@portfolio</span>:~$ stats --live</p><p id="terminalStatus" class="terminal-status">Connecting to public telemetry...</p>
-          <div class="terminal-columns">
-            <section class="terminal-section"><h2>GITHUB / REPOSITORY</h2><p class="repo-name" id="repoName">basanta-bhandari/Portfolio</p><div class="terminal-metrics"><p><span>STARS</span><strong id="ghStars">--</strong></p><p><span>FORKS</span><strong id="ghForks">--</strong></p><p><span>ISSUES</span><strong id="ghIssues">--</strong></p><p><span>WATCHERS</span><strong id="ghWatchers">--</strong></p></div><dl class="terminal-details"><div><dt>LANGUAGE</dt><dd id="ghLanguage">--</dd></div><div><dt>LAST PUSH</dt><dd id="ghPush">--</dd></div><div><dt>COMMIT</dt><dd id="ghCommit">--</dd></div></dl><a id="repoLink" class="terminal-link" href="https://github.com/basanta-bhandari/Portfolio" target="_blank" rel="noopener noreferrer">open repository</a></section>
-            <section class="terminal-section"><h2>VERCEL / DEPLOYMENT</h2><p class="repo-name">production pipeline</p><div class="terminal-metrics vercel-metrics"><p><span>STATE</span><strong id="vcState">--</strong></p><p><span>TARGET</span><strong id="vcTarget">--</strong></p><p><span>DOMAIN</span><strong>basanta.cc</strong></p><p><span>MODE</span><strong>PUBLIC</strong></p></div><dl class="terminal-details"><div><dt>CHECKED</dt><dd id="vcChecked">--</dd></div><div><dt>COMMIT</dt><dd id="vcCommit">--</dd></div><div><dt>LINK</dt><dd id="vcLinkText">--</dd></div></dl><a id="vcLink" class="terminal-link" href="https://basanta.cc" target="_blank" rel="noopener noreferrer">open production</a></section>
-          </div><p class="prompt prompt-bottom"><span>basanta@portfolio</span>:~$ <i class="cursor" aria-hidden="true"></i></p>
-        </div></div></div></div>
-        <div class="monitor-controls"><span class="power-light"></span><span>POWER</span><button type="button" aria-label="Monitor power indicator"></button><button type="button" aria-label="Monitor contrast control"></button><button type="button" aria-label="Monitor brightness control"></button></div>
-      </div>
-      <div class="keyboard" aria-hidden="true"><div class="keyboard-cable"></div><div class="key-row"><b>ESC</b><b>1</b><b>2</b><b>3</b><b>4</b><b>5</b><b>6</b><b>7</b><b>8</b><b>9</b><b>0</b><b>-</b><b>=</b><b class="wide">BACK</b></div><div class="key-row"><b class="wide">TAB</b><b>Q</b><b>W</b><b>E</b><b>R</b><b>T</b><b>Y</b><b>U</b><b>I</b><b>O</b><b>P</b><b>[</b><b>]</b><b class="wide">\</b></div><div class="key-row"><b class="wide">CAPS</b><b>A</b><b>S</b><b>D</b><b>F</b><b>G</b><b>H</b><b>J</b><b>K</b><b>L</b><b>;</b><b>'</b><b class="wide">ENTER</b></div><div class="key-row"><b class="wide">SHIFT</b><b>Z</b><b>X</b><b>C</b><b>V</b><b>B</b><b>N</b><b>M</b><b>,</b><b>.</b><b>/</b><b class="wide">SHIFT</b></div><div class="key-row bottom-row"><b>CTRL</b><b>ALT</b><b class="space">SPACE</b><b>ALT</b><b>CTRL</b></div></div>
-    </section><p class="crt-note">The display is read-only. Tokens and private admin data never enter the terminal.</p>
+  <main class="room">
+    <header class="room-heading"><div><p class="eyebrow">BASANTA'S WORKSTATION / 01</p><h1>Stats terminal.</h1></div><p>Pull up a chair.<br>Type <code>help</code> to look around.</p></header>
+    <div class="workbench">
+      <div class="shelves shelf-left" aria-hidden="true"><div class="tapes"><i>FIELD NOTES</i><i>BACKUP / 01</i><i>PORTFOLIO</i><i>ARCHIVE 2024</i><i>DO NOT ERASE</i></div><div class="shelf-radio"><span>FM / AM</span><b></b><i></i></div><div class="tapes"><i>EXPERIMENTS</i><i>SIDE A</i><i>NEONET</i><i>WORK IN PROGRESS</i></div></div>
+      <div class="shelves shelf-right" aria-hidden="true"><div class="books"><i></i><i></i><i></i><i></i><i></i></div><div class="tapes"><i>SYSTEM DISK</i><i>READ ME</i><i>PERSONAL FILES</i><i>BACKUP / 02</i></div><div class="speaker"><b></b><span>STEREO</span></div></div>
+      <section class="station" aria-label="Interactive CRT stats terminal">
+        <div class="top-unit" aria-hidden="true"><span>DATA INTERFACE</span><div class="unit-slots"></div><i></i><i></i><b>ONLINE</b></div>
+        <div class="monitor" id="monitor">
+          <div class="case-top"><span>BASANTA SYSTEMS</span><span>PERSONAL COMPUTER</span></div>
+          <div class="bezel"><div class="screen" id="screen">
+            <div class="screen-header"><span><i aria-hidden="true"></i> STATS / PORTFOLIO</span><time id="terminalClock">--:--:--</time></div>
+            <div class="terminal-scroll" id="terminalScroll" tabindex="0" aria-label="Terminal output. Scroll to review commands.">
+              <div id="terminalOutput"></div>
+              <form id="commandForm" class="command-form" autocomplete="off">
+                <label for="commandInput"><span>guest@basanta</span>:~$</label>
+                <span class="command-entry"><input id="commandInput" name="command" type="text" aria-label="Terminal command. Type help for available commands." autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="120" enterkeyhint="go"><span class="cursor-mirror" aria-hidden="true"><span id="cursorPrefix"></span><span class="terminal-cursor">|</span></span></span>
+                <button type="submit" class="enter-command" aria-label="Run command">ENTER</button>
+              </form>
+            </div>
+            <div class="screen-footer"><span id="connectionStatus" role="status">READY / TYPE HELP</span><span>READ ONLY / v1.0</span></div>
+          </div></div>
+          <div class="monitor-chin"><div class="vents" aria-hidden="true"></div><span class="case-badge">B-86 <small>COLOR DISPLAY</small></span><div class="hardware-controls"><button id="glowToggle" type="button" aria-pressed="true" title="Toggle screen glow">GLOW</button><button id="powerToggle" type="button" aria-pressed="true" aria-label="Turn monitor off"><i aria-hidden="true"></i> POWER</button></div></div>
+        </div>
+        <div class="computer-base" aria-hidden="true"><span>PERSONAL SYSTEM / 86</span><div class="drive"><i></i><b></b></div><div class="base-vents"></div><i class="drive-light"></i></div>
+        <div class="keyboard-lead" aria-hidden="true"></div>
+        <div class="keyboard">
+          <div class="keyboard-label"><span>BASANTA SYSTEMS</span><span>COMMAND KEYS</span></div>
+          <div class="command-keys" aria-label="Terminal command shortcuts"><button type="button" data-command="help"><small>F1</small>HELP</button><button type="button" data-command="stats"><small>F2</small>STATS</button><button type="button" data-command="github"><small>F3</small>GITHUB</button><button type="button" data-command="vercel"><small>F4</small>VERCEL</button><button type="button" data-command="languages"><small>F5</small>LANGUAGES</button><button type="button" data-command="refresh"><small>F6</small>REFRESH</button><button type="button" data-command="clear"><small>F7</small>CLEAR</button></div>
+          <div class="typing-keys" aria-hidden="true"><div class="key-row"><b>ESC</b><b>1</b><b>2</b><b>3</b><b>4</b><b>5</b><b>6</b><b>7</b><b>8</b><b>9</b><b>0</b><b>-</b><b>=</b><b class="wide">BACK</b></div><div class="key-row"><b class="wide">TAB</b><b>Q</b><b>W</b><b>E</b><b>R</b><b>T</b><b>Y</b><b>U</b><b>I</b><b>O</b><b>P</b><b>[</b><b>]</b><b>\</b></div><div class="key-row"><b class="wide">CAPS</b><b>A</b><b>S</b><b>D</b><b>F</b><b>G</b><b>H</b><b>J</b><b>K</b><b>L</b><b>;</b><b>'</b><b class="wide">ENTER</b></div><div class="key-row"><b class="wide">SHIFT</b><b>Z</b><b>X</b><b>C</b><b>V</b><b>B</b><b>N</b><b>M</b><b>,</b><b>.</b><b>/</b><b class="wide">SHIFT</b></div><div class="key-row last-row"><b>CTRL</b><b>ALT</b><b class="spacebar"></b><b>ALT</b><b>CTRL</b></div></div>
+        </div>
+      </section>
+    </div>
+    <p class="desk-caption">A little window into what I'm building.<span>Use the command keys or type directly on the screen.</span></p>
+    <noscript><p class="noscript">The terminal needs JavaScript. View <a href="https://github.com/basanta-bhandari/Portfolio">the repository on GitHub</a> instead.</p></noscript>
   </main>
-  <footer><p>BASANTA BHANDARI - PORTFOLIO - 2026</p><p><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">GitHub</a></p></footer>
-  <script>
-    const $ = id => document.getElementById(id); const date = value => value ? new Intl.DateTimeFormat([], { dateStyle:'medium', timeStyle:'short' }).format(new Date(value)) : '--'; const number = value => new Intl.NumberFormat().format(Number(value || 0)); const set = (id, value) => { $(id).textContent = value ?? '--'; };
-    function clock() { set('terminalClock', new Date().toLocaleTimeString([], { hour12:false })); } clock(); window.setInterval(clock, 1000);
-    function showGithub(repository, commit) { set('repoName', repository.full_name); set('ghStars', number(repository.stargazers_count)); set('ghForks', number(repository.forks_count)); set('ghIssues', number(repository.open_issues_count)); set('ghWatchers', number(repository.subscribers_count)); set('ghLanguage', repository.language || 'mixed'); set('ghPush', date(repository.pushed_at)); set('ghCommit', commit ? commit.sha.slice(0, 8) : '--'); $('repoLink').href = repository.html_url; }
-    function showVercel(status, commit) { if (!status) { set('vcState', 'NO DATA'); set('vcTarget', '--'); set('vcChecked', 'waiting'); set('vcCommit', '--'); set('vcLinkText', 'not found'); return; } set('vcState', String(status.state || 'unknown').toUpperCase()); set('vcTarget', 'production'); set('vcChecked', date(new Date().toISOString())); set('vcCommit', commit ? commit.sha.slice(0, 8) : '--'); set('vcLinkText', 'vercel'); $('vcLink').href = status.target_url || 'https://basanta.cc'; }
-    const headers = { Accept:'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' }; const base = 'https://api.github.com/repos/basanta-bhandari/Portfolio'; const get = url => fetch(url, { headers, cache:'no-store' }).then(response => { if (!response.ok) throw new Error(`GitHub request failed (${response.status})`); return response.json(); });
-    Promise.all([get(base), get(`${base}/commits?per_page=1`), get(`${base}/commits/main/status`)]).then(([repository, commits, commitStatus]) => { const commit = commits[0]; const vercel = commitStatus.statuses.find(status => status.context.toLowerCase().includes('vercel')); showGithub(repository, commit); showVercel(vercel, commit); set('terminalStatus', `Telemetry online // ${new Date().toLocaleString()}`); }).catch(error => { set('terminalStatus', `Telemetry error // ${error.message}`); set('vcState', 'OFFLINE'); });
-  </script>
+  <footer class="room-footer"><span>BASANTA BHANDARI / 2026</span><a href="/">Back home</a></footer>
 </body>
 </html>
