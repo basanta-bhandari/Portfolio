@@ -265,7 +265,7 @@
   async function refreshPresence(showError = false) {
     if (document.visibilityState === 'hidden') return;
     try {
-      const data = await apiJson('/api/admin-presence', { method: 'POST' });
+      const data = await apiJson('/api/session', { method: 'POST' });
       renderPresence(data.admins || []);
     } catch (error) {
       if (showError) setMessage(document.getElementById('chatMsg'), error.message);

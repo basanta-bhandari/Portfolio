@@ -6,3 +6,11 @@
 .coming-soon{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:150px 28px 190px;text-align:center;border-bottom:1px solid var(--hair)}.coming-soon h1{font-size:clamp(3.5rem,8vw,7rem);margin:0 0 20px}.coming-soon p:last-child{max-width:48ch;margin:0 auto;color:var(--muted);font-size:.95rem}
 @media(max-width:1050px){.hero{grid-template-columns:1fr;gap:70px}.app-preview{max-width:700px}.download-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.download-card{min-height:310px}}
 @media(max-width:640px){.topnav{padding:15px 16px;align-items:flex-start}.links{gap:10px;flex-wrap:wrap;justify-content:flex-end}.shell{padding:0 16px}.hero{padding:60px 0 70px;min-height:auto;gap:50px}h1{font-size:clamp(3.4rem,13vw,5rem)}.intro{font-size:.91rem}.app-preview{transform:none;box-shadow:6px 6px 0 #9bc685}.preview-body{grid-template-columns:96px 1fr;min-height:300px}.preview-body aside{font-size:.62rem;padding:18px 7px;gap:11px}.preview-body aside small{font-size:.52rem}.preview-thread{padding:0 9px 10px}.thread-head{font-size:.6rem}.thread-head span{display:none}.message{margin:20px 8% 0 0;font-size:.62rem;padding:8px}.message.mine{margin-left:9%}.composer{font-size:.6rem}.downloads{padding:70px 0 65px}.section-heading{display:block}.section-heading>p{text-align:left}.download-grid{grid-template-columns:1fr}.download-card{min-height:255px}.download-card h3{margin-top:20px}.download-card p{min-height:0}.explainer{grid-template-columns:1fr;padding:60px 0;gap:20px}.endline{font-size:.62rem}footer{padding:20px 16px;gap:12px;font-size:.6rem}}
+
+.v1-preview{transform:rotate(.35deg)}
+.v1-status{margin:0;padding:22px 24px 10px}
+.v1-status div{display:grid;grid-template-columns:145px 1fr;gap:18px;padding:18px 0;border-bottom:1px solid #3b5140}
+.v1-status dt{color:#b6f485;font-weight:800}
+.v1-status dd{margin:0;color:#dce9d8}
+.v1-warning{margin:0;padding:17px 24px 22px;color:#93aa97;line-height:1.7}
+@media(max-width:640px){.v1-status{padding:10px 15px 5px}.v1-status div{grid-template-columns:1fr;gap:5px;padding:13px 0}.v1-warning{padding:13px 15px 17px}}

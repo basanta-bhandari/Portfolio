@@ -224,7 +224,7 @@ Super admins can:
 - change their own password
 - use admin chat
 
-Normal admins receive selected permissions for blog posts, projects, and Tether. API functions enforce those permissions on the server; hiding a tab in the browser is only a usability feature. All authenticated admins can use the private admin chat and presence list.
+Normal admins receive selected permissions for blog posts, projects, and Tether. API functions enforce those permissions on the server; hiding a tab in the browser is only a usability feature. All authenticated admins can use the Tether-backed admin chat and presence list.
 
 The API prevents deleting the account currently in use and prevents removing the final active super admin.
 
@@ -325,7 +325,7 @@ These allowances reset monthly and do not accumulate. Confirm current limits in 
 
 Use Standard storage. The free allowance does not apply to Infrequent Access storage. Keep images compressed, retain the 3 MB upload limit, and check the R2 usage dashboard monthly. Cloudflare does not provide a guaranteed hard spending stop, so keep a low billing alert configured.
 
-The chat uses one rolling encrypted object, which bounds storage and requires one object read per refresh rather than reading a separate R2 object for every message.
+Admin chat does not use R2. Only blog images count toward this bucket's storage and operation usage.
 
 ## 12. Browser JavaScript
 
@@ -352,7 +352,7 @@ Dynamic user content is placed into the page using DOM creation and `textContent
 | --- | --- | --- |
 | `/api/login` | POST | Public credentials endpoint |
 | `/api/logout` | POST | Logged-in session; also clears presence |
-| `/api/session` | GET | Returns current session status |
+| `/api/session` | GET, POST | GET returns session status; POST updates and lists admin presence |
 | `/api/change-password` | POST | Super admin |
 | `/api/admin-users` | GET, POST | Super admin |
 | `/api/admin-users/[id]` | PUT, DELETE | Super admin |
@@ -362,7 +362,6 @@ Dynamic user content is placed into the page using DOM creation and `textContent
 | `/api/projects/[id]` | GET, PUT, DELETE | Reading public; changes require project permission |
 | `/api/uploads/blog-image` | POST | Blog permission |
 | `/api/tether-settings` | GET, PUT | GET public; PUT requires super admin |
-| `/api/admin-presence` | POST | Any authenticated admin |
 
 Admin messages deliberately have no hosted API route. The browser uses the local bridge endpoints at `http://127.0.0.1:7331/v1/` after explicit consent.
 
