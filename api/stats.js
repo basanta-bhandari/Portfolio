@@ -1,5 +1,7 @@
 import https from 'node:https';
 
+export const config = { runtime: 'nodejs20.x' };
+
 const CACHE_TTL = 5 * 60 * 1000;
 let cached = null;
 
