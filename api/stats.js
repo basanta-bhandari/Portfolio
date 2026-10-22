@@ -1,3 +1,5 @@
+import https from 'node:https';
+
 const CACHE_TTL = 5 * 60 * 1000;
 let cached = null;
 
@@ -8,9 +10,22 @@ function githubHeaders() {
 }
 
 async function getJson(url, options = {}) {
-  const response = await fetch(url, options);
-  if (!response.ok) throw new Error(`Upstream request failed (${response.status})`);
-  return response.json();
+  return new Promise((resolve, reject) => {
+    const request = https.get(url, { headers: options.headers || {} }, response => {
+      let body = '';
+      response.setEncoding('utf8');
+      response.on('data', chunk => { body += chunk; });
+      response.on('end', () => {
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          reject(new Error(`Upstream request failed (${response.statusCode})`));
+          return;
+        }
+        try { resolve(JSON.parse(body)); } catch { reject(new Error('Upstream returned invalid JSON')); }
+      });
+    });
+    request.setTimeout(12000, () => request.destroy(new Error('Upstream request timed out')));
+    request.on('error', reject);
+  });
 }
 
 async function getGithub() {
