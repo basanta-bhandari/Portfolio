@@ -1,6 +1,8 @@
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
+import re
 import stat
 import tempfile
 import time
@@ -8,12 +10,21 @@ import unittest
 
 
 SCRIPT = Path(__file__).parents[1] / "tether" / "downloads" / "tether-web-bridge.py"
+LAUNCHER = SCRIPT.with_name("start-tether-admin-chat.sh")
 SPEC = importlib.util.spec_from_file_location("tether_web_bridge", SCRIPT)
 bridge_module = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(bridge_module)
 
 
 class TetherWebBridgeTests(unittest.TestCase):
+    def test_launcher_pins_the_published_bridge_and_appimage(self):
+        launcher = LAUNCHER.read_text(encoding="utf-8")
+        expected_bridge = re.search(r'BRIDGE_SHA256="([a-f0-9]{64})"', launcher).group(1)
+        expected_tether = re.search(r'TETHER_SHA256="([a-f0-9]{64})"', launcher).group(1)
+        tether = SCRIPT.with_name("neonet-linux-x86_64-v0.5.2.AppImage")
+        self.assertEqual(hashlib.sha256(SCRIPT.read_bytes()).hexdigest(), expected_bridge)
+        self.assertEqual(hashlib.sha256(tether.read_bytes()).hexdigest(), expected_tether)
+
     def fake_neonet(self, root: Path) -> Path:
         script = root / "fake-neonet"
         snapshot = {

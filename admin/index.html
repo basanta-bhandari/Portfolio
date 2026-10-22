@@ -191,10 +191,8 @@
   .chat-note { color: var(--muted); font-size: .7rem; margin: 9px 0 0; }
   .bridge-setup { border: 1px solid var(--line); border-radius: 18px; padding: 22px; max-width: 800px; }
   .bridge-setup h3 { margin: 0 0 10px; font-family: Arial, Helvetica, sans-serif; }
-  .bridge-requirements { margin: 14px 0; padding-left: 20px; color: var(--muted); font-size: .78rem; line-height: 1.65; }
   .bridge-command { display: block; margin: 12px 0; padding: 12px; border: 1px solid var(--hair); border-radius: 10px; overflow-x: auto; color: var(--fg); background: color-mix(in srgb, var(--fg) 4%, transparent); font-size: .72rem; }
-  .bridge-consent { display: flex; align-items: flex-start; gap: 9px; margin: 16px 0; font-size: .78rem; line-height: 1.45; }
-  .bridge-consent input { flex: 0 0 auto; width: 17px; height: 17px; margin-top: 2px; accent-color: var(--fg); }
+  .launcher-download { display: inline-flex; margin-top: 16px; text-decoration: none; }
   .bridge-connect { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px; align-items: end; }
   .bridge-connect .field { margin: 0; }
   .chat-toolbar { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 14px; }
@@ -425,19 +423,11 @@ Leave a blank line between paragraphs."></textarea>
     <h2>Admin Chat</h2>
     <p class="feature-intro">This page is a local interface for Tether. Message bodies travel through participating Tether devices and never pass through Vercel, Neon, or Cloudflare.</p>
     <div class="bridge-setup" id="chatBridgeSetup">
-      <h3>Enable this device as a messaging node</h3>
-      <p class="chat-note">The browser cannot run a permanent network node by itself. The small local bridge connects this page to the Tether installation on your computer.</p>
-      <ul class="bridge-requirements">
-        <li>Tether / NeoNet and Python 3 must be installed on this computer.</li>
-        <li>Your browser will ask for permission to access a service on <code>127.0.0.1</code>. The bridge listens only on this computer.</li>
-        <li>Tether runs a background connection and uses a small amount of memory, CPU, disk space, and network traffic while messaging is enabled.</li>
-        <li>Other admins must be paired Tether devices. At least one reachable Tether core is required when the devices are on different networks.</li>
-        <li>Admin-chat messages expire after 24 hours. The bridge removes expired chat records from its local state and Tether channel logs.</li>
-      </ul>
-      <a class="secondary-btn" href="/tether/downloads/tether-web-bridge.py" download>Download local bridge</a>
-      <p class="chat-note">On Linux, make both downloads executable once: <code>chmod +x tether-web-bridge.py /path/to/Tether.AppImage</code></p>
-      <code class="bridge-command">python3 tether-web-bridge.py --neonet /path/to/neonet-or-Tether.AppImage</code>
-      <label class="bridge-consent"><input type="checkbox" id="chatBridgeConsent"> <span>I understand that enabling messaging starts my local Tether connection and contributes this device's network and local resources to the messaging network.</span></label>
+      <h3>Connect Tether</h3>
+      <p class="chat-note">The Linux launcher downloads the current Tether build and bridge, verifies both files, starts the bridge, and returns here automatically.</p>
+      <a class="publish-btn launcher-download" href="/tether/downloads/start-tether-admin-chat.sh" download>Download Linux launcher</a>
+      <code class="bridge-command">chmod +x ~/Downloads/start-tether-admin-chat.sh &amp;&amp; ~/Downloads/start-tether-admin-chat.sh</code>
+      <p class="chat-note">Already running the bridge manually? Paste its token below.</p>
       <div class="bridge-connect">
         <div class="field"><label for="chatBridgeToken">Bridge token shown in the terminal</label><input type="password" id="chatBridgeToken" autocomplete="off" spellcheck="false"></div>
         <button type="button" class="publish-btn" id="chatBridgeConnect">Enable messaging</button>

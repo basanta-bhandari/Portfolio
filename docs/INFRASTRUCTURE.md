@@ -302,7 +302,9 @@ sequenceDiagram
     P-->>B: Recipient bridge displays message
 ```
 
-Enabling chat is explicit. The setup panel explains that the computer contributes a background process, small amounts of memory, CPU, disk, and network traffic, and requires browser permission to reach loopback. The terminal prints a random bridge token. The token stays in that browser tab's `sessionStorage` and is required on every bridge request. The bridge accepts only the production site and local development origins.
+On Linux, `start-tether-admin-chat.sh` is the normal setup path. The user runs this downloaded launcher once. It downloads the published AppImage and local bridge over HTTPS, verifies their pinned SHA-256 hashes, installs them under the user's local data directory, starts the bridge, verifies its authenticated status endpoint, and reopens the admin chat with a one-time fragment token. URL fragments are not sent to Vercel. The page immediately removes the token from the address bar and keeps it in that tab's `sessionStorage`.
+
+Browsers are not permitted to silently execute a downloaded program, so running the launcher remains an operating-system action. The manual bridge-token field remains available for development and non-Linux installations. Every bridge request requires the random token, and the bridge accepts only the production site and local development origins.
 
 The bridge starts the saved Tether background route with `neonet up`. Every other participant must run Tether and complete its one-time device pairing. Devices on separate networks also need at least one reachable, pinned Tether core. GitHub distributes Tether source and releases; it is not a message transport.
 
@@ -363,7 +365,7 @@ Dynamic user content is placed into the page using DOM creation and `textContent
 | `/api/uploads/blog-image` | POST | Blog permission |
 | `/api/tether-settings` | GET, PUT | GET public; PUT requires super admin |
 
-Admin messages deliberately have no hosted API route. The browser uses the local bridge endpoints at `http://127.0.0.1:7331/v1/` after explicit consent.
+Admin messages deliberately have no hosted API route. The browser uses the token-authenticated local bridge endpoints at `http://127.0.0.1:7331/v1/`.
 
 ## 14. Backups and recovery
 

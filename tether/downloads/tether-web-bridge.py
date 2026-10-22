@@ -57,11 +57,11 @@ def decode_wire(text: str) -> dict | None:
 
 
 class Bridge:
-    def __init__(self, neonet: str, root: Path, origins: set[str]):
+    def __init__(self, neonet: str, root: Path, origins: set[str], token: str | None = None):
         self.neonet = neonet
         self.root = root
         self.origins = origins
-        self.token = secrets.token_urlsafe(32)
+        self.token = token or secrets.token_urlsafe(32)
         self.state_path = root / "web-chat-outbox.json"
 
     def run_neonet(self, arguments: list[str], input_text: str | None = None) -> str:
@@ -389,12 +389,20 @@ def main() -> None:
     if arguments.port < 1024 or arguments.port > 65535:
         parser.error("--port must be between 1024 and 65535")
     root = Path(arguments.home or os.environ.get("NEONET_HOME", "~/.neonet")).expanduser()
-    bridge = Bridge(find_neonet(arguments.neonet), root, DEFAULT_ORIGINS | set(arguments.allow_origin))
+    supplied_token = os.environ.get("TETHER_BRIDGE_TOKEN", "")
+    if supplied_token and (len(supplied_token) < 32 or len(supplied_token) > 200):
+        raise SystemExit("TETHER_BRIDGE_TOKEN must contain 32 to 200 characters")
+    bridge = Bridge(
+        find_neonet(arguments.neonet),
+        root,
+        DEFAULT_ORIGINS | set(arguments.allow_origin),
+        supplied_token or None,
+    )
     server = ThreadingHTTPServer(("127.0.0.1", arguments.port), handler_for(bridge))
-    print("Tether web bridge is ready.")
-    print(f"Local address: http://127.0.0.1:{arguments.port}")
-    print(f"Bridge token: {bridge.token}")
-    print("Keep this window open while using admin chat. Press Ctrl+C to stop.")
+    print("Tether web bridge is ready.", flush=True)
+    print(f"Local address: http://127.0.0.1:{arguments.port}", flush=True)
+    print(f"Bridge token: {bridge.token}", flush=True)
+    print("Keep this window open while using admin chat. Press Ctrl+C to stop.", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

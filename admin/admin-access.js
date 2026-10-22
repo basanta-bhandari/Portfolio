@@ -19,8 +19,15 @@
   let renderedMessageIds = '';
   let chatMessages = [];
   const TETHER_BRIDGE = 'http://127.0.0.1:7331';
-  let bridgeToken = window.sessionStorage.getItem('tetherBridgeToken') || '';
+  const launchFragment = new URLSearchParams(window.location.hash.slice(1));
+  const launchToken = launchFragment.get('tether-token') || '';
+  let bridgeToken = launchToken || window.sessionStorage.getItem('tetherBridgeToken') || '';
+  let bridgeAutoEnable = Boolean(launchToken);
   let bridgeStatus = null;
+  if (launchToken) {
+    window.sessionStorage.setItem('tetherBridgeToken', launchToken);
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+  }
 
   function setMessage(element, text, ok = false) {
     element.textContent = text;
@@ -423,7 +430,9 @@
     stopChatPolling();
     refreshPresence(true);
     if (bridgeToken) {
-      connectBridge(false).catch(error => showBridgeSetup(error.message));
+      connectBridge(bridgeAutoEnable)
+        .then(() => { bridgeAutoEnable = false; })
+        .catch(error => showBridgeSetup(error.message));
     } else {
       showBridgeSetup();
     }
@@ -447,10 +456,6 @@
   document.getElementById('chatBridgeConnect').addEventListener('click', async () => {
     const message = document.getElementById('chatBridgeMsg');
     message.textContent = '';
-    if (!document.getElementById('chatBridgeConsent').checked) {
-      setMessage(message, 'Confirm the local resource and network requirements first.');
-      return;
-    }
     bridgeToken = document.getElementById('chatBridgeToken').value.trim();
     if (!bridgeToken) {
       setMessage(message, 'Enter the bridge token shown in the terminal.');
@@ -469,7 +474,6 @@
     chatMessages = [];
     window.sessionStorage.removeItem('tetherBridgeToken');
     document.getElementById('chatBridgeToken').value = '';
-    document.getElementById('chatBridgeConsent').checked = false;
     showBridgeSetup();
   });
   document.getElementById('chatDevice').addEventListener('change', event => {
@@ -593,7 +597,9 @@
       panel.hidden = !allowed.includes(name);
     });
 
-    const firstPanel = ['blog', 'projects', 'tether', 'chat', 'users'].find(name => allowed.includes(name));
+    const firstPanel = bridgeAutoEnable && allowed.includes('chat')
+      ? 'chat'
+      : ['blog', 'projects', 'tether', 'chat', 'users'].find(name => allowed.includes(name));
     if (!firstPanel) throw new Error('This account has no enabled admin features');
     window.selectAdminPanel(firstPanel);
 
