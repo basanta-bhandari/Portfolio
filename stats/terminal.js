@@ -3,6 +3,10 @@
   const output = $('terminalOutput');
   const input = $('commandInput');
   const scroll = $('terminalScroll');
+  const monitor = $('monitor');
+  function syncTheme() { monitor.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'; }
+  syncTheme();
+  new MutationObserver(syncTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   const base = 'https://api.github.com/repos/basanta-bhandari/Portfolio';
   const commands = ['help', 'stats', 'github', 'vercel', 'languages', 'whoami', 'ls', 'cat', 'clear', 'refresh'];
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');

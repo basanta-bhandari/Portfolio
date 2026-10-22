@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Stats — coming soon.">
+  <meta name="description" content="Explore Basanta's GitHub stats and Vercel deployment checks in a CRT terminal.">
   <title>Stats | Basanta Bhandari</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <script src="/theme.js?v=2"></script>
@@ -11,20 +11,51 @@
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/navbar.css?v=1">
   <link rel="stylesheet" href="/theme-toggle.css?v=2">
-  <style>
-    .stats-placeholder { min-height:70vh; min-height:70svh; display:grid; place-content:center; text-align:center; padding:48px 24px; gap:16px; }
-    .stats-placeholder p { font-size:12px; letter-spacing:2px; }
-    .stats-placeholder h1 { font-family:var(--mono); font-size:clamp(28px,6vw,56px); }
-  </style>
+  <link rel="stylesheet" href="/stats/CRTMonitor.css?v=1">
+  <link rel="stylesheet" href="/stats/styles.css?v=4">
+  <script src="/stats/terminal.js?v=4" defer></script>
 </head>
 <body>
   <nav class="topnav" aria-label="Main navigation"><a href="/" class="brand">HOME?<span class="dot">.</span></a><div class="links">
     <a href="/">Home</a><a href="/projects">Projects</a><a href="/stats" aria-current="page">Stats</a><a href="/tether">Tether</a><a href="/blog">Blog</a><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener noreferrer">GitHub</a>
     <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch theme"><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
   </div></nav>
-  <main class="stats-placeholder">
-    <p>STATS</p>
-    <h1>Coming soon...</h1>
+  <main class="stats-stage">
+    <header class="stats-intro"><div><p class="eyebrow">BASANTA / PUBLIC DATA</p><h1>Stats terminal.</h1></div><p>Type <code>help</code> to get started.</p></header>
+    <div class="crt-monitor" id="monitor" data-scanlines="on">
+      <div class="crt-monitor__body">
+        <div class="crt-monitor__recess"><div class="crt-monitor__bezel"><div class="crt-monitor__glass">
+          <div class="crt-monitor__phosphor" aria-hidden="true"></div>
+          <div class="crt-monitor__raster" aria-hidden="true"></div>
+          <section class="crt-monitor__content" id="screen" aria-label="Interactive Stats terminal">
+            <div class="screen-header"><span>STATS / PORTFOLIO</span><time id="terminalClock">--:--:--</time></div>
+            <div class="terminal-scroll" id="terminalScroll" tabindex="0" aria-label="Terminal output. Scroll to review commands.">
+              <div id="terminalOutput"></div>
+              <form id="commandForm" class="command-form" autocomplete="off">
+                <label for="commandInput"><span>guest@basanta</span>:~$</label>
+                <span class="command-entry"><input id="commandInput" name="command" type="text" aria-label="Terminal command. Type help for available commands." autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="120" enterkeyhint="go"><span class="cursor-mirror" aria-hidden="true"><span id="cursorPrefix"></span><span class="terminal-cursor">|</span></span></span>
+                <button type="submit" class="enter-command" aria-label="Run command">ENTER</button>
+              </form>
+            </div>
+            <div class="screen-footer"><span id="connectionStatus" role="status">READY / TYPE HELP</span><span>READ ONLY / v1.0</span></div>
+          </section>
+          <div class="crt-monitor__reflection" aria-hidden="true"></div>
+        </div></div></div>
+        <div class="crt-monitor__chin">
+          <div class="crt-monitor__vents" aria-hidden="true"></div><div class="crt-monitor__dial" aria-hidden="true"></div>
+          <div class="crt-monitor__badge" aria-hidden="true"><span></span> CRT / 01</div>
+          <div class="crt-monitor__controls">
+            <button class="crt-monitor__key" id="glowToggle" type="button" aria-label="Screen glow and scanlines" title="Screen glow and scanlines" aria-pressed="true"></button>
+            <button class="crt-monitor__key" data-command="help" type="button" aria-label="Show terminal help" title="Help"></button>
+            <button class="crt-monitor__power" id="powerToggle" type="button" aria-label="Turn monitor off" title="Power" aria-pressed="true"><span aria-hidden="true"></span></button>
+          </div>
+        </div>
+        <div class="crt-monitor__seam" aria-hidden="true"></div>
+      </div>
+      <div class="crt-monitor__foot" aria-hidden="true"></div>
+    </div>
+    <div class="command-shortcuts" role="group" aria-label="Terminal command shortcuts"><button data-command="help">help</button><button data-command="stats">stats</button><button data-command="github">github</button><button data-command="vercel">vercel</button><button data-command="languages">languages</button><button data-command="clear">clear</button></div>
+    <noscript><p>The terminal needs JavaScript. <a href="https://github.com/basanta-bhandari/Portfolio">View the repository on GitHub.</a></p></noscript>
   </main>
 </body>
 </html>
