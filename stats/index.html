@@ -12,8 +12,8 @@
   <link rel="stylesheet" href="/navbar.css?v=1">
   <link rel="stylesheet" href="/theme-toggle.css?v=2">
   <link rel="stylesheet" href="/stats/CRTMonitor.css?v=1">
-  <link rel="stylesheet" href="/stats/styles.css?v=5">
-  <script src="/stats/terminal.js?v=4" defer></script>
+  <link rel="stylesheet" href="/stats/styles.css?v=6">
+  <script src="/stats/terminal.js?v=5" defer></script>
 </head>
 <body>
   <nav class="topnav" aria-label="Main navigation"><a href="/" class="brand">HOME?<span class="dot">.</span></a><div class="links">
@@ -21,7 +21,7 @@
     <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch theme"><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
   </div></nav>
   <main class="stats-stage">
-    <header class="stats-intro"><div><p class="eyebrow">BASANTA / PUBLIC DATA</p><h1>Stats terminal.</h1></div><p>Type <code>help</code> to get started.</p></header>
+    <header class="stats-intro"><h1>Stats</h1></header>
     <div class="crt-monitor" id="monitor" data-scanlines="on">
       <div class="crt-monitor__body">
         <div class="crt-monitor__recess"><div class="crt-monitor__bezel"><div class="crt-monitor__glass">
@@ -37,13 +37,13 @@
                 <button type="submit" class="enter-command" aria-label="Run command">ENTER</button>
               </form>
             </div>
-            <div class="screen-footer"><span id="connectionStatus" role="status">READY / TYPE HELP</span><span>READ ONLY / v1.0</span></div>
+            <div class="screen-footer"><span id="connectionStatus" role="status">READY</span></div>
           </section>
           <div class="crt-monitor__reflection" aria-hidden="true"></div>
         </div></div></div>
         <div class="crt-monitor__chin">
           <div class="crt-monitor__vents" aria-hidden="true"></div><div class="crt-monitor__dial" aria-hidden="true"></div>
-          <div class="crt-monitor__badge" aria-hidden="true"><span></span> CRT / 01</div>
+          <div class="crt-monitor__badge" aria-hidden="true"></div>
           <div class="crt-monitor__controls">
             <button class="crt-monitor__key" id="glowToggle" type="button" aria-label="Screen glow and scanlines" title="Screen glow and scanlines" aria-pressed="true"></button>
             <button class="crt-monitor__key" data-command="help" type="button" aria-label="Show terminal help" title="Help"></button>

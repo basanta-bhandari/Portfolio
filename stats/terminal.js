@@ -153,9 +153,6 @@
     }
   }
   function boot() {
-    const heading = element('div', undefined, 'boot');
-    heading.append(element('p', 'BASANTA / STATS', 'boot-title'), element('p', 'PERSONAL SYSTEM 86 // PUBLIC ACCESS', 'boot-subtitle'));
-    output.append(heading);
     print("Type 'help' to get started.", output, 'terminal-muted');
   }
   function syncCursor() {
@@ -206,7 +203,7 @@
     } else if (selected === 'ls' || selected === 'cat') {
       print('AVAILABLE DATA FILES\n\ngithub.txt     Repository statistics\nvercel.txt     Latest deployment check\nlanguages.txt  Source language breakdown\n\nRead a file with: cat github.txt', result);
     } else if (selected === 'whoami') {
-      print('You are a guest at Basanta\'s workstation.\nThis terminal reads public data for basanta-bhandari/Portfolio.\nUse stats to see the repository and its latest Vercel check.', result);
+      print('Public stats for basanta-bhandari/Portfolio.\nSource: GitHub repository data and Vercel commit checks.', result);
     } else if (['stats', 'github', 'vercel', 'languages', 'refresh'].includes(selected)) {
       const loading = print('[|] Reading public data...', block, 'loading-output');
       loading.setAttribute('role', 'status');
