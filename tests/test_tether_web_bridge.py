@@ -25,6 +25,13 @@ class TetherWebBridgeTests(unittest.TestCase):
         self.assertEqual(hashlib.sha256(SCRIPT.read_bytes()).hexdigest(), expected_bridge)
         self.assertEqual(hashlib.sha256(tether.read_bytes()).hexdigest(), expected_tether)
 
+    def test_launcher_chooses_a_free_port_and_hands_it_to_the_browser(self):
+        launcher = LAUNCHER.read_text(encoding="utf-8")
+        self.assertIn('sock.bind(("127.0.0.1", 0))', launcher)
+        self.assertIn('--port "$bridge_port"', launcher)
+        self.assertIn('tether-port=$bridge_port', launcher)
+        self.assertNotIn('http://127.0.0.1:7331/v1/status', launcher)
+
     def fake_neonet(self, root: Path) -> Path:
         script = root / "fake-neonet"
         snapshot = {

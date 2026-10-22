@@ -61,9 +61,10 @@ if [[ -f "$PID_FILE" ]]; then
 fi
 
 bridge_token="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+bridge_port="$(python3 -c 'import socket; sock = socket.socket(); sock.bind(("127.0.0.1", 0)); print(sock.getsockname()[1]); sock.close()')"
 : > "$LOG_FILE"
 nohup env TETHER_BRIDGE_TOKEN="$bridge_token" \
-  python3 -u "$BRIDGE_FILE" --neonet "$TETHER_FILE" \
+  python3 -u "$BRIDGE_FILE" --neonet "$TETHER_FILE" --port "$bridge_port" \
   >>"$LOG_FILE" 2>&1 </dev/null &
 bridge_pid=$!
 printf '%s\n' "$bridge_pid" > "$PID_FILE"
@@ -73,7 +74,7 @@ for _ in {1..15}; do
   if curl --fail --silent --max-time 5 \
       --header "Origin: $SITE_ORIGIN" \
       --header "X-Tether-Bridge-Token: $bridge_token" \
-      http://127.0.0.1:7331/v1/status | grep -q '"bridgeVersion"'; then
+      "http://127.0.0.1:$bridge_port/v1/status" | grep -q '"bridgeVersion"'; then
     bridge_ready=true
     break
   fi
@@ -88,7 +89,7 @@ if [[ "$bridge_ready" != true ]]; then
   exit 1
 fi
 
-admin_url="$SITE_ORIGIN/admin/#tether-token=$bridge_token"
+admin_url="$SITE_ORIGIN/admin/#tether-token=$bridge_token&tether-port=$bridge_port"
 echo "Tether was downloaded, verified, and started successfully."
 if command -v xdg-open >/dev/null 2>&1; then
   xdg-open "$admin_url" >/dev/null 2>&1 &

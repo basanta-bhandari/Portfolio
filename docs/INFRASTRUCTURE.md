@@ -302,7 +302,7 @@ sequenceDiagram
     P-->>B: Recipient bridge displays message
 ```
 
-On Linux, `start-tether-admin-chat.sh` is the normal setup path. The user runs this downloaded launcher once. It downloads the published AppImage and local bridge over HTTPS, verifies their pinned SHA-256 hashes, installs them under the user's local data directory, starts the bridge, verifies its authenticated status endpoint, and reopens the admin chat with a one-time fragment token. URL fragments are not sent to Vercel. The page immediately removes the token from the address bar and keeps it in that tab's `sessionStorage`.
+On Linux, `start-tether-admin-chat.sh` is the normal setup path. The user runs this downloaded launcher once. It downloads the published AppImage and local bridge over HTTPS, verifies their pinned SHA-256 hashes, installs them under the user's local data directory, starts the bridge on an unused loopback port, verifies its authenticated status endpoint, and reopens the admin chat with a one-time fragment token and port. URL fragments are not sent to Vercel. The page immediately removes the values from the address bar and keeps them in that tab's `sessionStorage`. Choosing an unused port allows the launcher to coexist with an older bridge or another local service.
 
 Browsers are not permitted to silently execute a downloaded program, so running the launcher remains an operating-system action. The manual bridge-token field remains available for development and non-Linux installations. Every bridge request requires the random token, and the bridge accepts only the production site and local development origins.
 
@@ -365,7 +365,7 @@ Dynamic user content is placed into the page using DOM creation and `textContent
 | `/api/uploads/blog-image` | POST | Blog permission |
 | `/api/tether-settings` | GET, PUT | GET public; PUT requires super admin |
 
-Admin messages deliberately have no hosted API route. The browser uses the token-authenticated local bridge endpoints at `http://127.0.0.1:7331/v1/`.
+Admin messages deliberately have no hosted API route. The browser uses token-authenticated local bridge endpoints on a launcher-selected `127.0.0.1` port. Manual development setup defaults to port `7331`.
 
 ## 14. Backups and recovery
 
