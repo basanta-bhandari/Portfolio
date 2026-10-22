@@ -18,6 +18,9 @@
   let chatLoading = false;
   let renderedMessageIds = '';
   let chatMessages = [];
+  const TETHER_BRIDGE = 'http://127.0.0.1:7331';
+  let bridgeToken = window.sessionStorage.getItem('tetherBridgeToken') || '';
+  let bridgeStatus = null;
 
   function setMessage(element, text, ok = false) {
     element.textContent = text;
@@ -269,6 +272,88 @@
     }
   }
 
+  async function bridgeJson(path, options = {}) {
+    if (!bridgeToken) throw new Error('Enter the token shown by the local Tether bridge');
+    const request = {
+      mode: 'cors',
+      cache: 'no-store',
+      targetAddressSpace: 'loopback',
+      ...options,
+      headers: {
+        'X-Tether-Bridge-Token': bridgeToken,
+        ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+        ...(options.headers || {})
+      }
+    };
+    const response = await fetch(TETHER_BRIDGE + path, request);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Local Tether bridge request failed');
+    return data;
+  }
+
+  function showBridgeSetup(message = '') {
+    bridgeStatus = null;
+    document.getElementById('chatBridgeSetup').hidden = false;
+    document.getElementById('chatBridgeConnected').hidden = true;
+    if (message) setMessage(document.getElementById('chatBridgeMsg'), message);
+  }
+
+  function showBridgeConnected(status) {
+    bridgeStatus = status;
+    document.getElementById('chatBridgeSetup').hidden = true;
+    document.getElementById('chatBridgeConnected').hidden = false;
+    const running = status.background?.running;
+    const version = status.tetherVersion ? 'Tether ' + status.tetherVersion : 'Tether';
+    document.getElementById('chatBridgeStatus').textContent =
+      version + (running ? ' node online' : ' connected locally');
+    checkBridgeRelease(status.tetherVersion);
+
+    const select = document.getElementById('chatDevice');
+    const previous = select.value || window.localStorage.getItem('tetherChatDevice') || '';
+    select.replaceChildren(new Option('Choose a paired device', ''));
+    for (const device of status.devices || []) {
+      const option = new Option(device.alias + ' (' + device.fingerprint.slice(0, 10) + ')', device.fingerprint);
+      select.appendChild(option);
+    }
+    if ([...select.options].some(option => option.value === previous)) select.value = previous;
+    if (!select.value && status.devices?.length === 1) select.value = status.devices[0].fingerprint;
+    if (select.value) {
+      window.localStorage.setItem('tetherChatDevice', select.value);
+      loadChat(true);
+    } else {
+      chatMessages = [];
+      renderedMessageIds = '';
+      renderChat();
+    }
+  }
+
+  async function checkBridgeRelease(currentVersion) {
+    if (!currentVersion) return;
+    try {
+      const response = await fetch('/tether/downloads/latest.json', { cache: 'no-store' });
+      if (!response.ok) return;
+      const release = await response.json();
+      if (release.version && release.version !== currentVersion) {
+        document.getElementById('chatBridgeStatus').textContent +=
+          ' · update v' + release.version + ' available on the Tether tab';
+      }
+    } catch {
+      // Messaging must continue even if the static release manifest is unavailable.
+    }
+  }
+
+  async function connectBridge(enableNode = false) {
+    const status = enableNode
+      ? await bridgeJson('/v1/enable', { method: 'POST', body: '{}' })
+      : await bridgeJson('/v1/status');
+    if (!status.tetherVersion && enableNode) {
+      const refreshed = await bridgeJson('/v1/status');
+      showBridgeConnected(refreshed);
+    } else {
+      showBridgeConnected(status);
+    }
+  }
+
   function renderChat() {
     const log = document.getElementById('chatLog');
     const query = document.getElementById('chatSearch').value.trim().toLocaleLowerCase();
@@ -285,19 +370,23 @@
     if (!messages.length) {
       const empty = document.createElement('p');
       empty.className = 'chat-empty';
-      empty.textContent = query ? 'No messages match that search.' : 'No messages yet. Say hello.';
+      empty.textContent = query
+        ? 'No messages match that search.'
+        : document.getElementById('chatDevice').value
+          ? 'No messages in the last 24 hours. Say hello.'
+          : 'Choose a paired Tether device.';
       log.appendChild(empty);
       return;
     }
     messages.forEach(message => {
       const item = document.createElement('article');
-      item.className = 'chat-message' + (message.adminId === session.id ? ' own' : '');
+      item.className = 'chat-message' + (message.direction === 'outgoing' ? ' own' : '');
       const head = document.createElement('div');
       head.className = 'chat-message-head';
       const author = document.createElement('strong');
       author.textContent = message.username;
       const time = document.createElement('time');
-      const sentAt = new Date(message.createdAt);
+      const sentAt = new Date(Number(message.createdAt) * 1000);
       time.dateTime = sentAt.toISOString();
       time.textContent = sentAt.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
       const body = document.createElement('p');
@@ -310,10 +399,11 @@
   }
 
   async function loadChat(showError = false) {
-    if (chatLoading || document.visibilityState === 'hidden') return;
+    const device = document.getElementById('chatDevice').value;
+    if (!bridgeStatus || !device || chatLoading || document.visibilityState === 'hidden') return;
     chatLoading = true;
     try {
-      const data = await apiJson('/api/admin-chat', { cache: 'no-store' });
+      const data = await bridgeJson('/v1/messages?device=' + encodeURIComponent(device));
       chatMessages = data.messages || [];
       renderChat();
       document.getElementById('chatMsg').textContent = '';
@@ -331,8 +421,12 @@
 
   function startChatPolling() {
     stopChatPolling();
-    loadChat(true);
     refreshPresence(true);
+    if (bridgeToken) {
+      connectBridge(false).catch(error => showBridgeSetup(error.message));
+    } else {
+      showBridgeSetup();
+    }
     chatTimer = window.setInterval(() => loadChat(false), 6000);
   }
 
@@ -350,17 +444,56 @@
   document.getElementById('adminRole').addEventListener('change', syncRoleControls);
   document.getElementById('cancelAdminEdit').addEventListener('click', resetAdminForm);
   document.getElementById('saveTetherSettings').addEventListener('click', savePublicTetherSettings);
+  document.getElementById('chatBridgeConnect').addEventListener('click', async () => {
+    const message = document.getElementById('chatBridgeMsg');
+    message.textContent = '';
+    if (!document.getElementById('chatBridgeConsent').checked) {
+      setMessage(message, 'Confirm the local resource and network requirements first.');
+      return;
+    }
+    bridgeToken = document.getElementById('chatBridgeToken').value.trim();
+    if (!bridgeToken) {
+      setMessage(message, 'Enter the bridge token shown in the terminal.');
+      return;
+    }
+    try {
+      await connectBridge(true);
+      window.sessionStorage.setItem('tetherBridgeToken', bridgeToken);
+    } catch (error) {
+      setMessage(message, error.message + ' Make sure the bridge is running and allow local network access if your browser asks.');
+    }
+  });
+  document.getElementById('chatBridgeDisconnect').addEventListener('click', () => {
+    bridgeToken = '';
+    bridgeStatus = null;
+    chatMessages = [];
+    window.sessionStorage.removeItem('tetherBridgeToken');
+    document.getElementById('chatBridgeToken').value = '';
+    document.getElementById('chatBridgeConsent').checked = false;
+    showBridgeSetup();
+  });
+  document.getElementById('chatDevice').addEventListener('change', event => {
+    chatMessages = [];
+    renderedMessageIds = '';
+    if (event.target.value) window.localStorage.setItem('tetherChatDevice', event.target.value);
+    loadChat(true);
+  });
   document.getElementById('chatForm').addEventListener('submit', async event => {
     event.preventDefault();
     const input = document.getElementById('chatInput');
     const button = document.getElementById('chatSendBtn');
     const message = input.value.trim();
     if (!message) return;
+    const device = document.getElementById('chatDevice').value;
+    if (!device) {
+      setMessage(document.getElementById('chatMsg'), 'Choose a paired Tether device first.');
+      return;
+    }
     button.disabled = true;
     try {
-      await apiJson('/api/admin-chat', {
+      await bridgeJson('/v1/messages', {
         method: 'POST',
-        body: JSON.stringify({ message })
+        body: JSON.stringify({ device, username: session.username, message })
       });
       input.value = '';
       renderedMessageIds = '';

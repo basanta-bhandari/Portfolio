@@ -18,6 +18,8 @@ flowchart LR
     API -->|Signed internal request| W[Cloudflare Worker]
     W --> R2[(Cloudflare R2)]
     R2 -->|Public blog images only| Visitor
+    Admin[Admin browser] -->|Loopback HTTP with explicit permission| Bridge[Local Tether bridge]
+    Bridge -->|Signed recipient-encrypted messages| Mesh[Tether device and core network]
 ```
 
 The main responsibilities are:
@@ -28,8 +30,10 @@ The main responsibilities are:
 | Cloudflare DNS | Authoritative DNS for the domain |
 | Vercel | Static hosting, serverless API functions, HTTPS, redirects, and GitHub deployments |
 | Neon | PostgreSQL data for posts, projects, users, settings, and admin presence |
-| Cloudflare Worker | Validates signed image uploads and handles encrypted admin chat storage |
-| Cloudflare R2 | Stores blog images and encrypted admin-chat ciphertext |
+| Cloudflare Worker | Validates signed blog-image uploads |
+| Cloudflare R2 | Stores public blog images |
+| Tether / NeoNet | Carries signed, recipient-encrypted admin messages between participating devices |
+| Local Tether bridge | Lets the admin page use the Tether node running on the same computer |
 | GitHub | Source history and the deployment source used by Vercel |
 
 ## 2. Domains and DNS
@@ -130,10 +134,8 @@ These values belong in Vercel Project Settings under Environment Variables. Add 
 | `R2_UPLOAD_URL` | Base URL of the Cloudflare upload Worker |
 | `R2_UPLOAD_SECRET` | Shared HMAC secret for signed blog-image uploads |
 | `R2_PUBLIC_BASE_URL` | Public R2 domain, normally `https://media.basanta.cc` |
-| `R2_CHAT_API_URL` | Base URL of the Worker that handles encrypted admin chat |
-| `R2_CHAT_API_SECRET` | Shared HMAC secret used only between Vercel and the Worker |
 
-Never put the raw admin password, database password, session secret, upload secret, chat API secret, or chat encryption key in Git.
+Never put the raw admin password, database password, session secret, or upload secret in Git.
 
 ## 5. Neon PostgreSQL
 
@@ -281,50 +283,36 @@ Super admins control three independent settings:
 
 Normal admins with Tether permission can view the release information but cannot change the public switches.
 
-## 10. Encrypted admin chat
+## 10. Tether admin chat
 
-The admin dashboard provides a chat tab for every authenticated admin. The browser never talks directly to R2 and never receives an encryption key.
+The admin dashboard provides a chat tab for every authenticated admin. Message bodies do not use a Vercel API, Neon, a Cloudflare Worker, or R2. Each participating computer runs `tether-web-bridge.py`, which listens only on `127.0.0.1` and invokes the installed Tether/NeoNet command without a shell.
 
 ```mermaid
 sequenceDiagram
     participant B as Admin browser
-    participant V as Vercel API
-    participant W as Cloudflare Worker
-    participant R as R2 bucket
+    participant L as Local bridge on 127.0.0.1
+    participant T as Local Tether node
+    participant C as Pinned Tether core(s)
+    participant P as Paired admin device
 
-    B->>V: Send or fetch chat messages
-    V->>V: Authenticate admin session
-    V->>W: HMAC-signed internal request
-    W->>W: Verify signature and timestamp
-    W->>W: Encrypt or decrypt with AES-256-GCM
-    W->>R: Conditional read or write
-    W-->>V: Plain JSON over HTTPS
-    V-->>B: Authorized chat response
+    B->>L: Token-authenticated loopback request
+    L->>T: Start background route and send channel message
+    T->>C: Authenticated encrypted TCP
+    C->>P: Route signed recipient-encrypted message
+    P-->>B: Recipient bridge displays message
 ```
 
-The Worker stores one encrypted rolling chat object at `admin-chat/messages-v1.enc`. The R2 object contains ciphertext, a random AES-GCM nonce, and an authentication tag. R2 never receives plaintext through its storage API.
+Enabling chat is explicit. The setup panel explains that the computer contributes a background process, small amounts of memory, CPU, disk, and network traffic, and requires browser permission to reach loopback. The terminal prints a random bridge token. The token stays in that browser tab's `sessionStorage` and is required on every bridge request. The bridge accepts only the production site and local development origins.
 
-The internal Worker endpoint requires an HMAC signature containing the method, path, timestamp, and request-body hash. Requests older than 60 seconds are rejected. Conditional R2 writes use the previous ETag and retry when two admins send at the same moment, preventing silent overwrites.
+The bridge starts the saved Tether background route with `neonet up`. Every other participant must run Tether and complete its one-time device pairing. Devices on separate networks also need at least one reachable, pinned Tether core. GitHub distributes Tether source and releases; it is not a message transport.
 
-The chat keeps the latest 100 messages from the last 90 days. Each message is limited to 1,000 characters. Admins can search the loaded history by sender or message text. Enter sends, Shift+Enter inserts a newline, and a failed send leaves the draft in the composer so it can be retried. The UI always inserts text with `textContent`, so a message cannot inject HTML or JavaScript.
+Web-chat messages contain a signed application expiry and are shown for 24 hours. The bridge removes expired web-chat entries from its outbox and local Tether channel logs whenever it starts or receives a request. It never deletes unrelated Tether messages. A recipient that receives an already expired envelope does not display it. Core queues remain bounded by Tether; the current protocol may retain encrypted, unreadable queued ciphertext until delivery or queue eviction, so strict relay-side deletion requires a future protocol-level TTL understood by every core.
 
-### Cloudflare Worker secrets
-
-These belong only in the Cloudflare Worker settings:
-
-| Secret | Purpose |
-| --- | --- |
-| `UPLOAD_SECRET` | Existing HMAC secret for image uploads |
-| `CHAT_API_SECRET` | Must match Vercel's `R2_CHAT_API_SECRET` |
-| `CHAT_ENCRYPTION_KEY` | A 32-byte AES key encoded as 64 hexadecimal characters |
-
-Generate independent values with `openssl rand -hex 32`. Never reuse `JWT_SECRET`, a password, or the database password.
-
-Back up `CHAT_ENCRYPTION_KEY` in a trusted password manager. Losing it makes existing chat ciphertext permanently unreadable. Changing it without first migrating the encrypted object has the same effect.
+Each message is limited to 1,000 characters. Enter sends, Shift+Enter inserts a newline, and the UI uses `textContent`, preventing message HTML or JavaScript injection.
 
 ## 11. Cloudflare R2 and cost control
 
-The bucket binding is named `BLOG_IMAGES` and currently points to `basanta-blog-images`. It stores both public blog images and the private encrypted chat object.
+The bucket binding is named `BLOG_IMAGES` and currently points to `basanta-blog-images`. It stores public blog images only.
 
 The current free R2 Standard allowance shown for this account is:
 
@@ -375,7 +363,8 @@ Dynamic user content is placed into the page using DOM creation and `textContent
 | `/api/uploads/blog-image` | POST | Blog permission |
 | `/api/tether-settings` | GET, PUT | GET public; PUT requires super admin |
 | `/api/admin-presence` | POST | Any authenticated admin |
-| `/api/admin-chat` | GET, POST | Any authenticated admin |
+
+Admin messages deliberately have no hosted API route. The browser uses the local bridge endpoints at `http://127.0.0.1:7331/v1/` after explicit consent.
 
 ## 14. Backups and recovery
 
@@ -398,14 +387,12 @@ Treat a database export as sensitive because it contains password hashes and adm
 
 ### Cloudflare R2
 
-Blog images should be backed up if they cannot be recreated. The encrypted chat object is useful only together with `CHAT_ENCRYPTION_KEY`.
+Blog images should be backed up if they cannot be recreated. Admin chat intentionally expires and is not part of the site backup.
 
 ### Secret recovery
 
 - Losing `JWT_SECRET` logs everyone out after replacement but does not delete content.
 - Losing `R2_UPLOAD_SECRET` stops new image uploads until the same replacement is installed in Vercel and Cloudflare.
-- Losing `R2_CHAT_API_SECRET` stops chat until the same replacement is installed in Vercel and Cloudflare.
-- Losing `CHAT_ENCRYPTION_KEY` makes existing encrypted chat history unrecoverable.
 - Losing the bootstrap password does not matter after a database super admin exists, provided another super admin can reset the account.
 
 ## 15. Safe deployment checklist
@@ -452,9 +439,9 @@ Check the Vercel function logs and the `DATABASE_URL` environment variable. Conf
 
 Confirm `R2_UPLOAD_URL`, `R2_UPLOAD_SECRET`, and `R2_PUBLIC_BASE_URL` in Vercel. Confirm the Worker has the matching `UPLOAD_SECRET` and the `BLOG_IMAGES` R2 binding.
 
-### Chat says encrypted storage is not configured
+### Chat cannot reach the local Tether bridge
 
-Confirm `R2_CHAT_API_URL` and `R2_CHAT_API_SECRET` in Vercel. Confirm the Worker has matching `CHAT_API_SECRET`, a valid 64-character hexadecimal `CHAT_ENCRYPTION_KEY`, and the R2 binding.
+Keep the bridge terminal open and paste its current token into the admin page. Confirm Tether is installed, the selected device is paired, and `neonet control` works. If the browser asks for local-network access, allow it for `basanta.cc`. A remote send also needs a running background route and a reachable pinned core.
 
 ### Admin incorrectly appears online
 
