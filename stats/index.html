@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stats | Basanta Bhandari</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <script src="/theme.js?v=2"></script><script src="/site-settings.js" defer></script>
+  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/navbar.css?v=1"><link rel="stylesheet" href="/theme-toggle.css?v=2"><link rel="stylesheet" href="/stats/styles.css?v=1">
+</head>
+<body>
+  <div class="grid-background" aria-hidden="true"></div>
+  <nav class="topnav" aria-label="Main navigation"><a href="/" class="brand">HOME?<span class="dot">.</span></a><div class="links">
+    <a href="/">Home</a><a href="/projects">Projects</a><a href="/stats" aria-current="page">Stats</a><a href="/tether">Tether</a><a href="/blog">Blog</a><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener noreferrer">GitHub</a>
+    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch theme"><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l-1.41-1.41M17.66 6.34l-1.41-1.41"/></svg><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
+  </div></nav>
+  <main class="stats-shell"><header class="stats-hero"><p class="eyebrow">PUBLIC TELEMETRY</p><h1>Stats</h1><p>What is moving behind this site: the code, the deployments, and the occasional little experiment.</p><p id="statsUpdated" class="stats-updated" aria-live="polite">Loading live data...</p></header>
+    <section class="stats-grid" aria-label="Project statistics"><article class="stats-panel"><div class="panel-heading"><span class="panel-kicker">SOURCE</span><h2>GitHub</h2></div><p id="githubStatus" class="panel-status">Fetching repository data...</p><div id="githubMetrics" class="metric-grid" aria-live="polite"></div><div id="githubDetails" class="detail-list"></div></article><article class="stats-panel"><div class="panel-heading"><span class="panel-kicker">HOSTING</span><h2>Vercel</h2></div><p id="vercelStatus" class="panel-status">Fetching deployment data...</p><div id="vercelMetrics" class="metric-grid" aria-live="polite"></div><div id="vercelDetails" class="detail-list"></div></article></section>
+    <p class="stats-note">This page shows public project and deployment metadata. It does not expose API tokens, environment variables, or private admin data.</p>
+  </main>
+  <footer><p>BASANTA BHANDARI - PORTFOLIO - 2026</p><p><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">GitHub</a></p></footer>
+  <script>
+    const $ = id => document.getElementById(id);
+    const number = value => new Intl.NumberFormat().format(Number(value || 0));
+    const date = value => value ? new Intl.DateTimeFormat([], { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : 'Unknown';
+    function metric(parent, label, value) { const item = document.createElement('div'); item.className = 'metric'; const strong = document.createElement('strong'); strong.textContent = value; const span = document.createElement('span'); span.textContent = label; item.append(strong, span); parent.appendChild(item); }
+    function addLink(parent, label, href) { if (!href) return; const a = document.createElement('a'); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = label; parent.appendChild(a); }
+    function row(parent, label, value) { const p = document.createElement('p'); const span = document.createElement('span'); span.textContent = label; const strong = document.createElement('strong'); strong.textContent = value; p.append(span, strong); parent.appendChild(p); return p; }
+    function showGithub(data) { if (!data.available) { $('githubStatus').textContent = data.error; return; } $('githubStatus').textContent = data.description || data.name; metric($('githubMetrics'), 'stars', data.stars); metric($('githubMetrics'), 'forks', data.forks); metric($('githubMetrics'), 'open issues', data.openIssues); metric($('githubMetrics'), 'watchers', data.watchers); row($('githubDetails'), 'primary language', data.language || 'Mixed'); row($('githubDetails'), 'default branch', data.defaultBranch); row($('githubDetails'), 'last push', date(data.pushedAt)); row($('githubDetails'), 'repository size', `${number(data.sizeKb)} KB`); if (data.latestCommit) { const p = row($('githubDetails'), 'latest commit', data.latestCommit.message); addLink(p.querySelector('strong'), ` ${data.latestCommit.sha.slice(0, 7)}`, data.latestCommit.url); } addLink($('githubDetails'), 'Open repository', data.url); }
+    function showVercel(data) { if (!data.available) { $('vercelStatus').textContent = data.error || 'No public deployment metadata is available yet.'; metric($('vercelMetrics'), 'status', 'quiet'); return; } $('vercelStatus').textContent = data.project ? `${data.project} · ${data.framework}` : 'Live deployment environment'; const deployments = data.deployments || []; metric($('vercelMetrics'), 'deployments shown', deployments.length || '—'); metric($('vercelMetrics'), 'environment', data.environment || (deployments[0]?.target || 'production')); metric($('vercelMetrics'), 'latest state', deployments[0]?.state || 'live'); if (data.productionDomain) addLink($('vercelDetails'), `Open ${data.productionDomain}`, `https://${data.productionDomain}`); deployments.slice(0, 5).forEach(deployment => { const p = row($('vercelDetails'), `${deployment.target} · ${date(deployment.createdAt)}`, deployment.state || 'unknown'); addLink(p.querySelector('strong'), ' open', deployment.url); }); if (data.error) { const small = document.createElement('small'); small.textContent = data.error; $('vercelDetails').appendChild(small); } }
+    fetch('/api/stats', { cache: 'no-store' }).then(response => { if (!response.ok) throw new Error('Live stats are unavailable.'); return response.json(); }).then(data => { $('statsUpdated').textContent = `Updated ${date(data.generatedAt)}`; showGithub(data.github); showVercel(data.vercel); }).catch(error => { $('statsUpdated').textContent = error.message; $('githubStatus').textContent = error.message; $('vercelStatus').textContent = error.message; });
+  </script>
+</body>
+</html>

@@ -151,6 +151,13 @@ footer a { text-decoration: none; color: var(--fg); font-weight: bold; }
     margin-bottom: 24px;
 }
 
+.hero-eyebrow {
+    margin-bottom: 18px;
+    color: var(--muted);
+    font-size: .72em;
+    letter-spacing: 2px;
+}
+
 .hero-bio {
     max-width: 780px;
     font-size: .95em;
@@ -167,6 +174,45 @@ footer a { text-decoration: none; color: var(--fg); font-weight: bold; }
     text-decoration: underline;
 }
 
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 28px;
+}
+
+.hero-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 15px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--fg);
+    font-size: .78em;
+    text-decoration: none;
+    transition: background .15s, color .15s, transform .15s;
+}
+
+.hero-action.primary { background: var(--fg); color: var(--bg); }
+.hero-action:hover { transform: translateY(-2px); background: var(--fg); color: var(--bg); }
+.hero-action.primary:hover { background: transparent; color: var(--fg); }
+
+.hero-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    margin-top: 56px;
+    border-top: 1px solid var(--hair);
+    border-bottom: 1px solid var(--hair);
+    background: var(--hair);
+}
+
+.hero-grid > div { min-height: 150px; padding: 20px 18px; background: var(--bg); }
+.hero-grid span { display: block; margin-bottom: 26px; color: var(--muted); font-size: .7em; }
+.hero-grid strong { display: block; margin-bottom: 8px; font-size: .92em; }
+.hero-grid p { color: var(--muted); font-size: .76em; line-height: 1.6; }
+
 .hero-meta {
     margin-top: 20px;
     font-size: .78em;
@@ -181,6 +227,9 @@ footer a { text-decoration: none; color: var(--fg); font-weight: bold; }
     .hero { padding: 48px 18px 38px; }
     .hero h1 { font-size: clamp(2.2rem, 12vw, 3.1rem); margin-bottom: 18px; }
     .hero-bio { padding-left: 14px; font-size: .9rem; }
+    .hero-grid { grid-template-columns: 1fr; margin-top: 40px; }
+    .hero-grid > div { min-height: auto; padding: 16px; }
+    .hero-grid span { margin-bottom: 14px; }
 }
 
 @media (min-width: 821px) and (max-width: 1120px) {
@@ -210,5 +259,8 @@ footer a { text-decoration: none; color: var(--fg); font-weight: bold; }
         font-size: .88rem;
         line-height: 1.68;
     }
+    .hero-eyebrow { font-size: .64rem; letter-spacing: 1.4px; }
+    .hero-actions { margin-top: 22px; }
+    .hero-action { width: 100%; justify-content: space-between; }
     footer { padding: 24px 16px; font-size: .72rem; letter-spacing: 1.2px; }
 }
