@@ -19,20 +19,25 @@
   let renderedMessageIds = '';
   let chatMessages = [];
   const DEFAULT_TETHER_BRIDGE_PORT = 7331;
+  const sessionStore = {
+    getItem(key) { try { return window.sessionStorage.getItem(key); } catch { return null; } },
+    setItem(key, value) { try { window.sessionStorage.setItem(key, value); } catch { /* The current connection still works. */ } },
+    removeItem(key) { try { window.sessionStorage.removeItem(key); } catch { /* Nothing persisted. */ } }
+  };
   const launchFragment = new URLSearchParams(window.location.hash.slice(1));
   const launchToken = launchFragment.get('tether-token') || '';
   const launchPort = Number.parseInt(launchFragment.get('tether-port') || '', 10);
-  const storedPort = Number.parseInt(window.sessionStorage.getItem('tetherBridgePort') || '', 10);
+  const storedPort = Number.parseInt(sessionStore.getItem('tetherBridgePort') || '', 10);
   const validPort = port => Number.isInteger(port) && port >= 1024 && port <= 65535;
   let bridgePort = validPort(launchPort)
     ? launchPort
     : (validPort(storedPort) ? storedPort : DEFAULT_TETHER_BRIDGE_PORT);
-  let bridgeToken = launchToken || window.sessionStorage.getItem('tetherBridgeToken') || '';
+  let bridgeToken = launchToken || sessionStore.getItem('tetherBridgeToken') || '';
   let bridgeAutoEnable = Boolean(launchToken);
   let bridgeStatus = null;
   if (launchToken) {
-    window.sessionStorage.setItem('tetherBridgeToken', launchToken);
-    window.sessionStorage.setItem('tetherBridgePort', String(bridgePort));
+    sessionStore.setItem('tetherBridgeToken', launchToken);
+    sessionStore.setItem('tetherBridgePort', String(bridgePort));
     window.history.replaceState(null, '', window.location.pathname + window.location.search);
   }
 
@@ -43,6 +48,7 @@
 
   async function apiJson(url, options = {}) {
     const response = await fetch(url, {
+      signal: AbortSignal.timeout(15000),
       credentials: 'include',
       ...options,
       headers: options.body
@@ -470,7 +476,7 @@
     }
     try {
       await connectBridge(true);
-      window.sessionStorage.setItem('tetherBridgeToken', bridgeToken);
+      sessionStore.setItem('tetherBridgeToken', bridgeToken);
     } catch (error) {
       setMessage(message, error.message + ' Make sure the bridge is running and allow local network access if your browser asks.');
     }
@@ -480,8 +486,8 @@
     bridgePort = DEFAULT_TETHER_BRIDGE_PORT;
     bridgeStatus = null;
     chatMessages = [];
-    window.sessionStorage.removeItem('tetherBridgeToken');
-    window.sessionStorage.removeItem('tetherBridgePort');
+    sessionStore.removeItem('tetherBridgeToken');
+    sessionStore.removeItem('tetherBridgePort');
     document.getElementById('chatBridgeToken').value = '';
     showBridgeSetup();
   });

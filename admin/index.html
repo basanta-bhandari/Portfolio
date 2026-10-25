@@ -235,6 +235,7 @@
     .presence-list { grid-template-columns: 1fr; }
   }
 </style>
+<link rel="stylesheet" href="/ui.css?v=1">
 </head>
 <body class="admin-pending">
 <div class="grid-background"></div>
@@ -244,6 +245,7 @@
     <div class="links">
         <a href="/">Home</a>
         <a href="/projects">Projects</a>
+        <a href="/stats">Stats</a>
         <a href="/tether">Tether</a>
         <a href="/blog">Blog</a>
         <a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener noreferrer">GitHub</a>
@@ -467,6 +469,18 @@ Leave a blank line between paragraphs."></textarea>
 
 <script src="/admin/admin-access.js"></script>
 <script>
+async function adminRequest(url, options = {}) {
+  const response = await fetch(url, { ...options, signal: AbortSignal.timeout(15000) });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || 'Request failed. Please try again.');
+  }
+  return response;
+}
+function showAdminError(error) {
+  const message = error.name === 'TimeoutError' ? 'The request timed out. Please try again.' : error.message || 'Could not connect. Please try again.';
+  alert(message);
+}
 async function checkAuth() {
   try {
     const res = await fetch('/api/session', { credentials: 'include' });
@@ -494,8 +508,10 @@ document.querySelectorAll('.admin-tabs [data-panel]').forEach(tab => {
 });
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
-  await fetch('/api/logout', { method: 'POST', credentials: 'include' });
-  window.location.href = '/login/';
+  try {
+    await adminRequest('/api/logout', { method: 'POST', credentials: 'include' });
+    window.location.href = '/login/';
+  } catch (error) { showAdminError(error); }
 });
 
 // Auto-fill slug from title, but only while the user hasn't hand-edited it
@@ -583,7 +599,7 @@ document.getElementById('insertLinkBtn').addEventListener('click', () => {
 });
 
 async function loadPosts() {
-  const res = await fetch('/api/posts');
+  const res = await adminRequest('/api/posts');
   const posts = await res.json();
   const list = document.getElementById('postsList');
   list.innerHTML = posts.length ? '' : '<p style="color:var(--muted);">No posts yet.</p>';
@@ -611,8 +627,10 @@ async function loadPosts() {
     delBtn.textContent = 'Delete';
     delBtn.addEventListener('click', async () => {
       if (!confirm('Delete "' + p.title + '"?')) return;
-      await fetch('/api/posts/' + encodeURIComponent(p.slug), { method: 'DELETE', credentials: 'include' });
-      loadPosts();
+      try {
+        await adminRequest('/api/posts/' + encodeURIComponent(p.slug), { method: 'DELETE', credentials: 'include' });
+        await loadPosts();
+      } catch (error) { showAdminError(error); }
     });
     actions.append(editBtn, downloadLink, delBtn);
     row.appendChild(label);
@@ -620,7 +638,7 @@ async function loadPosts() {
     list.appendChild(row);
   });
 }
-loadPosts();
+loadPosts().catch(showAdminError);
 
 async function startEdit(post) {
   const res = await fetch('/api/posts/' + encodeURIComponent(post.slug), { credentials: 'include' });
@@ -651,6 +669,10 @@ document.getElementById('cancelEditBtn').addEventListener('click', cancelEdit);
 
 document.getElementById('postForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+  const submit = document.getElementById('submitBtn');
+  if (submit.disabled) return;
+  submit.disabled = true;
+  try {
   const title = titleInput.value;
   const slug = slugInput.value;
   const excerpt = document.getElementById('excerpt').value;
@@ -659,7 +681,7 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
   msg.textContent = '';
 
   const isEditing = Boolean(editingSlug);
-  const res = await fetch(isEditing ? '/api/posts/' + encodeURIComponent(editingSlug) : '/api/posts', {
+  const res = await adminRequest(isEditing ? '/api/posts/' + encodeURIComponent(editingSlug) : '/api/posts', {
     method: isEditing ? 'PUT' : 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -674,7 +696,9 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
   msg.style.color = '#27ae60';
   msg.textContent = isEditing ? 'Changes saved!' : 'Published!';
   cancelEdit();
-  loadPosts();
+  await loadPosts();
+  } catch (error) { showAdminError(error); }
+  finally { submit.disabled = false; }
 });
 
 const projectForm = document.getElementById('projectForm');
@@ -733,8 +757,8 @@ document.getElementById('newCategoryBtn').addEventListener('click', () => {
   renderSelectedCategories(); updateCategoryOptions([]);
 });
 async function loadProjects() {
-  const res = await fetch('/api/projects');
-  const projects = res.ok ? await res.json() : [];
+  const res = await adminRequest('/api/projects');
+  const projects = await res.json();
   updateCategoryOptions(projects);
   const list = document.getElementById('projectsList');
   list.innerHTML = projects.length ? '' : '<p style="color:var(--muted);">No projects yet.</p>';
@@ -747,7 +771,10 @@ async function loadProjects() {
     const edit = document.createElement('button'); edit.className = 'edit-btn'; edit.textContent = 'Edit'; edit.addEventListener('click', () => startProjectEdit(project));
     const remove = document.createElement('button'); remove.className = 'delete-btn'; remove.textContent = 'Delete'; remove.addEventListener('click', async () => {
       if (!confirm('Delete "' + project.name + '"?')) return;
-      await fetch('/api/projects/' + project.id, { method: 'DELETE', credentials: 'include' }); loadProjects();
+      try {
+        await adminRequest('/api/projects/' + project.id, { method: 'DELETE', credentials: 'include' });
+        await loadProjects();
+      } catch (error) { showAdminError(error); }
     });
     actions.append(edit, remove); row.append(label, actions); list.appendChild(row);
   });
@@ -775,18 +802,24 @@ function startProjectEdit(project) {
 document.getElementById('cancelProjectEditBtn').addEventListener('click', cancelProjectEdit);
 projectForm.addEventListener('submit', async (event) => {
   event.preventDefault();
+  const submit = document.getElementById('projectSubmitBtn');
+  if (submit.disabled) return;
+  submit.disabled = true;
+  try {
   const editing = Boolean(editingProjectId);
   const msg = document.getElementById('projectMsg'); msg.textContent = '';
   if (!selectedProjectCategories.length) { msg.style.color = '#c0392b'; msg.textContent = 'Choose at least one category.'; return; }
-  const res = await fetch(editing ? '/api/projects/' + editingProjectId : '/api/projects', {
+  const res = await adminRequest(editing ? '/api/projects/' + editingProjectId : '/api/projects', {
     method: editing ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
     body: JSON.stringify({ name: projectName.value.trim(), subtitle: projectSubtitle.value.trim(), githubUrl: githubUrl.value.trim(), additionalLinks: listValues(additionalLinks.value), categories: selectedProjectCategories })
   });
   const data = await res.json();
   if (!res.ok) { msg.style.color = '#c0392b'; msg.textContent = data.error || 'Could not save project'; return; }
-  msg.style.color = '#27ae60'; msg.textContent = editing ? 'Changes saved!' : 'Project added!'; cancelProjectEdit(); loadProjects();
+  msg.style.color = '#27ae60'; msg.textContent = editing ? 'Changes saved!' : 'Project added!'; cancelProjectEdit(); await loadProjects();
+  } catch (error) { showAdminError(error); }
+  finally { submit.disabled = false; }
 });
-loadProjects();
+loadProjects().catch(showAdminError);
 </script>
 </body>
 </html>

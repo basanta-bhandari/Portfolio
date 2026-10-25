@@ -6,10 +6,11 @@ import {
   publicAdminRecord
 } from '../../lib/admin-users.js';
 import { sql } from '../../lib/db.js';
+import { passwordInput, secureApi } from '../../lib/security.js';
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_.-]{3,32}$/;
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const session = await authenticateRequest(req);
   if (!session) return res.status(401).json({ error: 'Unauthorized' });
   if (!isSuperAdmin(session)) return res.status(403).json({ error: 'Super admin access required' });
@@ -34,6 +35,7 @@ export default async function handler(req, res) {
     if (String(password || '').length < 10) {
       return res.status(400).json({ error: 'Password must be at least 10 characters' });
     }
+    passwordInput(password, 'Password', 10);
     if (!['admin', 'super'].includes(role)) {
       return res.status(400).json({ error: 'Invalid role' });
     }
@@ -62,3 +64,4 @@ export default async function handler(req, res) {
   res.setHeader('Allow', 'GET, POST');
   return res.status(405).json({ error: 'Method not allowed' });
 }
+export default secureApi(handler, { maxBytes: 8192 });

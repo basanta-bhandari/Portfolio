@@ -10,7 +10,8 @@
     });
   }
 
-  const savedTheme = localStorage.getItem(storageKey);
+  let savedTheme;
+  try { savedTheme = localStorage.getItem(storageKey); } catch { /* The switch still works when storage is blocked. */ }
   applyTheme(savedTheme === 'dark' ? 'dark' : 'light');
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -18,7 +19,7 @@
     document.querySelectorAll('[data-theme-toggle]').forEach(button => {
       button.addEventListener('click', () => {
         const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-        localStorage.setItem(storageKey, next);
+        try { localStorage.setItem(storageKey, next); } catch { /* Keep the current-page preference. */ }
         applyTheme(next);
       });
     });

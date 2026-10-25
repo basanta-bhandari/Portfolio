@@ -2,7 +2,8 @@ node_modules/
 __pycache__/
 *.py[cod]
 .vercel/
-.env
-.env.local
-.env*.local
+.env*
+!.env.example
+*.pem
+*.key
 .git

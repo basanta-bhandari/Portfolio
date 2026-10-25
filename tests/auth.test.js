@@ -7,9 +7,11 @@ const {
   REMEMBER_SESSION_SECONDS,
   hasPermission,
   hashPassword,
+  hashPasswordAsync,
   setSessionCookie,
   signSession,
   verifyPassword,
+  verifyPasswordAsync,
   verifyRequest
 } = await import('../lib/auth.js');
 
@@ -17,6 +19,27 @@ test('password hashes accept the original password and reject another', () => {
   const stored = hashPassword('a strong test password');
   assert.equal(verifyPassword('a strong test password', stored), true);
   assert.equal(verifyPassword('wrong password', stored), false);
+});
+
+test('async password checks preserve stored hashes and reject malformed inputs', async () => {
+  const hash = await hashPasswordAsync('correct horse battery staple');
+  assert.equal(await verifyPasswordAsync('correct horse battery staple', hash), true);
+  assert.equal(await verifyPasswordAsync('wrong password', hash), false);
+  for (const bad of [null, {}, [], 'x'.repeat(1025)]) {
+    assert.equal(await verifyPasswordAsync(bad, hash), false);
+    assert.equal(verifyPassword(bad, hash), false);
+  }
+  assert.equal(await verifyPasswordAsync('test', 'malformed:deadbeef'), false);
+});
+
+test('sessions reject extra segments and expired tokens and have unique IDs', () => {
+  const first = signSession({ id: 1 }, 60), second = signSession({ id: 1 }, 60);
+  assert.notEqual(first, second);
+  assert.equal(verifyRequest({ headers: { cookie: `session=${first}.extra` } }), null);
+  const expired = signSession({ id: 1 }, 0.001);
+  const original = Date.now;
+  try { Date.now = () => original() + 1000; assert.equal(verifyRequest({ headers: { cookie: `session=${expired}` } }), null); }
+  finally { Date.now = original; }
 });
 
 test('signed sessions verify and reject tampering', () => {

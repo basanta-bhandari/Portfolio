@@ -1,4 +1,5 @@
-import { hashPassword, isSuperAdmin, normalizePermissions } from '../../lib/auth.js';
+import { hashPasswordAsync, isSuperAdmin, normalizePermissions } from '../../lib/auth.js';
+import { passwordInput, secureApi } from '../../lib/security.js';
 import { authenticateRequest, ensureAdminUsersTable, findAdminById, publicAdminRecord } from '../../lib/admin-users.js';
 import { sql } from '../../lib/db.js';
 
@@ -11,7 +12,7 @@ async function activeSuperCount() {
   return Number(rows[0]?.count || 0);
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const session = await authenticateRequest(req);
   if (!session) return res.status(401).json({ error: 'Unauthorized' });
   if (!isSuperAdmin(session)) return res.status(403).json({ error: 'Super admin access required' });
@@ -41,6 +42,8 @@ export default async function handler(req, res) {
     if (password && String(password).length < 10) {
       return res.status(400).json({ error: 'Replacement password must be at least 10 characters' });
     }
+    if (password !== undefined && password !== '') passwordInput(password, 'Replacement password', 10);
+    if (active !== undefined && typeof active !== 'boolean') return res.status(400).json({ error: 'Active must be a boolean' });
     const selectedPermissions = normalizePermissions(permissions);
     if (role === 'admin' && !selectedPermissions.length) {
       return res.status(400).json({ error: 'Choose at least one feature for a normal admin' });
@@ -62,7 +65,7 @@ export default async function handler(req, res) {
       const rows = password
         ? await sql`
             UPDATE admin_users
-            SET username = ${cleanUsername}, password_hash = ${hashPassword(password)},
+            SET username = ${cleanUsername}, password_hash = ${await hashPasswordAsync(password)},
                 role = ${role}, permissions = ${JSON.stringify(safePermissions)}::jsonb,
                 is_active = ${nextActive}, auth_version = auth_version + 1, updated_at = now()
             WHERE id = ${id}
@@ -72,7 +75,7 @@ export default async function handler(req, res) {
             UPDATE admin_users
             SET username = ${cleanUsername}, role = ${role},
                 permissions = ${JSON.stringify(safePermissions)}::jsonb,
-                is_active = ${nextActive}, updated_at = now()
+                is_active = ${nextActive}, auth_version = auth_version + 1, updated_at = now()
             WHERE id = ${id}
             RETURNING id, username, role, permissions, is_active, created_at, updated_at
           `;
@@ -89,3 +92,4 @@ export default async function handler(req, res) {
   res.setHeader('Allow', 'PUT, DELETE');
   return res.status(405).json({ error: 'Method not allowed' });
 }
+export default secureApi(handler, { maxBytes: 8192 });

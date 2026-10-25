@@ -1,9 +1,11 @@
 import { sql } from '../../lib/db.js';
 import { hasPermission } from '../../lib/auth.js';
 import { authenticateRequest } from '../../lib/admin-users.js';
+import { InputError, postInput, secureApi } from '../../lib/security.js';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const { slug } = req.query;
+  if (typeof slug !== 'string' || !slug || slug.length > 200) throw new InputError('Invalid post slug');
 
   if (req.method === 'GET') {
     const rows = await sql`SELECT * FROM posts WHERE slug = ${slug}`;
@@ -45,12 +47,12 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'PUT') {
-    const { title, content, excerpt } = req.body || {};
+    const { title, content, excerpt } = postInput(req.body || {}, true);
     const rows = await sql`
       UPDATE posts SET
-        title = COALESCE(${title}, title),
-        content = COALESCE(${content}, content),
-        excerpt = COALESCE(${excerpt}, excerpt),
+        title = COALESCE(${title ?? null}, title),
+        content = COALESCE(${content ?? null}, content),
+        excerpt = COALESCE(${excerpt ?? null}, excerpt),
         updated_at = now()
       WHERE slug = ${slug}
       RETURNING id, title, slug, excerpt, published_at, updated_at
@@ -62,3 +64,4 @@ export default async function handler(req, res) {
   res.setHeader('Allow', 'GET, PUT, DELETE');
   res.status(405).json({ error: 'Method not allowed' });
 }
+export default secureApi(handler);

@@ -1,8 +1,9 @@
 import { sql } from '../../lib/db.js';
 import { hasPermission } from '../../lib/auth.js';
 import { authenticateRequest } from '../../lib/admin-users.js';
+import { projectInput, secureApi } from '../../lib/security.js';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const id = Number(req.query.id);
   if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'Invalid project id' });
 
@@ -20,10 +21,9 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true });
   }
   if (req.method === 'PUT') {
-    const { name, subtitle, githubUrl, additionalLinks, categories } = req.body || {};
-    if (!name || !subtitle || !Array.isArray(additionalLinks) || !Array.isArray(categories)) {
-      return res.status(400).json({ error: 'name, subtitle, links, and categories are required' });
-    }
+    const existing = await sql`SELECT categories FROM projects WHERE id = ${id}`;
+    if (!existing[0]) return res.status(404).json({ error: 'Not found' });
+    const { name, subtitle, githubUrl, additionalLinks, categories } = projectInput(req.body || {}, { legacyCategories: existing[0].categories || [] });
     const rows = await sql`
       UPDATE projects SET name = ${name}, subtitle = ${subtitle}, github_url = ${githubUrl || null},
         additional_links = ${JSON.stringify(additionalLinks)}::jsonb,
@@ -38,3 +38,4 @@ export default async function handler(req, res) {
   res.setHeader('Allow', 'GET, PUT, DELETE');
   res.status(405).json({ error: 'Method not allowed' });
 }
+export default secureApi(handler, { maxBytes: 32768 });

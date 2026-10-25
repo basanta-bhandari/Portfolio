@@ -1,8 +1,9 @@
 import { sql } from '../../lib/db.js';
 import { hasPermission } from '../../lib/auth.js';
 import { authenticateRequest } from '../../lib/admin-users.js';
+import { postInput, secureApi } from '../../lib/security.js';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method === 'GET') {
     const rows = await sql`
       SELECT id, title, slug, excerpt, published_at
@@ -17,10 +18,7 @@ export default async function handler(req, res) {
     if (!session) return res.status(401).json({ error: 'Unauthorized' });
     if (!hasPermission(session, 'blog')) return res.status(403).json({ error: 'Blog access required' });
 
-    const { title, slug, content, excerpt } = req.body || {};
-    if (!title || !slug || !content) {
-      return res.status(400).json({ error: 'title, slug, and content are required' });
-    }
+    const { title, slug, content, excerpt } = postInput(req.body || {});
 
     try {
       const rows = await sql`
@@ -40,3 +38,4 @@ export default async function handler(req, res) {
   res.setHeader('Allow', 'GET, POST');
   res.status(405).json({ error: 'Method not allowed' });
 }
+export default secureApi(handler);

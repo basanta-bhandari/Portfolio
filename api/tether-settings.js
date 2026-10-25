@@ -1,12 +1,13 @@
 import { isSuperAdmin } from '../lib/auth.js';
 import { authenticateRequest } from '../lib/admin-users.js';
+import { InputError, secureApi } from '../lib/security.js';
 import {
   DEFAULT_TETHER_SETTINGS,
   getTetherSettings,
   saveTetherSettings
 } from '../lib/site-settings.js';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       return res.status(200).json(await getTetherSettings());
@@ -24,6 +25,9 @@ export default async function handler(req, res) {
   const session = await authenticateRequest(req);
   if (!session) return res.status(401).json({ error: 'Unauthorized' });
   if (!isSuperAdmin(session)) return res.status(403).json({ error: 'Super admin access required' });
+  for (const key of ['pageEnabled', 'navEnabled', 'downloadsEnabled']) {
+    if (typeof req.body?.[key] !== 'boolean') throw new InputError(`${key} must be a boolean`);
+  }
 
   try {
     return res.status(200).json(await saveTetherSettings(req.body || {}));
@@ -32,3 +36,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Could not save Tether settings' });
   }
 }
+export default secureApi(handler, { maxBytes: 1024 });

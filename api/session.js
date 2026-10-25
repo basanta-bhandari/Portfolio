@@ -1,7 +1,8 @@
 import { authenticateRequest } from '../lib/admin-users.js';
 import { listAdminPresence, touchAdminPresence } from '../lib/admin-community.js';
+import { secureApi } from '../lib/security.js';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   try {
     if (!['GET', 'POST'].includes(req.method)) {
       res.setHeader('Allow', 'GET, POST');
@@ -29,3 +30,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ loggedIn: false, error: 'Session lookup failed' });
   }
 }
+export default secureApi(handler, { maxBytes: 1024 });

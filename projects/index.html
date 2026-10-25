@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/projects/styles.css">
     <link rel="stylesheet" href="/navbar.css?v=1">
     <link rel="stylesheet" href="/theme-toggle.css?v=2">
+<link rel="stylesheet" href="/ui.css?v=1">
 </head>
 <body>
     <div class="grid-background"></div>
@@ -89,7 +90,7 @@
         if (links.childElementCount) card.appendChild(links); grid.prepend(card);
     }
     search.addEventListener('input', filterProjects);
-    fetch('/api/projects').then(res => {
+    fetch('/api/projects', { signal: AbortSignal.timeout(15000) }).then(res => {
         if (!res.ok) throw new Error('Could not load projects');
         return res.json();
     }).then(projects => {

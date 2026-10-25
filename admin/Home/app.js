@@ -589,7 +589,7 @@ async function openStudyDocument(files) {
     return;
   }
   studyDocumentURL = URL.createObjectURL(file);
-  $('document-viewer').innerHTML = `<iframe src="${studyDocumentURL}" title="${escapeHtml(file.name)}"></iframe>`;
+  $('document-viewer').innerHTML = `<iframe src="${studyDocumentURL}" sandbox="allow-scripts allow-downloads" title="${escapeHtml(file.name)}"></iframe>`;
 }
 function clearStudyDocument(resetInput = true) {
   if (studyDocumentURL) URL.revokeObjectURL(studyDocumentURL);

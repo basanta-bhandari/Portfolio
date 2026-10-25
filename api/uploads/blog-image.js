@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { hasPermission } from '../../lib/auth.js';
 import { authenticateRequest } from '../../lib/admin-users.js';
+import { secureApi } from '../../lib/security.js';
 
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 const IMAGE_EXTENSIONS = Object.freeze({
@@ -19,7 +20,7 @@ function r2Config() {
   return { uploadBaseUrl, uploadSecret, publicBaseUrl };
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
@@ -68,3 +69,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Could not prepare image upload' });
   }
 }
+export default secureApi(handler, { maxBytes: 1024 });

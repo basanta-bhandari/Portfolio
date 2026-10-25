@@ -107,6 +107,7 @@
     .login-box .sub { margin-bottom: 20px; }
   }
 </style>
+<link rel="stylesheet" href="/ui.css?v=1">
 </head>
 <body>
 <div class="grid-background"></div>
@@ -128,15 +129,15 @@
   <div class="login-box">
     <h1>Admin Login</h1>
     <p class="sub">Sign in to your permitted admin tools.</p>
-    <div class="error" id="errorMsg"></div>
+    <div class="error" id="errorMsg" role="status" aria-live="polite"></div>
     <form id="loginForm">
       <div class="field">
         <label for="username">Username</label>
-        <input type="text" id="username" autocomplete="username" required>
+        <input type="text" id="username" autocomplete="username" maxlength="64" autocapitalize="none" spellcheck="false" required>
       </div>
       <div class="field">
         <label for="password">Password</label>
-        <input type="password" id="password" autocomplete="current-password" required>
+        <input type="password" id="password" autocomplete="current-password" maxlength="1024" required>
       </div>
       <label class="remember-row" for="remember">
         <input type="checkbox" id="remember">
@@ -158,12 +159,17 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   const password = document.getElementById('password').value;
   const remember = document.getElementById('remember').checked;
   const errorMsg = document.getElementById('errorMsg');
+  const button = e.currentTarget.querySelector('button[type="submit"]');
+  if (button.disabled) return;
+  button.disabled = true;
+  button.textContent = 'Signing in...';
   errorMsg.textContent = '';
   try {
     const res = await fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
+      signal: AbortSignal.timeout(15000),
       body: JSON.stringify({ username, password, remember })
     });
     if (!res.ok) {
@@ -174,7 +180,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const next = new URLSearchParams(window.location.search).get('next');
     window.location.href = next && next.startsWith('/admin/') && !next.startsWith('//') ? next : '/admin/index.html';
   } catch {
-    errorMsg.textContent = 'Network error';
+    errorMsg.textContent = 'Could not connect. Please try again.';
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Log in';
   }
 });
 </script>

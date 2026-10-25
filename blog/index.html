@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/blog/styles.css">
     <link rel="stylesheet" href="/navbar.css?v=1">
     <link rel="stylesheet" href="/theme-toggle.css?v=2">
+<link rel="stylesheet" href="/ui.css?v=1">
 </head>
 <body>
     <div class="grid-background"></div>
@@ -70,17 +71,18 @@
             drawProgress(Math.min(92, progress + step));
         }, 140);
 
-        const finishLoading = async () => {
+        const finishLoading = async (success = true) => {
             clearInterval(progressTimer);
-            drawProgress(100);
+            if (success) drawProgress(100);
             await new Promise(resolve => setTimeout(resolve, 180));
             loader.hidden = true;
         };
 
         try {
-            const res = await fetch('/api/posts');
+            const res = await fetch('/api/posts', { signal: AbortSignal.timeout(15000) });
             if (!res.ok) throw new Error('Post request failed');
             const posts = await res.json();
+            if (!Array.isArray(posts)) throw new Error('Invalid post response');
             await finishLoading();
             search.disabled = false;
             if (!posts.length) {
@@ -146,9 +148,13 @@
             });
             search.addEventListener('input', filter);
         } catch {
-            await finishLoading();
+            await finishLoading(false);
             note.textContent = 'Could not load posts. Please try again.';
             note.hidden = false;
+            const retry = document.createElement('button');
+            retry.type = 'button'; retry.className = 'retry-button'; retry.textContent = 'Try again';
+            retry.addEventListener('click', () => location.reload());
+            note.append(document.createElement('br'), retry);
         }
     }
     loadPosts();
