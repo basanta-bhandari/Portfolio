@@ -55,7 +55,7 @@
     <label class="field-label" for="launcherPlatform">Your system</label><select id="launcherPlatform"><option value="linux-x86_64">Linux (x86-64)</option><option value="macos-arm64">macOS (Apple Silicon)</option><option value="windows-x86_64">Windows (x86-64, PowerShell)</option></select>
     <div class="command"><code id="launchCommand">curl -fsSL https://www.basanta.cc/chat/start-tether-chat.sh | sh</code><button id="copyCommand" class="text-button" aria-label="Copy launch command">Copy</button></div>
     <a class="download-link" id="launcherDownload" href="/chat/start-tether-chat.sh" download="start-tether-chat.sh">Download the launcher</a> · <a id="backendDownload" class="download-link" href="/tether">Backend packages</a><p id="backendAvailability" class="small muted" role="status"></p></li>
-    <li><strong>Keep the terminal open</strong><p>Set or enter your local passphrase when asked. Chat connects automatically.</p></li></ol>
+    <li><strong>Keep the terminal open</strong><p>Set or enter your local passphrase when asked. Allow local-network access if your browser asks. Keep this terminal open while chatting.</p></li></ol>
     <details><summary>Connect an already running backend</summary><label class="field-label" for="connectionLink">Connection link from your terminal</label><input id="connectionLink" type="password" autocomplete="off" placeholder="Paste connection link"><button id="useConnectionLink" class="primary">Connect</button></details>
     <div id="connectionInfo" class="connection-info" hidden></div><button id="disconnectButton" class="text-button danger" hidden>Disconnect this browser</button><p id="connectionError" class="form-error" role="alert"></p>
   </dialog>
