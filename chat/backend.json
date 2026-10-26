@@ -1,0 +1,10 @@
+{
+  "version": "0.6.0",
+  "source": "fcae9035367e78bcedb65d4b0f11998cf1307ec3",
+  "platforms": {
+    "linux-x86_64": {
+      "url": "/tether/downloads/backend/neonet-backend-linux-x86_64-v0.6.0",
+      "sha256": "b1059dc97005c86a7df284f1f1436f4c2845ae8a2118217750cf668845fb7734"
+    }
+  }
+}
