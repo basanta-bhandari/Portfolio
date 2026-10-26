@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="Tether conversations. Private direct messages and live rooms, with 24-hour message history.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' http://127.0.0.1:*; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+  <title>Chat / basanta.cc</title><link rel="stylesheet" href="/chat/styles.css">
+  <script src="/chat/app.js" defer></script>
+</head>
+<body>
+  <div class="desktop-shell">
+  <header class="window-titlebar"><div class="window-brand"><span class="window-icon" aria-hidden="true">↗</span><strong>CHAT</strong><span class="window-version">basanta.cc / your private workspace</span></div><div class="window-tools"><span class="window-retention">◷ 24-hour conversations</span><button id="themeButton" class="chrome-button" aria-label="Switch color theme" title="Switch color theme">◐</button></div></header>
+  <div class="workspace">
+    <aside class="rail" aria-label="Workspace">
+      <a class="brand" href="/" aria-label="basanta.cc home">b<span>·</span></a>
+      <button id="toggleNav" class="rail-button mobile-only" aria-label="Toggle conversations" aria-expanded="false">☰</button>
+      <button class="rail-button active" aria-label="Chat workspace" title="Chat">↗</button>
+      <div class="rail-bottom"><button id="connectionButton" class="rail-button" aria-label="Connection settings" title="Connection settings">⚙</button><a class="rail-button site-link" href="/" title="basanta.cc" aria-label="Back to basanta.cc">↖</a></div>
+    </aside>
+    <aside class="sidebar" id="sidebar" aria-label="Conversations">
+      <header class="workspace-heading"><div><p class="eyebrow">YOUR PRIVATE SPACE</p><h1>Conversations <span class="tag">WEB</span></h1></div><span class="pulse" id="connectionDot" aria-label="Disconnected"></span></header>
+      <button class="identity-card" id="identityButton"><span class="avatar self" id="myAvatar">T</span><span><strong id="myName">Your identity</strong><small id="myAccount">Connect your local node</small></span><span class="identity-arrow">⌄</span></button>
+      <label class="search"><span aria-hidden="true">⌕</span><input id="conversationSearch" type="search" placeholder="Find a conversation" aria-label="Find a conversation" autocomplete="off"><kbd>/</kbd></label>
+      <div class="list-title"><h2>DIRECT MESSAGES</h2><span id="deviceCount">0</span></div>
+      <nav id="directList" class="conversation-list" aria-label="Direct messages"><p class="list-empty">Your trusted devices will appear here.</p></nav>
+      <div class="list-title rooms-title"><h2>LIVE ROOMS</h2><button id="newRoomButton" class="icon-button" title="Create a room" aria-label="Create a room" disabled>+</button></div>
+      <nav id="roomList" class="conversation-list" aria-label="Live rooms"><p class="list-empty">A place for the whole conversation.</p></nav>
+      <footer class="sidebar-footer"><div class="retention-mark">◷ <span>Here for 24 hours.</span></div><p>Conversations, without the archive.</p><button id="connectSidebar" class="text-button">Connect Tether <span>↗</span></button></footer>
+    </aside>
+    <main class="conversation" id="main">
+      <header class="conversation-header"><div class="channel-symbol" id="channelSymbol">↗</div><div class="channel-heading"><h2 id="conversationTitle">A little closer.</h2><p id="conversationSubtitle">Your people. Your network. Your conversations.</p></div><div class="header-actions"><span class="expiry-pill" title="Messages expire 24 hours after sending">◷ 24h</span><button id="searchMessagesButton" class="icon-button" title="Search messages" aria-label="Search messages" disabled>⌕</button><button id="detailsButton" class="icon-button" title="Conversation details" aria-label="Conversation details" aria-expanded="false" disabled>ⓘ</button></div></header>
+      <div id="messageSearchRow" class="message-search-row" hidden><label class="search"><span aria-hidden="true">⌕</span><input id="messageSearch" type="search" placeholder="Search this conversation" aria-label="Search this conversation"></label><button id="closeMessageSearch" class="icon-button" aria-label="Close search">×</button></div>
+      <div class="content-row"><section class="timeline" id="timeline" aria-label="Messages" aria-live="polite" aria-relevant="additions">
+        <div class="welcome" id="welcome"><div class="welcome-grid" aria-hidden="true"><span>↗</span><i></i><i></i><i></i></div><p class="eyebrow">MAKE YOURSELF AT HOME</p><h2>Good conversations.<br><span>Your own little corner.</span></h2><p>Direct messages and live rooms on your Tether network. Every message leaves after 24 hours.</p><button id="connectWelcome" class="primary"><span id="connectWelcomeLabel">Connect your node</span><span aria-hidden="true">↗</span></button><div class="welcome-notes"><span>◈ Your Tether account</span><span>◷ 24-hour messages</span><span>⌁ No website login</span></div></div>
+      </section><aside id="detailsPanel" class="details" aria-label="Conversation details" hidden><p class="eyebrow">IN THIS CONVERSATION</p><h3 id="detailsTitle"></h3><div id="detailsMembers"></div><div class="details-note"><strong>A smaller footprint.</strong><p>Messages expire after 24 hours on participating Tether clients. Recipients can still copy or capture what they receive.</p></div></aside></div>
+      <div class="composer-wrap"><div id="replyPreview" class="reply-preview" hidden><span id="replyText"></span><button id="cancelReply" class="icon-button" aria-label="Cancel reply">×</button></div><form id="messageForm" class="composer"><label class="sr-only" for="messageInput">Message</label><textarea id="messageInput" rows="2" maxlength="4000" placeholder="Choose a conversation to begin…" disabled></textarea><div class="composer-toolbar"><span><span class="privacy-dot"></span><span id="composerHint">Connect your Tether node to begin.</span></span><div><span id="messageCount" class="message-count"></span><button id="sendButton" class="send-button" type="submit" aria-label="Send message" disabled>Send <span>↗</span></button></div></div></form><div class="composer-footnote"><span><kbd>Enter</kbd> to send · <kbd>Shift Enter</kbd> for a new line</span><span id="bridgeStatus">Local node disconnected</span></div></div>
+    </main>
+  </div>
+  </div>
+  <dialog id="connectionDialog" class="modal"><form method="dialog"><button class="modal-close icon-button" aria-label="Close connection settings">×</button></form><p class="eyebrow">A DIRECT CONNECTION</p><h2>Bring your Tether with you.</h2><p>This page connects to Tether on your device. Your account and conversations stay on your network.</p><label class="field-label" for="connectionLink">Open a terminal and run</label><div class="command"><code>neonet web-chat</code><button id="copyCommand" class="icon-button" aria-label="Copy launch command">⧉</button></div><p class="small muted">The command opens this page with a temporary connection. No admin account or website password is needed.</p><details><summary>Already have a connection link?</summary><label class="sr-only" for="connectionLink">Tether connection link</label><input id="connectionLink" type="password" autocomplete="off" placeholder="Paste the link from your terminal"><button id="useConnectionLink" class="primary">Connect locally</button></details><div id="connectionInfo" class="connection-info" hidden></div><button id="disconnectButton" class="text-button danger" hidden>Disconnect this browser</button><p id="connectionError" class="form-error" role="alert"></p></dialog>
+  <dialog id="roomDialog" class="modal"><form id="roomForm"><button class="modal-close icon-button" id="closeRoomDialog" type="button" aria-label="Close room creation">×</button><p class="eyebrow">A PLACE TO GATHER</p><h2>Start a live room.</h2><label class="field-label" for="roomName">Room name</label><input id="roomName" maxlength="64" placeholder="e.g. The studio" required autocomplete="off"><p class="field-label">Invite trusted devices</p><div id="roomMembers" class="member-picker"></div><p class="small muted">Invites travel through Tether. Messages expire after 24 hours.</p><p id="roomError" class="form-error" role="alert"></p><button class="primary" id="createRoomButton" type="submit">Create room <span>↗</span></button></form></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body></html>
