@@ -37,13 +37,16 @@ headers.push({ source: '/api/(.*)', headers: [
 for (const source of ['/admin', '/admin/(.*)', '/login', '/login/(.*)']) {
   headers.push({ source, headers: [{ key: 'Cache-Control', value: 'private, no-store' }, { key: 'X-Robots-Tag', value: 'noindex, nofollow' }] });
 }
+// Keep policies for separately maintained routes (for example the chat workspace).
+const managedSources = new Set(headers.map(rule => rule.source));
+const combinedHeaders = [...headers, ...(config.headers || []).filter(rule => !managedSources.has(rule.source))];
 if (process.argv.includes('--check')) {
-  if (JSON.stringify(config.headers) !== JSON.stringify(headers)) {
+  if (JSON.stringify(config.headers) !== JSON.stringify(combinedHeaders)) {
     console.error('Security headers are stale. Run node scripts/security-headers.mjs after editing page scripts.');
     process.exitCode = 1;
   }
 } else {
-  config.headers = headers;
+  config.headers = combinedHeaders;
   await writeFile(new URL('vercel.json', root), `${JSON.stringify(config, null, 2)}\n`);
   console.log(`Generated security headers for ${pages.length} pages (${fileURLToPath(root)}).`);
 }

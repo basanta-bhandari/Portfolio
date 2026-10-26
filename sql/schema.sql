@@ -46,3 +46,15 @@ CREATE TABLE IF NOT EXISTS admin_presence (
   admin_id INTEGER PRIMARY KEY REFERENCES admin_users(id) ON DELETE CASCADE,
   last_seen TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS login_attempts (
+  key TEXT PRIMARY KEY,
+  attempts INTEGER NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS revoked_sessions (
+  fingerprint TEXT PRIMARY KEY,
+  expires_at TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS revoked_sessions_expiry ON revoked_sessions (expires_at);
