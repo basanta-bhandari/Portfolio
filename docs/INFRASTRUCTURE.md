@@ -169,9 +169,9 @@ Stores all public projects:
 - categories as JSON
 - creation and edit timestamps
 
-The entries that originally lived only in `projects/index.html` are imported once by `lib/default-projects.js`. A marker named `default_projects_v1` in `site_settings` prevents deleted projects from being recreated. After import, every old and new project can be edited or deleted from the admin dashboard.
+All current projects are stored in the database and can be edited or deleted from the admin Projects tab. Both the public page and the admin list read `/api/projects`; normal requests never import default records.
 
-The original HTML cards remain only as a public fallback when the API or database is unavailable. When the API succeeds, browser JavaScript replaces those cards with the database response.
+The public page shows loading, empty, and retry states instead of a hardcoded fallback. Deleting a project therefore cannot make it reappear during an API failure. The optional historical import is archived in `scripts/migrations/import-legacy-projects.mjs` for explicit use on a fresh database; its existing `default_projects_v1` marker prevents repeat imports.
 
 #### `admin_users`
 
@@ -339,7 +339,7 @@ Important files include:
 | --- | --- |
 | `theme.js` | Dark/light theme state and toggle behavior |
 | `site-settings.js` | Applies the public Tether navbar setting |
-| `project-categories.js` | Built-in category suggestions |
+| Admin project editor | Category suggestions from existing database projects |
 | `admin/admin-access.js` | Admin roles, user management, Tether controls, presence, and chat |
 | `blog/index.html` scripts | Post loading, progress display, and fuzzy search |
 | `blog/post.html` scripts | Individual post loading and Markdown rendering |

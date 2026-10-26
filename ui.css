@@ -18,6 +18,14 @@ textarea { resize:vertical; }
 .post-row,.post-actions,.project-actions { gap:10px; }
 .post-actions,.project-actions { flex-wrap:wrap; }
 .msg,.error { overflow-wrap:anywhere; }
+.admin-project-row { align-items:flex-start; padding:20px 0; }
+.admin-project-details { min-width:0; flex:1; }
+.admin-project-details h3 { font-size:1rem; margin-bottom:7px; }
+.admin-project-details p { font-size:.85rem; line-height:1.6; margin-bottom:7px; overflow-wrap:anywhere; }
+.admin-project-row .project-actions { flex-shrink:0; }
+.project-actions .download-btn { display:inline-flex; align-items:center; padding:7px 12px; font-size:.78rem; border:1px solid var(--line); border-radius:8px; text-decoration:none; }
+.project-card { scroll-margin-top:140px; }
+.project-card:target { outline:2px solid var(--fg); outline-offset:5px; }
 .content-toolbar button:hover,.post-row .edit-btn:hover,.post-row .download-btn:hover { background:var(--fg); color:var(--bg); }
 .retry-button { margin-top:12px; padding:9px 14px; font:inherit; border:1px solid currentColor; border-radius:8px; background:transparent; color:inherit; cursor:pointer; }
 @media(max-width:560px) {

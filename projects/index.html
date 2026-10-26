@@ -33,28 +33,13 @@
                 <p>All my projects in one place.</p>
             </div>
             <label class="search-label" for="projectSearch">Search projects</label>
-            <input id="projectSearch" class="search-input" type="search" placeholder="Name, description, category" autocomplete="off">
-            <p class="project-freshness"><strong>Hey, this might be stale.</strong> I might have forgotten to update it. Last updated: <time datetime="2026-10-18">October 18, 2026</time>. Check my <a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener noreferrer">GitHub</a> for newer work.</p>
+            <input id="projectSearch" class="search-input" type="search" placeholder="Name, description, category" autocomplete="off" disabled>
+            <p class="project-freshness"><strong>Hey, this might be stale.</strong> I might have forgotten to update it. <span id="projectUpdated"></span> Check my <a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener noreferrer">GitHub</a> for newer work.</p>
+            <p id="projectStatus" role="status" aria-live="polite">Loading projects...</p>
+            <button id="retryProjects" type="button" class="retry-button" hidden>Try again</button>
             <p id="searchEmpty" class="search-empty" hidden>No projects match that search.</p>
-            <div id="contentGrid" class="content-grid">
-                <article class="project-card"><h3><a href="/tether">Tether / NeoNet</a></h3><p>A private desktop space for messages, a lasting inbox, and file exchange across trusted devices.</p><div class="tech-tags"><span class="tech-tag">Desktop</span><span class="tech-tag">Rust</span><span class="tech-tag">Networking</span></div><div class="project-links"><a href="/tether">Download</a></div></article>
-                <article class="project-card"><h3><a href="https://basanta.cc">Portfolio (to be finished)</a></h3><p>Personal portfolio and landing page. Where I showcase who I am and what I build. Simple. Direct. Me.</p><div class="tech-tags"><span class="tech-tag">HTML/CSS</span><span class="tech-tag">Portfolio</span></div><div class="project-links"><a href="https://basanta.cc" target="_blank" rel="noopener">Visit</a></div></article>
-                <article class="project-card"><h3>Hackclub Shanti (In Development)</h3><p>Official website for our school's coding community. Events. Projects. Members. Where builders meet and collaborate.</p><div class="tech-tags"><span class="tech-tag">HTML/CSS</span><span class="tech-tag">Community</span></div><div class="project-links"><a href="https://shantihacks.org" target="_blank" rel="noopener">Visit</a><a href="https://github.com/orgs/Hackclub-Shanti" target="_blank" rel="noopener">GitHub</a></div></article>
-                <article class="project-card"><h3>Retrohouse</h3><p>90s-inspired blog celebrating retro web aesthetics. Neon colors. Animated GIFs. Nostalgic vibes. Pure chaos.</p><div class="tech-tags"><span class="tech-tag">HTML/CSS</span><span class="tech-tag">90s Design</span><span class="tech-tag">Nostalgia</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari/Olympics" target="_blank" rel="noopener">GitHub</a></div></article>
-                <article class="project-card"><h3>Pytype</h3><p>Python/curses type checking and validation software: Monkeytype in a terminal.</p><div class="tech-tags"><span class="tech-tag">Python</span><span class="tech-tag">Typing Test</span><span class="tech-tag">Package</span></div><div class="project-links"><a href="https://pypi.org/project/Pytype-B1/" target="_blank" rel="noopener">PyPI</a><a href="https://github.com/basanta-bhandari/Pytype" target="_blank" rel="noopener">GitHub</a></div></article>
-                <article class="project-card"><h3>PyDOS</h3><p>DOS emulator for the modern terminal, with a package manager and web tools.</p><div class="tech-tags"><span class="tech-tag">Python</span><span class="tech-tag">Emulator</span><span class="tech-tag">Terminal</span></div><div class="project-links"><a href="https://pypi.org/project/Py-DOS-B1/" target="_blank" rel="noopener">PyPI</a><a href="https://github.com/basanta-bhandari/PY_DOS" target="_blank" rel="noopener">GitHub</a></div></article>
-                <article class="project-card"><h3>Terminal Speil</h3><p>CLI D&amp;D-esque game built for Summer of Making. Strategic and narrative-driven.</p><div class="tech-tags"><span class="tech-tag">Python</span><span class="tech-tag">Game</span><span class="tech-tag">CLI</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari/Summer_of_Making" target="_blank" rel="noopener">GitHub</a></div></article>
-                <article class="project-card"><h3>Pomodoro CLI</h3><p>Lightweight terminal-based pomodoro timer that works offline and needs no mouse.</p><div class="tech-tags"><span class="tech-tag">Python</span><span class="tech-tag">Productivity</span><span class="tech-tag">Timer</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">GitHub</a></div></article>
-                <article class="project-card"><h3>Lantern</h3><p>Yggdrasil-based mesh E2E CLI messaging network tool inspired by Mutiny from Halt &amp; Catch Fire.</p><div class="tech-tags"><span class="tech-tag">Python</span><span class="tech-tag">Networking</span><span class="tech-tag">E2E Messaging</span></div><div class="project-links"><a href="https://pypi.org/user/basantabh/" target="_blank" rel="noopener">View</a></div></article>
-                <article class="project-card"><h3>404 Experience</h3><p>Creative error page. When things break, make it memorable.</p><div class="tech-tags"><span class="tech-tag">HTML/CSS</span><span class="tech-tag">Interaction</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">View</a></div></article>
-                <article class="project-card"><h3>Distrohopper</h3><p>Distrohopping script builder for popular Debian-based distros.</p><div class="tech-tags"><span class="tech-tag">Web</span><span class="tech-tag">Debian</span><span class="tech-tag">Automation</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">View</a></div></article>
-                <article class="project-card"><h3>RefDek</h3><p>A reference deck for maintaining bibliography and glossary entries with descriptions and categories.</p><div class="tech-tags"><span class="tech-tag">Web</span><span class="tech-tag">Research</span><span class="tech-tag">Knowledge Base</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">View</a></div></article>
-                <article class="project-card"><h3>Termui</h3><p>A TUI tool launcher with sudo password caching, custom tool addition, and automatic package-manager detection.</p><div class="tech-tags"><span class="tech-tag">Python</span><span class="tech-tag">TUI</span><span class="tech-tag">CLI</span></div><div class="project-links"><a href="https://pypi.org/user/basantabh/" target="_blank" rel="noopener">View</a></div></article>
-                <article class="project-card"><h3>Discord Bot</h3><p>Custom Discord bot for management and automation for our server.</p><div class="tech-tags"><span class="tech-tag">Python</span><span class="tech-tag">Discord</span><span class="tech-tag">Bot</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">GitHub</a></div></article>
-                <article class="project-card"><h3>Hackatime Figma Plugin</h3><p>Figma plugin integration with Hackatime for the desktop application.</p><div class="tech-tags"><span class="tech-tag">JavaScript</span><span class="tech-tag">Figma</span><span class="tech-tag">Plugin</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari/Hackatime" target="_blank" rel="noopener">GitHub</a></div></article>
-                <article class="project-card"><h3>AoPS Enhanced Learning</h3><p>Art of Problem Solving platform enhancement with mastery filters and visual analytics.</p><div class="tech-tags"><span class="tech-tag">Browser Extension</span><span class="tech-tag">Analytics</span><span class="tech-tag">Mathematics</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">GitHub</a></div></article>
-                <article class="project-card"><h3>Coming Soon!</h3><p>Do you like maths?</p><div class="tech-tags"><span class="tech-tag">Math</span><span class="tech-tag">JavaScript</span><span class="tech-tag">???</span></div><div class="project-links"><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">Coming</a></div></article>
-            </div>
+            <div id="contentGrid" class="content-grid" aria-busy="true"></div>
+            <noscript><p>Enable JavaScript to load projects, or <a href="https://github.com/basanta-bhandari">view my work on GitHub</a>.</p></noscript>
         </section>
     </main>
     <footer><p>BASANTA BHANDARI - PORTFOLIO - 2026</p><p><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">GitHub</a></p></footer>
@@ -62,6 +47,9 @@
     const grid = document.getElementById('contentGrid');
     const search = document.getElementById('projectSearch');
     const empty = document.getElementById('searchEmpty');
+    const status = document.getElementById('projectStatus');
+    const retry = document.getElementById('retryProjects');
+    let projectCount = 0;
     function fuzzyMatch(query, value) {
         const words = value.toLowerCase().match(/[\p{L}\p{N}]+/gu) || [];
         return query.toLowerCase().trim().split(/\s+/).every(term => words.some(word => {
@@ -73,34 +61,50 @@
     function filterProjects() {
         const query = search.value.trim(); let visible = 0;
         grid.querySelectorAll('.project-card').forEach(card => { const matches = !query || fuzzyMatch(query, card.textContent); card.hidden = !matches; if (matches) visible++; });
-        empty.hidden = visible !== 0;
+        empty.hidden = projectCount === 0 || visible !== 0;
     }
     function asArray(value) { try { return Array.isArray(value) ? value : JSON.parse(value || '[]'); } catch { return []; } }
-    function safeUrl(value) { try { return /^https?:$/.test(new URL(value).protocol) ? value : null; } catch { return null; } }
+    function safeUrl(value) { try { const url = new URL(value); return /^https?:$/.test(url.protocol) && !url.username && !url.password ? url.href : null; } catch { return null; } }
     function text(parent, tag, value, className) { const el = document.createElement(tag); el.textContent = value; if (className) el.className = className; parent.appendChild(el); return el; }
     function addProject(project) {
-        const card = document.createElement('article'); card.className = 'project-card'; text(card, 'h3', project.name); text(card, 'p', project.subtitle);
+        const card = document.createElement('article'); card.className = 'project-card'; card.id = 'project-' + project.id; text(card, 'h3', project.name); text(card, 'p', project.subtitle);
         const tags = document.createElement('div'); tags.className = 'tech-tags'; asArray(project.categories).forEach(category => text(tags, 'span', category, 'tech-tag')); card.appendChild(tags);
         const links = document.createElement('div'); links.className = 'project-links';
-        const addLink = (url, label) => { const valid = safeUrl(url); if (!valid) return; const link = document.createElement('a'); link.href = valid; link.target = '_blank'; link.rel = 'noopener'; link.textContent = label; links.appendChild(link); };
+        const addLink = (url, label) => { const valid = safeUrl(url); if (!valid) return; const link = document.createElement('a'); link.href = valid; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = label; links.appendChild(link); };
         addLink(project.github_url, 'GitHub'); asArray(project.additional_links).forEach((link, index) => {
             if (typeof link === 'string') addLink(link, `Link ${index + 1}`);
             else addLink(link?.url, link?.label || `Link ${index + 1}`);
         });
-        if (links.childElementCount) card.appendChild(links); grid.prepend(card);
+        if (links.childElementCount) card.appendChild(links); grid.appendChild(card);
     }
     search.addEventListener('input', filterProjects);
-    fetch('/api/projects', { signal: AbortSignal.timeout(15000) }).then(res => {
-        if (!res.ok) throw new Error('Could not load projects');
-        return res.json();
-    }).then(projects => {
-        grid.replaceChildren();
-        projects.forEach(addProject);
-        filterProjects();
-    }).catch(() => {
-        // Keep the built-in HTML cards visible if the database is unavailable.
-        filterProjects();
-    });
+    async function loadProjects() {
+        search.disabled = true; retry.hidden = true; status.hidden = false;
+        status.textContent = 'Loading projects...'; grid.setAttribute('aria-busy', 'true');
+        try {
+            const res = await fetch('/api/projects', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+            if (!res.ok) throw new Error('Could not load projects');
+            const projects = await res.json();
+            if (!Array.isArray(projects)) throw new Error('Invalid project response');
+            grid.replaceChildren(); projectCount = projects.length;
+            projects.forEach(addProject);
+            const dates = projects.map(project => Date.parse(project.updated_at || project.created_at)).filter(Number.isFinite);
+            const updated = document.getElementById('projectUpdated'); updated.replaceChildren();
+            if (dates.length) {
+                const date = new Date(Math.max(...dates)), time = document.createElement('time');
+                time.dateTime = date.toISOString(); time.textContent = date.toLocaleDateString(undefined, { dateStyle: 'long' });
+                updated.append('Last updated: ', time, '.');
+            }
+            search.disabled = !projectCount;
+            status.hidden = projectCount > 0; status.textContent = projectCount ? '' : 'No projects yet.';
+            filterProjects();
+            if (/^#project-\d+$/.test(location.hash)) document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: 'center' });
+        } catch {
+            status.textContent = 'Could not load projects. Please try again.'; retry.hidden = false;
+        } finally { grid.setAttribute('aria-busy', 'false'); }
+    }
+    retry.addEventListener('click', loadProjects);
+    loadProjects();
     </script>
 </body>
 </html>

@@ -7,7 +7,6 @@
 <link rel="icon" type="image/png" href="/favicon.png">
 <script src="/theme.js?v=2"></script>
 <script src="/site-settings.js" defer></script>
-<script src="/project-categories.js"></script>
 <link rel="stylesheet" href="../blog/styles.css">
 <link rel="stylesheet" href="/navbar.css?v=1">
 <link rel="stylesheet" href="/theme-toggle.css?v=2">
@@ -337,16 +336,20 @@ Leave a blank line between paragraphs."></textarea>
     <h2 id="projectFormHeading">New Project</h2>
     <div class="msg" id="projectMsg"></div>
     <form id="projectForm">
-      <div class="field"><label for="projectName">Name</label><input type="text" id="projectName" required></div>
-      <div class="field"><label for="projectSubtitle">Subtitle / short description</label><textarea id="projectSubtitle" required></textarea></div>
+      <div class="field"><label for="projectName">Name</label><input type="text" id="projectName" maxlength="200" required></div>
+      <div class="field"><label for="projectSubtitle">Subtitle / short description</label><textarea id="projectSubtitle" maxlength="4000" required></textarea></div>
       <div class="field"><label for="githubUrl">GitHub link <span style="font-weight:normal;">(optional)</span></label><input type="url" id="githubUrl" placeholder="https://github.com/..." inputmode="url"></div>
-      <div class="field"><label for="additionalLinks">Additional links <span style="font-weight:normal;">(optional)</span></label><textarea id="additionalLinks" placeholder="One URL per line"></textarea><div class="hint">Add a website, PyPI page, video, or any other link - one per line.</div></div>
+      <div class="field"><label for="additionalLinks">Additional links <span style="font-weight:normal;">(optional)</span></label><textarea id="additionalLinks" placeholder="PyPI | https://pypi.org/project/example/"></textarea><div class="hint">One URL per line, or Label | URL to name a link. Up to 15 links.</div></div>
       <div class="field"><label for="categorySelect">Categories <span style="font-weight:normal;">(up to 3 for new projects)</span></label><div class="category-control"><select id="categorySelect"><option value="">Choose a category</option></select><button type="button" id="newCategoryBtn">+ New category</button></div><div id="selectedCategories" class="category-chip-list"></div><div class="hint">Choose an existing category or add a new one. New categories become available for future projects.</div></div>
       <button type="submit" class="publish-btn" id="projectSubmitBtn">Add project</button>
       <button type="button" id="cancelProjectEditBtn" style="display:none; margin-left:8px;" class="publish-btn">Cancel edit</button>
     </form>
-    <h2 style="margin-top:50px;">Existing Projects</h2>
-    <div id="projectsList"></div>
+    <h2 style="margin-top:50px;">All Projects <span id="projectCount"></span></h2>
+    <label class="search-label" for="adminProjectSearch">Search projects</label>
+    <input type="search" id="adminProjectSearch" class="search-input" placeholder="Name, description, category" autocomplete="off" disabled>
+    <p id="adminProjectStatus" class="hint" role="status" aria-live="polite">Loading projects...</p>
+    <button type="button" id="retryAdminProjects" class="secondary-btn" hidden>Try again</button>
+    <div id="projectsList" aria-busy="true"></div>
   </section>
 
   <section class="admin-panel feature-panel" id="tetherPanel" role="tabpanel" aria-labelledby="tetherTab" hidden>
@@ -710,10 +713,13 @@ const categorySelect = document.getElementById('categorySelect');
 const selectedCategoriesBox = document.getElementById('selectedCategories');
 let editingProjectId = null;
 let selectedProjectCategories = [];
-let availableCategories = new Set(window.BASE_PROJECT_CATEGORIES || []);
+let availableCategories = new Set();
 
 function listValues(value) {
-  return String(value || '').split(/[\n,]/).map(item => item.trim()).filter(Boolean);
+  return String(value || '').split(/\r?\n/).map(item => item.trim()).filter(Boolean).map(line => {
+    const match = /^(.+?)\s+\|\s+(https?:\/\/\S+)$/i.exec(line);
+    return match ? { label: match[1].trim(), url: match[2] } : line;
+  });
 }
 function projectArray(value) {
   try { return Array.isArray(value) ? value : JSON.parse(value || '[]'); } catch { return []; }
@@ -757,28 +763,55 @@ document.getElementById('newCategoryBtn').addEventListener('click', () => {
   renderSelectedCategories(); updateCategoryOptions([]);
 });
 async function loadProjects() {
+  const list = document.getElementById('projectsList');
+  const status = document.getElementById('adminProjectStatus');
+  const retry = document.getElementById('retryAdminProjects');
+  list.setAttribute('aria-busy', 'true'); status.textContent = 'Loading projects...'; retry.hidden = true;
+  try {
   const res = await adminRequest('/api/projects');
   const projects = await res.json();
+  if (!Array.isArray(projects)) throw new Error('Could not load the project list');
+  availableCategories = new Set();
   updateCategoryOptions(projects);
-  const list = document.getElementById('projectsList');
-  list.innerHTML = projects.length ? '' : '<p style="color:var(--muted);">No projects yet.</p>';
+  list.replaceChildren(); document.getElementById('projectCount').textContent = '(' + projects.length + ')';
+  const search = document.getElementById('adminProjectSearch'); search.disabled = false;
   projects.forEach(project => {
-    const row = document.createElement('div'); row.className = 'post-row';
-    const label = document.createElement('span'); label.textContent = project.name + ' ';
-    const small = document.createElement('small'); small.style.color = 'var(--muted)';
-    small.textContent = '(' + projectArray(project.categories).join(', ') + ')'; label.appendChild(small);
+    const row = document.createElement('article'); row.className = 'post-row admin-project-row';
+    row.dataset.search = [project.name, project.subtitle, ...projectArray(project.categories)].join(' ').toLowerCase();
+    const details = document.createElement('div'); details.className = 'admin-project-details';
+    const name = document.createElement('h3'); name.textContent = project.name;
+    const description = document.createElement('p'); description.textContent = project.subtitle;
+    const small = document.createElement('small'); small.className = 'hint';
+    small.textContent = projectArray(project.categories).join(' · ');
+    details.append(name, description, small);
     const actions = document.createElement('div'); actions.className = 'project-actions';
-    const edit = document.createElement('button'); edit.className = 'edit-btn'; edit.textContent = 'Edit'; edit.addEventListener('click', () => startProjectEdit(project));
-    const remove = document.createElement('button'); remove.className = 'delete-btn'; remove.textContent = 'Delete'; remove.addEventListener('click', async () => {
+    const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'edit-btn'; edit.textContent = 'Edit'; edit.setAttribute('aria-label', 'Edit ' + project.name); edit.addEventListener('click', () => startProjectEdit(project));
+    const view = document.createElement('a'); view.className = 'download-btn'; view.textContent = 'View on site'; view.href = '/projects/#project-' + project.id; view.target = '_blank'; view.rel = 'noopener noreferrer';
+    const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'delete-btn'; remove.textContent = 'Delete'; remove.setAttribute('aria-label', 'Delete ' + project.name); remove.addEventListener('click', async () => {
       if (!confirm('Delete "' + project.name + '"?')) return;
       try {
+        remove.disabled = true;
         await adminRequest('/api/projects/' + project.id, { method: 'DELETE', credentials: 'include' });
+        if (editingProjectId === project.id) cancelProjectEdit();
         await loadProjects();
       } catch (error) { showAdminError(error); }
+      finally { remove.disabled = false; }
     });
-    actions.append(edit, remove); row.append(label, actions); list.appendChild(row);
+    actions.append(edit, view, remove); row.append(details, actions); list.appendChild(row);
   });
+  filterAdminProjects();
+  } catch (error) { status.textContent = error.message || 'Could not load projects.'; retry.hidden = false; }
+  finally { list.setAttribute('aria-busy', 'false'); }
 }
+function filterAdminProjects() {
+  const query = document.getElementById('adminProjectSearch').value.trim().toLowerCase();
+  const rows = [...document.querySelectorAll('#projectsList .admin-project-row')];
+  let visible = 0;
+  rows.forEach(row => { row.hidden = !query.split(/\s+/).every(term => row.dataset.search.includes(term)); if (!row.hidden) visible++; });
+  document.getElementById('adminProjectStatus').textContent = !rows.length ? 'No projects yet. Add your first project above.' : !visible ? 'No projects match that search.' : '';
+}
+document.getElementById('adminProjectSearch').addEventListener('input', filterAdminProjects);
+document.getElementById('retryAdminProjects').addEventListener('click', loadProjects);
 function cancelProjectEdit() {
   editingProjectId = null; projectForm.reset();
   selectedProjectCategories = []; renderSelectedCategories(); updateCategoryOptions([]);
@@ -790,7 +823,7 @@ function startProjectEdit(project) {
   editingProjectId = project.id; projectName.value = project.name; projectSubtitle.value = project.subtitle;
   githubUrl.value = project.github_url || '';
   additionalLinks.value = projectArray(project.additional_links)
-    .map(link => typeof link === 'string' ? link : link?.url)
+    .map(link => typeof link === 'string' ? link : link?.url ? (link.label ? link.label + ' | ' : '') + link.url : '')
     .filter(Boolean)
     .join('\n');
   selectedProjectCategories = projectArray(project.categories); renderSelectedCategories(); updateCategoryOptions([]);
@@ -819,7 +852,7 @@ projectForm.addEventListener('submit', async (event) => {
   } catch (error) { showAdminError(error); }
   finally { submit.disabled = false; }
 });
-loadProjects().catch(showAdminError);
+loadProjects();
 </script>
 </body>
 </html>

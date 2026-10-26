@@ -1,6 +1,6 @@
-import { sql } from './db.js';
-import { ensureProjectsTable } from './projects.js';
-import { ensureSiteSettingsTable } from './site-settings.js';
+import { sql } from '../../lib/db.js';
+import { ensureProjectsTable } from '../../lib/projects.js';
+import { ensureSiteSettingsTable } from '../../lib/site-settings.js';
 
 // These entries predate the project admin. They are imported once so the
 // public page and admin dashboard use the same source of truth from then on.
@@ -183,3 +183,7 @@ export async function ensureDefaultProjects() {
     throw error;
   }
 }
+
+// Optional historical import: run explicitly against a fresh database only.
+await ensureDefaultProjects();
+console.log('Legacy project import complete.');
