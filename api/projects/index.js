@@ -3,6 +3,7 @@ import { hasPermission } from '../../lib/auth.js';
 import { authenticateRequest } from '../../lib/admin-users.js';
 import { ensureDefaultProjects } from '../../lib/default-projects.js';
 import { projectInput, secureApi } from '../../lib/security.js';
+import { ensureProjectsTable } from '../../lib/projects.js';
 
 async function handler(req, res) {
   if (req.method === 'GET') {
@@ -18,6 +19,7 @@ async function handler(req, res) {
     const session = await authenticateRequest(req);
     if (!session) return res.status(401).json({ error: 'Unauthorized' });
     if (!hasPermission(session, 'projects')) return res.status(403).json({ error: 'Projects access required' });
+    await ensureProjectsTable();
     const { name, subtitle, githubUrl, additionalLinks, categories } = projectInput({ additionalLinks: [], categories: [], ...req.body });
     const rows = await sql`
       INSERT INTO projects (name, subtitle, github_url, additional_links, categories)

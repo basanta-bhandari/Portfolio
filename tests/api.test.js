@@ -5,10 +5,12 @@ register('./helpers/db-loader.mjs', import.meta.url);
 process.env.JWT_SECRET = 'local-test-secret-with-enough-entropy';
 process.env.DATABASE_URL = 'postgres://test.invalid/test';
 const { signSession } = await import('../lib/auth.js');
-let role = 'admin', permissions = ['blog'], revoked = false, fail = false, attempts = 0;
+let role = 'admin', permissions = ['blog'], revoked = false, fail = false, attempts = 0, projectsTableExists = false;
 globalThis.__portfolioTestSql = async (parts, ...values) => {
   if (fail) throw new Error('private connection details');
   const query = parts.join('?');
+  if (/CREATE TABLE IF NOT EXISTS projects/.test(query)) projectsTableExists = true;
+  if (/FROM projects/.test(query) && !projectsTableExists) throw new Error('projects table does not exist');
   if (/INSERT INTO login_attempts/.test(query)) {
     attempts++;
     assert.ok(values[0].every(value => /^[a-f0-9]{64}$/.test(value)));
@@ -33,6 +35,9 @@ function response() { return { headers: {}, code: 200, setHeader(key, value) { t
 function request(method = 'POST', body) { return { method, body, query: { id: '1' }, headers: { origin: 'https://www.basanta.cc', 'content-type': 'application/json', cookie: `session=${signSession({ id: 1, user: 'tester', authVersion: 1 })}` } }; }
 
 test('admin permission, session revocation, and endpoint validation regressions', async t => {
+  await t.test('public projects initialize their schema before querying an older database', async () => {
+    const res = response(); await projects(request('GET'), res); assert.equal(res.code, 200); assert.equal(projectsTableExists, true);
+  });
   await t.test('normal blog admins cannot create projects or manage users', async () => {
     for (const handler of [projects, users]) { const res = response(); await handler(request('POST', {}), res); assert.equal(res.code, 403); }
   });

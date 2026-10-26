@@ -11,6 +11,7 @@
 - **Supply chain.** Neon is pinned to 1.0.2; package-lock.json fixes the transitive graph and integrity hashes. No dependency code or package-manager install was run locally. The lock was generated from the official npm registry metadata, rejecting lifecycle scripts. Deployment lifecycle scripts are disabled in .npmrc. OSV returned no known advisories for the twelve pinned packages when checked on this date. This is a point-in-time database check, not proof that dependencies cannot contain bugs or malicious code. Dependabot can propose weekly updates; it does not automatically merge them.
 - **UI/reliability.** Improved mobile navigation and admin tabs, focus visibility, theme-aware hover contrast, disabled submit states, long text wrapping, network timeouts, retry controls, and failed save/delete reporting. Storage-disabled browsers can still change theme and use the current chat connection. Local document frames are sandboxed.
 - **Projects initialization.** Already-initialized databases skip the default-project import. Its ordering column uses an unambiguous SQL name rather than the PostgreSQL POSITION keyword.
+- **Projects schema.** Both project endpoints initialize their table idempotently and migrate the optional updated_at column. This covers older installations that only served hardcoded cards; it does not drop or replace existing project data.
 
 ## Validation
 

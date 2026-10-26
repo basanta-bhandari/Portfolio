@@ -2,12 +2,14 @@ import { sql } from '../../lib/db.js';
 import { hasPermission } from '../../lib/auth.js';
 import { authenticateRequest } from '../../lib/admin-users.js';
 import { projectInput, secureApi } from '../../lib/security.js';
+import { ensureProjectsTable } from '../../lib/projects.js';
 
 async function handler(req, res) {
   const id = Number(req.query.id);
   if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'Invalid project id' });
 
   if (req.method === 'GET') {
+    await ensureProjectsTable();
     const rows = await sql`SELECT * FROM projects WHERE id = ${id}`;
     if (!rows[0]) return res.status(404).json({ error: 'Not found' });
     return res.status(200).json(rows[0]);
@@ -16,6 +18,7 @@ async function handler(req, res) {
   const session = await authenticateRequest(req);
   if (!session) return res.status(401).json({ error: 'Unauthorized' });
   if (!hasPermission(session, 'projects')) return res.status(403).json({ error: 'Projects access required' });
+  await ensureProjectsTable();
   if (req.method === 'DELETE') {
     await sql`DELETE FROM projects WHERE id = ${id}`;
     return res.status(200).json({ ok: true });
