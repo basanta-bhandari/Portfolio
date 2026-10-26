@@ -156,5 +156,6 @@
   $('roomForm').onsubmit=async event=>{event.preventDefault();$('createRoomButton').disabled=true;try{const members=[...$('roomMembers').querySelectorAll('input:checked')].map(input=>input.value);if(!members.length)throw new Error('Choose at least one trusted device.');const data=await api('/v1/rooms',{method:'POST',body:JSON.stringify({name:$('roomName').value.trim(),members})});$('roomDialog').close();await refresh();select(`room:${data.room.id}`);}catch(error){$('roomError').textContent=error.message;}finally{$('createRoomButton').disabled=false;}};
   document.addEventListener('keydown',event=>{if(event.key==='/'&&!/INPUT|TEXTAREA/.test(document.activeElement?.tagName||'')&&!document.querySelector('dialog[open]')){event.preventDefault();$('conversationSearch').focus();}});
   setInterval(()=>{if(state.selected)renderMessages();},60000);
+  renderHeader();renderLists();
   if(state.token)refresh();else updateConnection(false);
 })();
