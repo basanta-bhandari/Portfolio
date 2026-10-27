@@ -80,5 +80,18 @@ against server signature verification. It also tests the handler against an
 in-memory SQL test adapter: capability failures, tampering, room/DM isolation,
 JSONB-order-independent retries, signed receipts, signaling admission, expiry,
 and rate limits. This is not a substitute for testing the deployed database.
+`node scripts/check-browser-chat.mjs --live` is an explicit opt-in check that
+creates a disposable room against the deployed API. It verifies real database
+isolation, ciphertext responses, duplicate retries, signatures and receipts,
+then marks its synthetic participants offline.
+
 Use two browser sessions against the deployed API to verify create/join,
 room messages, DMs, receipts, reconnect/refresh and encrypted-relay fallback.
+
+Live verification on 2026-10-27 passed: two independent browser sessions joined
+a room, exchanged messages, established a WebRTC peer connection, and exchanged
+a private DM after direct connections were disabled. Signed delivery, Refresh,
+invite copying, unread DM indicators and key/history restoration after reloading
+were exercised. The opt-in live API checks also passed against the actual
+deployed database. Browser UI testing used Chromium; Zen/Firefox and Safari
+runtime testing remains separate from API compatibility.

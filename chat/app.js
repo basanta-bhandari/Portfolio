@@ -8,7 +8,7 @@ let pollTimer,toastTimer,listSignature,messageSignature;
 const welcome=$('welcome');
 function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{$('toast').hidden=true;},4200);}
 function save(){if(!state.me)return;try{sessionStorage.setItem(storageKey,JSON.stringify({name:state.name,useDirect:state.useDirect,identity:state.me.saved,rooms:state.rooms.map(r=>({id:r.id,name:r.name,secret:r.secret,session:r.session,read:r.read}))}));}catch{toast('This browser cannot save the session. Keep your invite link before reloading.');}}
-function roomState(data){return {...data,messages:new Map(),unread:new Map(),read:Object.assign(Object.create(null),data.read&&typeof data.read==='object'?data.read:{}),peers:new Map(),connections:new Map(),receipts:new Map(),acknowledged:new Set(),ackPending:new Set(),retry:new Map(),after:0,joined:false,live:false,failures:0,polling:null};}
+function roomState(data){return {...data,messages:new Map(),unread:new Map(),read:Object.assign(Object.create(null),data.read&&typeof data.read==='object'?data.read:{}),peers:new Map(),connections:new Map(),receipts:new Map(),acknowledged:new Set(),ackPending:new Set(),retry:new Map(),after:0,joined:false,loaded:false,live:false,failures:0,polling:null};}
 const ready=(async()=>{
   if(!crypto?.subtle)throw new Error('Use a current browser over HTTPS to start encrypted chat.');
   state.me=await identity(saved.identity);
@@ -110,18 +110,19 @@ function directCount(r){return [...r.connections.values()].filter(x=>x.channel?.
 function renderHeader(){
   const r=state.current,p=r?.peers.get(state.direct);
   $('conversationTitle').textContent=p?.name||r?.name||'Conversations';$('conversationSymbol').textContent=state.direct?'@':'#';
-  $('conversationSubtitle').textContent=p?`Direct message · ${r.name}`:r?`${r.peers.size} ${r.peers.size===1?'person':'people'} · Room`:'Rooms and direct messages';
+  $('conversationSubtitle').textContent=p?`Direct message · ${r.name}`:r?(r.loaded?`${r.peers.size} ${r.peers.size===1?'person':'people'} · Room`:'Connecting to room…'):'Rooms and direct messages';
   $('inviteButton').hidden=!r;$('detailsButton').hidden=!r;$('composerArea').hidden=!r;
   $('connectionStatus').textContent=r?(r.live?'Live':directCount(r)?'Direct only':'Reconnecting…'):'';$('connectionStatus').classList.toggle('live',Boolean(r?.live));
   $('messageInput').placeholder=p?`Message ${p.name}…`:r?`Message ${r.name}…`:'Write a message…';
 }
-function updateComposer(){ $('sendButton').disabled=!state.current||!$('messageInput').value.trim()||state.sending;$('characterCount').textContent=$('messageInput').value.length>3500?`${$('messageInput').value.length}/4000`:'';$('composerHint').textContent=state.direct?'Only you and this person can decrypt DMs':'Encrypted for people with this room’s invite'; }
+function updateComposer(){ const ready=Boolean(state.current?.joined&&state.current?.keys);$('messageInput').disabled=!ready;$('sendButton').disabled=!ready||!$('messageInput').value.trim()||state.sending;$('characterCount').textContent=$('messageInput').value.length>3500?`${$('messageInput').value.length}/4000`:'';$('composerHint').textContent=state.direct?'Only you and this person can decrypt DMs':'Encrypted for people with this room’s invite'; }
 function visibleMessages(r){return [...r.messages.values()].filter(m=>(m.expiresAt||m.packet.createdAt+RETENTION_MS)>Date.now()&&(state.direct?m.packet.sender===state.direct&&m.packet.to===state.me.peer||m.packet.sender===state.me.peer&&m.packet.to===state.direct:!m.packet.to)).sort((a,b)=>a.packet.createdAt-b.packet.createdAt||a.packet.id.localeCompare(b.packet.id));}
 function renderMessages(){
   const r=state.current;if(!r){$('timeline').replaceChildren(welcome);messageSignature=null;return;}
-  const messages=visibleMessages(r),signature=JSON.stringify([r.id,state.direct,messages.map(m=>[m.packet.id,m.status,m.text,r.receipts.get(m.packet.id)?.size]),[...r.peers.values()].map(p=>[p.peer,p.name])]);
+  const messages=visibleMessages(r),signature=JSON.stringify([r.id,r.loaded,state.direct,messages.map(m=>[m.packet.id,m.status,m.text,r.receipts.get(m.packet.id)?.size]),[...r.peers.values()].map(p=>[p.peer,p.name])]);
   if(signature===messageSignature)return;messageSignature=signature;
   const timeline=$('timeline'),bottom=timeline.scrollHeight-timeline.scrollTop-timeline.clientHeight<120;timeline.replaceChildren();
+  if(!r.loaded&&!messages.length){const loading=make('div','empty-conversation');loading.append(make('strong','','Loading messages…'));timeline.append(loading);return;}
   if(!messages.length){const empty=make('div','empty-conversation');empty.append(make('strong','',state.direct?'A private conversation':'No messages yet'),make('p','',state.direct?'Only you and this person can read these messages.':r.peers.size<2?'Invite someone, or leave a message for when they arrive.':'Say hello to the room.'));if(!state.direct){const button=make('button','primary','Invite someone');button.onclick=showInvite;empty.append(button);}timeline.append(empty);return;}
   let day='';
   for(const m of messages){
@@ -160,13 +161,14 @@ function poll(r=state.current){if(!r)return Promise.resolve(false);if(r.polling)
 async function pollNow(r){
   clearTimeout(pollTimer);
   try{
+    if(!r.joined)await enroll(r,'join');
     const data=await api(r,'poll',{after:r.after});if(state.current!==r)return false;
     for(const p of data.peers||[]){try{const old=r.peers.get(p.peer);if(sameRegistration(old,p)||await validPeer(p,r.keys.membership))r.peers.set(p.peer,p);}catch{}}
     r.peers.set(state.me.peer,{...r.registration,lastSeen:Date.now()});
     for(const row of data.messages||[]){try{await receive(r,row.packet,row);}catch{ /* Keep unverifiable messages out of the transcript. */ }r.after=Math.max(r.after,row.seq);}
     for(const ack of data.receipts||[])await receiveReceipt(r,ack);
     for(const signal of data.signals||[]){try{await receiveSignal(r,signal.sender,signal.data);}catch{}}
-    r.live=true;r.failures=0;$('connectionBanner').hidden=true;renderAll();startConnections(r);return true;
+    r.loaded=true;r.live=true;r.failures=0;$('connectionBanner').hidden=true;renderAll();startConnections(r);return true;
   }catch(error){r.failures++;showFailure(r,error);return false;}
   finally{if(state.current===r)pollTimer=setTimeout(()=>poll(r),Math.min(15000,(document.hidden?8000:2200)*Math.max(1,r.failures)));}
 }
