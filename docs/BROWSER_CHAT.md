@@ -2,8 +2,8 @@
 
 `/chat/` is a browser-native implementation. Opening it does not run or require
 NeoNet, a launcher, Rust, Python, an administrator account, or local-network
-permission. The main site's navigation continues to hide Chat; the direct URL
-is available.
+permission. Chat is available from the main site's navigation and directly at
+`/chat/`.
 
 Create a room, choose a nickname, and share the complete invite. Invite secrets
 are in the URL fragment and are removed from the address bar after reading.
