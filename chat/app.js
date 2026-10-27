@@ -27,7 +27,7 @@ async function request(body){
 }
 function api(room,op,extra={}){return request({op,room:room.id,peer:state.me.peer,session:room.session,...extra});}
 async function enroll(r,op){
-  r.keys=await roomKeys(r.secret,r.id);r.registration=await registration(state.me,r.id,state.name,r.session,state.useDirect);
+  r.keys=await roomKeys(r.secret,r.id);r.registration=await registration(state.me,r.id,state.name,r.session,state.useDirect,r.keys.membership);
   const response=await request({op,...r.registration,session:r.session,access:r.keys.access,roomName:r.name});
   r.name=response.name;r.joined=true;r.peers.set(state.me.peer,{...r.registration,lastSeen:Date.now()});return r;
 }
@@ -149,7 +149,7 @@ async function pollNow(r){
   clearTimeout(pollTimer);
   try{
     const data=await api(r,'poll',{after:r.after});if(state.current!==r)return false;
-    for(const p of data.peers||[]){try{const old=r.peers.get(p.peer);if(sameRegistration(old,p)||await validPeer(p))r.peers.set(p.peer,p);}catch{}}
+    for(const p of data.peers||[]){try{const old=r.peers.get(p.peer);if(sameRegistration(old,p)||await validPeer(p,r.keys.membership))r.peers.set(p.peer,p);}catch{}}
     r.peers.set(state.me.peer,{...r.registration,lastSeen:Date.now()});
     for(const row of data.messages||[]){try{await receive(r,row.packet,row);}catch{ /* Keep unverifiable messages out of the transcript. */ }r.after=Math.max(r.after,row.seq);}
     for(const ack of data.receipts||[])await receiveReceipt(r,ack);

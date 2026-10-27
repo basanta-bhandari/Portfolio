@@ -42,22 +42,25 @@ globalThis.__portfolioTestSql=async(parts,...v)=>{
 function response(){return {code:200,headers:{},setHeader(k,v){this.headers[k]=v;},status(code){this.code=code;return this;},json(body){this.body=body;return this;}};}
 async function call(body,origin='https://www.basanta.cc'){const res=response();await handler({method:'POST',body,headers:{origin,'content-type':'application/json','x-forwarded-for':'192.0.2.20'}},res);return res;}
 async function member(me,room,name,secret,op='join'){
-  const session=C.randomHex(32),p=await C.registration(me,room,name,session),keys=await C.roomKeys(secret,room);
+  const session=C.randomHex(32),keys=await C.roomKeys(secret,room),p=await C.registration(me,room,name,session,true,keys.membership);
   const result=await call({op,...p,session,access:keys.access,roomName:'Disposable test room'});assert.equal(result.code,200,JSON.stringify(result.body));
   return {me,room,session,keys,registration:p,auth:{room,peer:me.peer,session}};
 }
 
 test('browser encryption, identity binding and private direct messages',async()=>{
   const a=await C.identity(),b=await C.identity(),c=await C.identity(),room=C.randomHex(),secret=C.randomHex(32),keys=await C.roomKeys(secret,room);
-  const registrations=await Promise.all([[a,'Alice'],[b,'Bob'],[c,'Cara']].map(([me,name])=>C.registration(me,room,name,C.randomHex(32))));
+  const registrations=await Promise.all([[a,'Alice'],[b,'Bob'],[c,'Cara']].map(([me,name])=>C.registration(me,room,name,C.randomHex(32),true,keys.membership)));
   const directory=new Map(registrations.map(p=>[p.peer,p]));
-  for(const p of registrations)assert.equal(await C.validPeer(p),true);
-  assert.equal(await C.validPeer({...registrations[0],exchangeKey:registrations[1].exchangeKey}),false);
+  for(const p of registrations)assert.equal(await C.validPeer(p,keys.membership),true);
+  assert.equal(await C.validPeer({...registrations[0],exchangeKey:registrations[1].exchangeKey},keys.membership),false);
   assert.equal(P.sameRegistration(registrations[0],{...registrations[0],lastSeen:Date.now()}),true);
   assert.equal(P.sameRegistration(registrations[0],{...registrations[0],exchangeKey:registrations[1].exchangeKey}),false);
   const group=await C.encryptMessage(a,room,keys.key,null,'literal <script> text');
   assert.equal(await C.decryptMessage(b,keys.key,directory,group),'literal <script> text');
-  const wrong=await C.roomKeys(C.randomHex(32),room);await assert.rejects(C.decryptMessage(b,wrong.key,directory,group));
+  const wrong=await C.roomKeys(C.randomHex(32),room);
+  const injected=await C.registration(c,room,'Fake Alice',C.randomHex(32),true,wrong.membership);
+  assert.equal(await C.validPeer(injected,keys.membership),false);
+  await assert.rejects(C.decryptMessage(b,wrong.key,directory,group));
   await assert.rejects(C.decryptMessage(b,keys.key,directory,{...group,cipher:group.cipher.slice(0,-2)+'AA'}));
   const dm=await C.encryptMessage(a,room,keys.key,registrations[1],'private to Bob');
   assert.equal(await C.decryptMessage(b,keys.key,directory,dm),'private to Bob');
@@ -73,9 +76,9 @@ test('browser chat API enforces capabilities, signatures, DM isolation, expiry a
   await t.test('wrong session, wrong invite, and cross-site writes are rejected',async()=>{
     assert.equal((await call({op:'poll',...a.auth,session:C.randomHex(32)})).code,401);
     assert.equal((await call({op:'poll',...a.auth},'https://attacker.invalid')).code,403);
-    const other=await C.identity(),session=C.randomHex(32),p=await C.registration(other,room,'Stranger',session);
+    const other=await C.identity(),session=C.randomHex(32),p=await C.registration(other,room,'Stranger',session,true,a.keys.membership);
     assert.equal((await call({op:'join',...p,session,access:C.randomHex(32)})).code,404);
-    const newSession=C.randomHex(32),changed=await C.registration(a.me,room,'Alice',newSession);
+    const newSession=C.randomHex(32),changed=await C.registration(a.me,room,'Alice',newSession,true,a.keys.membership);
     assert.equal((await call({op:'join',...changed,session:newSession,access:a.keys.access})).code,409);
   });
   await t.test('forgeries fail and the server stores only a canonical encrypted envelope',async()=>{

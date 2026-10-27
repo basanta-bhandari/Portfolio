@@ -39,7 +39,9 @@ no third-party realtime subscription or new paid hosting service.
 - DMs use ECDH with the other participant's signed exchange key and a distinct
   HKDF context. Possessing a room invite is insufficient to decrypt others' DMs.
 - Signed registration records bind a public identity, display name, exchange
-  key, session hash, room and connection preference. Message signatures cover
+  key, session hash, room and connection preference. A separate invite-derived
+  HMAC proves that a participant also possesses the room secret, preventing a
+  signaling service from injecting its own key as a fake participant. Message signatures cover
   the routing header, nonce and ciphertext. AEAD binds that same header.
 - Delivery receipts are signed and only accepted from an intended participant.
   Successful storage alone is displayed as Sent, not Delivered.

@@ -1,4 +1,4 @@
-import {header,signaturePayload,registrationPayload,receiptPayload,TOKEN,ID,MAX_TEXT} from './protocol.js';
+import {header,signaturePayload,registrationPayload,receiptPayload,membershipPayload,TOKEN,ID,MAX_TEXT} from './protocol.js';
 const utf8=new TextEncoder(),decode=new TextDecoder();
 export function b64(bytes){return btoa(String.fromCharCode(...new Uint8Array(bytes))).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,'');}
 export function unb64(text){return Uint8Array.from(atob(text.replaceAll('-','+').replaceAll('_','/')),c=>c.charCodeAt(0));}
@@ -20,18 +20,20 @@ async function sign(key,text){return b64(await crypto.subtle.sign({name:'ECDSA',
 async function verify(key,text,sig){
   try{const imported=await crypto.subtle.importKey('spki',unb64(key),{name:'ECDSA',namedCurve:'P-256'},false,['verify']);return await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},imported,unb64(sig),utf8.encode(text));}catch{return false;}
 }
-export async function registration(me,room,name,session,direct=true){
+export async function registration(me,room,name,session,direct,membershipKey){
   const p={room,peer:me.peer,name,signKey:me.signKey,exchangeKey:me.exchangeKey,sessionHash:await hash(session),direct};
-  return {...p,proof:await sign(me.sign,registrationPayload(p))};
+  p.proof=await sign(me.sign,registrationPayload(p));
+  p.membership=b64(await crypto.subtle.sign('HMAC',membershipKey,utf8.encode(membershipPayload(p))));return p;
 }
-export async function validPeer(p){return ID.test(p.peer)&&p.peer===(await hash(unb64(p.signKey))).slice(0,32)&&await verify(p.signKey,registrationPayload(p),p.proof);}
+export async function validPeer(p,membershipKey){return ID.test(p.peer)&&p.peer===(await hash(unb64(p.signKey))).slice(0,32)&&await verify(p.signKey,registrationPayload(p),p.proof)&&await crypto.subtle.verify('HMAC',membershipKey,unb64(p.membership),utf8.encode(membershipPayload(p)));}
 export async function roomKeys(secret,room){
   if(!TOKEN.test(secret)||!ID.test(room))throw new Error('This invite is incomplete. Copy the whole invite link.');
   const seed=await crypto.subtle.importKey('raw',Uint8Array.from(secret.match(/../g),x=>parseInt(x,16)),'HKDF',false,['deriveBits','deriveKey']);
   const params=label=>({name:'HKDF',hash:'SHA-256',salt:utf8.encode(room),info:utf8.encode(`Tether browser v1 ${label}`)});
   const key=await crypto.subtle.deriveKey(params('room encryption'),seed,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
   const access=[...new Uint8Array(await crypto.subtle.deriveBits(params('room admission'),seed,256))].map(x=>x.toString(16).padStart(2,'0')).join('');
-  return {key,access};
+  const membership=await crypto.subtle.deriveKey(params('membership authentication'),seed,{name:'HMAC',hash:'SHA-256',length:256},false,['sign','verify']);
+  return {key,access,membership};
 }
 async function dmKey(me,other,room){
   const publicKey=await crypto.subtle.importKey('spki',unb64(other.exchangeKey),{name:'ECDH',namedCurve:'P-256'},false,[]);
