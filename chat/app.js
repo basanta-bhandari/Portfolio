@@ -7,8 +7,8 @@ const state={me:null,name:typeof saved.name==='string'?saved.name.slice(0,40):`G
 let pollTimer,toastTimer,listSignature,messageSignature;
 const welcome=$('welcome');
 function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{$('toast').hidden=true;},4200);}
-function save(){if(!state.me)return;try{sessionStorage.setItem(storageKey,JSON.stringify({name:state.name,useDirect:state.useDirect,identity:state.me.saved,rooms:state.rooms.map(r=>({id:r.id,name:r.name,secret:r.secret,session:r.session}))}));}catch{toast('This browser cannot save the session. Keep your invite link before reloading.');}}
-function roomState(data){return {...data,messages:new Map(),peers:new Map(),connections:new Map(),receipts:new Map(),acknowledged:new Set(),ackPending:new Set(),retry:new Map(),after:0,joined:false,live:false,failures:0,polling:null};}
+function save(){if(!state.me)return;try{sessionStorage.setItem(storageKey,JSON.stringify({name:state.name,useDirect:state.useDirect,identity:state.me.saved,rooms:state.rooms.map(r=>({id:r.id,name:r.name,secret:r.secret,session:r.session,read:r.read}))}));}catch{toast('This browser cannot save the session. Keep your invite link before reloading.');}}
+function roomState(data){return {...data,messages:new Map(),unread:new Map(),read:Object.assign(Object.create(null),data.read&&typeof data.read==='object'?data.read:{}),peers:new Map(),connections:new Map(),receipts:new Map(),acknowledged:new Set(),ackPending:new Set(),retry:new Map(),after:0,joined:false,live:false,failures:0,polling:null};}
 const ready=(async()=>{
   if(!crypto?.subtle)throw new Error('Use a current browser over HTTPS to start encrypted chat.');
   state.me=await identity(saved.identity);
@@ -73,26 +73,37 @@ function restoreDraft(){ $('messageInput').value=state.drafts.get(draftKey())||'
 function stopConnections(r){if(!r)return;for(const connection of r.connections.values())connection.pc.close();r.connections.clear();}
 async function enterRoom(r){
   stashDraft();clearTimeout(pollTimer);if(state.current!==r)stopConnections(state.current);
-  state.current=r;state.direct=null;$('sidebar').classList.remove('open');$('toggleSidebar').setAttribute('aria-expanded','false');restoreDraft();renderAll();
+  state.current=r;state.direct=null;markRead(r,'room');$('sidebar').classList.remove('open');$('toggleSidebar').setAttribute('aria-expanded','false');restoreDraft();renderAll();
   try{if(!r.joined)await enroll(r,'join');await poll(r);}catch(error){showFailure(r,error);}
 }
-function selectPerson(peer){stashDraft();state.direct=peer;restoreDraft();renderAll();$('sidebar').classList.remove('open');$('toggleSidebar').setAttribute('aria-expanded','false');$('messageInput').focus();}
+function selectPerson(peer){stashDraft();state.direct=peer;markRead(state.current,`dm:${peer}`);restoreDraft();renderAll();$('sidebar').classList.remove('open');$('toggleSidebar').setAttribute('aria-expanded','false');$('messageInput').focus();}
+function markRead(r,conversation){
+  if(!r)return;r.read[conversation]=Date.now();r.unread.delete(conversation);save();
+}
+function noteIncoming(r,p){
+  if(p.sender===state.me.peer)return;const conversation=p.to?`dm:${p.sender}`:'room';
+  const visible=state.current===r&&(p.to?state.direct===p.sender:!state.direct)&&!document.hidden;
+  if(visible){r.read[conversation]=Math.max(Date.now(),p.createdAt);r.unread.delete(conversation);save();}
+  else if(p.createdAt>(Number(r.read[conversation])||0))r.unread.set(conversation,(r.unread.get(conversation)||0)+1);
+}
+function badge(count){const n=make('span','unread-badge',count>99?'99+':String(count));n.setAttribute('aria-label',`${count} unread messages`);return n;}
 function avatar(name,own=false){const n=make('span',`avatar${own?' self':''}`,(name||'?').split(/\s+/).slice(0,2).map(x=>Array.from(x)[0]||'').join('').toUpperCase());return n;}
 function renderProfile(){ $('profileName').textContent=state.name;$('profileAvatar').textContent=state.name.slice(0,1).toUpperCase(); }
 function renderLists(){
   const query=$('conversationSearch').value.trim().toLowerCase(),r=state.current;
   const peers=r?[...r.peers.values()].filter(p=>p.peer!==state.me?.peer):[];
-  const signature=JSON.stringify([query,state.current?.id,state.direct,state.rooms.map(x=>[x.id,x.name]),peers.map(p=>[p.peer,p.name,Date.now()-p.lastSeen<45000])]);
+  const signature=JSON.stringify([query,state.current?.id,state.direct,state.rooms.map(x=>[x.id,x.name]),peers.map(p=>[p.peer,p.name,Date.now()-p.lastSeen<45000]),state.rooms.map(x=>[x.id,[...x.unread]])]);
   if(signature===listSignature)return;listSignature=signature;
   $('roomCount').textContent=state.rooms.length;$('peopleCount').textContent=peers.length;$('roomList').replaceChildren();$('peopleList').replaceChildren();
   for(const room of state.rooms.filter(x=>x.name.toLowerCase().includes(query))){
-    const button=make('button',`conversation-item${r===room&&!state.direct?' selected':''}`);button.type='button';button.setAttribute('aria-current',r===room&&!state.direct?'page':'false');button.append(make('span','avatar room-avatar','#'),make('span','label',room.name));button.onclick=()=>enterRoom(room);$('roomList').append(button);
+    const button=make('button',`conversation-item${r===room&&!state.direct?' selected':''}`);button.type='button';button.setAttribute('aria-current',r===room&&!state.direct?'page':'false');button.append(make('span','avatar room-avatar','#'),make('span','label',room.name));if(room.unread.get('room'))button.append(badge(room.unread.get('room')));button.onclick=()=>enterRoom(room);$('roomList').append(button);
   }
   peers.sort((a,b)=>Number(Date.now()-b.lastSeen<45000)-Number(Date.now()-a.lastSeen<45000)||a.name.localeCompare(b.name));
   for(const p of peers.filter(x=>x.name.toLowerCase().includes(query))){
-    const button=make('button',`conversation-item${state.direct===p.peer?' selected':''}`);button.type='button';button.append(avatar(p.name),make('span','label',p.name));const dot=make('span',`presence${Date.now()-p.lastSeen<45000?' online':''}`);dot.title=Date.now()-p.lastSeen<45000?'Online':'Offline';button.append(dot);button.onclick=()=>selectPerson(p.peer);$('peopleList').append(button);
+    const button=make('button',`conversation-item${state.direct===p.peer?' selected':''}`);button.type='button';button.append(avatar(p.name),make('span','label',p.name));const dot=make('span',`presence${Date.now()-p.lastSeen<45000?' online':''}`);dot.title=Date.now()-p.lastSeen<45000?'Online':'Offline';button.append(dot);if(r.unread.get(`dm:${p.peer}`))button.append(badge(r.unread.get(`dm:${p.peer}`)));button.onclick=()=>selectPerson(p.peer);$('peopleList').append(button);
   }
   if(!$('roomList').children.length)$('roomList').append(make('p','list-empty',query?'No matching rooms.':'Your rooms will appear here.'));
+  const unread=state.rooms.reduce((total,room)=>total+[...room.unread.values()].reduce((sum,n)=>sum+n,0),0);document.title=`${unread?`(${unread}) `:''}Chat / basanta.cc`;
   if(!$('peopleList').children.length)$('peopleList').append(make('p','list-empty',query?'No matching people.':r?'Invite someone to join this room.':'Join a room to find people.'));
 }
 function directCount(r){return [...r.connections.values()].filter(x=>x.channel?.readyState==='open').length;}
@@ -111,7 +122,7 @@ function renderMessages(){
   const messages=visibleMessages(r),signature=JSON.stringify([r.id,state.direct,messages.map(m=>[m.packet.id,m.status,m.text,r.receipts.get(m.packet.id)?.size]),[...r.peers.values()].map(p=>[p.peer,p.name])]);
   if(signature===messageSignature)return;messageSignature=signature;
   const timeline=$('timeline'),bottom=timeline.scrollHeight-timeline.scrollTop-timeline.clientHeight<120;timeline.replaceChildren();
-  if(!messages.length){const empty=make('div','empty-conversation');empty.append(make('strong','',state.direct?'A private conversation':'You’re the first message away'),make('p','',state.direct?'Only you and this person can read these messages.':r.peers.size<2?'Invite someone, or leave a message for when they arrive.':'Say hello to the room.'));if(!state.direct){const button=make('button','primary','Invite someone');button.onclick=showInvite;empty.append(button);}timeline.append(empty);return;}
+  if(!messages.length){const empty=make('div','empty-conversation');empty.append(make('strong','',state.direct?'A private conversation':'No messages yet'),make('p','',state.direct?'Only you and this person can read these messages.':r.peers.size<2?'Invite someone, or leave a message for when they arrive.':'Say hello to the room.'));if(!state.direct){const button=make('button','primary','Invite someone');button.onclick=showInvite;empty.append(button);}timeline.append(empty);return;}
   let day='';
   for(const m of messages){
     const p=m.packet,own=p.sender===state.me.peer,name=own?'You':r.peers.get(p.sender)?.name||'Participant',date=new Date(p.createdAt),dateLabel=date.toLocaleDateString(undefined,{month:'long',day:'numeric'});
@@ -141,6 +152,7 @@ async function receive(r,p,meta={},channel){
   const old=r.messages.get(p.id);
   if(old){if(old.packet.sig!==p.sig||signaturePayload(old.packet)!==signaturePayload(p))return;if(meta.seq){old.status='sent';old.seq=meta.seq;old.expiresAt=Math.min(meta.expiresAt||Infinity,p.createdAt+RETENTION_MS);}await acknowledge(r,old.packet,channel);return;}
   const text=await decryptMessage(state.me,r.keys.key,r.peers,p);r.messages.set(p.id,{packet:p,text,status:'sent',seq:meta.seq,expiresAt:Math.min(meta.expiresAt||Infinity,p.createdAt+RETENTION_MS)});
+  noteIncoming(r,p);
   while(r.messages.size>1000)r.messages.delete(r.messages.keys().next().value);
   await acknowledge(r,p,channel);
 }
@@ -190,7 +202,7 @@ $('refreshButton').onclick=async()=>{const button=$('refreshButton');button.disa
 $('profileButton').onclick=()=>{$('nameInput').value=state.name;$('directConnections').checked=state.useDirect;$('profileError').textContent='';openDialog('profileDialog');};
 $('profileForm').onsubmit=async event=>{event.preventDefault();$('saveProfile').disabled=true;try{await ready;state.name=$('nameInput').value.trim();if(!state.name)throw new Error('Enter your name.');state.useDirect=$('directConnections').checked;if(!state.useDirect)stopConnections(state.current);if(state.current)await enroll(state.current,'join');for(const r of state.rooms)if(r!==state.current)r.joined=false;save();renderProfile();closeDialog('profileDialog');if(state.current)await poll();}catch(error){$('profileError').textContent=error.message;}finally{$('saveProfile').disabled=false;}};
 $('detailsButton').onclick=()=>{
-  const r=state.current;if(!r)return;$('roomDetailsTitle').textContent=r.name;$('roomDetailsConnection').textContent=`${directCount(r)} direct peer connections. Encrypted delivery through this site is available for everyone else.`;$('memberList').replaceChildren();
+  const r=state.current;if(!r)return;$('roomDetailsTitle').textContent=r.name;$('roomDetailsConnection').textContent=`Direct connections: ${directCount(r)}. Encrypted delivery through this site is available for everyone else.`;$('memberList').replaceChildren();
   for(const p of r.peers.values()){const row=make('div','member');row.append(avatar(p.name,p.peer===state.me.peer),make('span','',p.peer===state.me.peer?`${p.name} (you)`:p.name),make('small','',Date.now()-p.lastSeen<45000?'Online':'Offline'));$('memberList').append(row);}openDialog('detailsDialog');
 };
 $('leaveRoom').onclick=async()=>{const r=state.current;if(!r)return;api(r,'leave').catch(()=>{});clearTimeout(pollTimer);stopConnections(r);state.rooms=state.rooms.filter(x=>x!==r);state.current=null;state.direct=null;save();closeDialog('detailsDialog');renderAll();if(state.rooms[0])await enterRoom(state.rooms[0]);};
@@ -202,7 +214,7 @@ function connectPeer(r,p,offer=false){
   const send=data=>api(r,'signal',{to:p.peer,data}).catch(()=>{});
   pc.onicecandidate=event=>{if(event.candidate&&state.current===r)send({candidate:event.candidate.toJSON()});};
   pc.onconnectionstatechange=()=>{if(state.current!==r)return;renderHeader();if(pc.connectionState==='failed'||pc.connectionState==='closed'){pc.close();if(r.connections.get(p.peer)===connection)r.connections.delete(p.peer);r.retry.set(p.peer,Date.now()+30000);}};
-  const attach=channel=>{connection.channel=channel;channel.onopen=()=>{if(state.current===r)renderHeader();};channel.onclose=()=>{if(state.current===r)renderHeader();};channel.onmessage=async event=>{if(state.current!==r||typeof event.data!=='string'||event.data.length>40000)return;try{const value=JSON.parse(event.data);if(value.type==='message'&&value.packet?.sender===p.peer){await receive(r,value.packet,{},channel);renderMessages();}else if(value.type==='receipt'&&value.receipt?.peer===p.peer)await receiveReceipt(r,value.receipt);}catch{}};};
+  const attach=channel=>{connection.channel=channel;channel.onopen=()=>{if(state.current===r)renderHeader();};channel.onclose=()=>{if(state.current===r)renderHeader();};channel.onmessage=async event=>{if(state.current!==r||typeof event.data!=='string'||event.data.length>40000)return;try{const value=JSON.parse(event.data);if(value.type==='message'&&value.packet?.sender===p.peer){await receive(r,value.packet,{},channel);renderMessages();renderLists();}else if(value.type==='receipt'&&value.receipt?.peer===p.peer)await receiveReceipt(r,value.receipt);}catch{}};};
   pc.ondatachannel=event=>attach(event.channel);
   if(offer){attach(pc.createDataChannel('tether-chat-v1'));(async()=>{await pc.setLocalDescription(await pc.createOffer());if(state.current===r)await send({description:pc.localDescription.toJSON()});})().catch(()=>{pc.close();r.connections.delete(p.peer);});}
   return connection;
@@ -214,7 +226,7 @@ async function receiveSignal(r,from,data){
   if(data.description){if(!['offer','answer'].includes(data.description.type))return;await c.pc.setRemoteDescription(data.description);for(const candidate of c.ice.splice(0))await c.pc.addIceCandidate(candidate);if(data.description.type==='offer'){await c.pc.setLocalDescription(await c.pc.createAnswer());await api(r,'signal',{to:from,data:{description:c.pc.localDescription.toJSON()}});}}
   else if(data.candidate){if(c.pc.remoteDescription)await c.pc.addIceCandidate(data.candidate);else if(c.ice.length<30)c.ice.push(data.candidate);}
 }
-window.addEventListener('online',()=>poll());document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});
+window.addEventListener('online',()=>poll());document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(state.current)markRead(state.current,state.direct?`dm:${state.direct}`:'room');renderLists();poll();}});
 window.addEventListener('pagehide',()=>{stashDraft();save();stopConnections(state.current);});
 setInterval(()=>{for(const r of state.rooms)for(const [id,m] of r.messages)if((m.expiresAt||m.packet.createdAt+RETENTION_MS)<=Date.now())r.messages.delete(id);if(state.current)renderMessages();},60000);
 function acceptHash(){if(!location.hash)return;const value=location.href;history.replaceState(null,'',location.pathname+location.search);try{parseInvite(value);ready.then(()=>openJoin(value));}catch(error){toast(error.message);}}

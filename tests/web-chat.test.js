@@ -66,7 +66,8 @@ test('browser encryption, identity binding and private direct messages',async()=
   assert.equal(await C.decryptMessage(b,keys.key,directory,dm),'private to Bob');
   assert.equal(await C.decryptMessage(a,keys.key,directory,dm),'private to Bob');
   await assert.rejects(C.decryptMessage(c,keys.key,directory,dm));
-  assert.equal((await C.identity(a.saved)).peer,a.peer);
+  const restored=await C.identity(a.saved);assert.equal(restored.peer,a.peer);
+  assert.equal(await C.decryptMessage(restored,keys.key,directory,dm),'private to Bob');
   assert.notEqual(keys.access,secret);
 });
 
