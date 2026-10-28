@@ -1,10 +1,15 @@
 {
   "version": "0.6.0",
-  "source": "fcae9035367e78bcedb65d4b0f11998cf1307ec3",
   "platforms": {
     "linux-x86_64": {
       "url": "/tether/downloads/backend/neonet-backend-linux-x86_64-v0.6.0",
-      "sha256": "b1059dc97005c86a7df284f1f1436f4c2845ae8a2118217750cf668845fb7734"
+      "sha256": "6affcb3b235b497dafceaea7e36c464a96f605a498644524f87e039d0c9cff85",
+      "source": "6c88beb"
+    },
+    "macos-arm64": {
+      "url": "/tether/downloads/backend/neonet-backend-macos-arm64-v0.6.0",
+      "sha256": "0d1d6783ad585e2db61d3c430a0425b4bfd6f58f341733605edca48bb13c4225",
+      "source": "010eacf"
     }
   }
 }

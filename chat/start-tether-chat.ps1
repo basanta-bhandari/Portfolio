@@ -26,5 +26,10 @@ if ($TetherNeedsDownload) {
         Move-Item -LiteralPath $TetherTemporary -Destination $TetherBinary -Force
     } finally { if (Test-Path -LiteralPath $TetherTemporary) { Remove-Item -LiteralPath $TetherTemporary -Force } }
 }
+$TetherProfile = if ($env:NEONET_HOME) { $env:NEONET_HOME } else { Join-Path $env:USERPROFILE '.neonet' }
+if (-not (Test-Path -LiteralPath (Join-Path $TetherProfile 'network/config.json'))) {
+    & $TetherBinary network | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Tether could not initialize its network settings.' }
+}
 Write-Host 'Starting chat. Keep this terminal open; Ctrl-C disconnects and locks this session.'
 & $TetherBinary web-chat

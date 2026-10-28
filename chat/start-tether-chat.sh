@@ -48,6 +48,12 @@ if [ ! -f "$tether_binary" ] || [ "$(tether_hash "$tether_binary")" != "$tether_
   trap - EXIT HUP INT TERM
 fi
 chmod 700 "$tether_binary"
+# Migrate profiles created before global networking existed. Keep an existing
+# provider configuration intact; an empty legacy bootstrap is not a route.
+tether_profile=${NEONET_HOME:-$HOME/.neonet}
+if [ ! -f "$tether_profile/network/config.json" ]; then
+  "$tether_binary" network >/dev/null
+fi
 echo 'Starting chat. Keep this terminal open; Ctrl-C disconnects and locks this session.'
 if [ -t 0 ]; then
   exec "$tether_binary" web-chat "$@"

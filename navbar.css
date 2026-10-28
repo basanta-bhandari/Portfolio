@@ -87,3 +87,6 @@
     .topnav .brand { font-size: .9rem; }
     .topnav .links { gap: 16px; font-size: .74rem; }
 }
+
+/* Chat remains accessible by its direct URL, outside the main navigation. */
+.topnav .links a[href="/chat"], .topnav .links a[href="/chat/"] { display:none !important; }

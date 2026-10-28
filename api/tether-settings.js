@@ -1,3 +1,4 @@
+import browserChat from '../lib/web-chat-handler.js';
 import { isSuperAdmin } from '../lib/auth.js';
 import { authenticateRequest } from '../lib/admin-users.js';
 import { InputError, secureApi } from '../lib/security.js';
@@ -36,4 +37,8 @@ async function handler(req, res) {
     return res.status(500).json({ error: 'Could not save Tether settings' });
   }
 }
-export default secureApi(handler, { maxBytes: 1024 });
+const settingsHandler = secureApi(handler, { maxBytes: 1024 });
+export default function route(req, res) {
+  if (req.query?.browser_chat === '1') return browserChat(req, res);
+  return settingsHandler(req, res);
+}
