@@ -31,10 +31,14 @@
   <nav id="roomList" class="conversation-list" aria-label="Rooms"><p class="list-empty">Your rooms will appear here.</p></nav>
   <div class="list-title"><h2>People</h2><span id="peopleCount">0</span></div>
   <nav id="peopleList" class="conversation-list people-list" aria-label="Direct messages"><p class="list-empty">Join a room to find people.</p></nav>
+  <div class="list-title"><h2>Friends</h2></div>
+  <nav id="friendList" class="conversation-list" aria-label="Friends"><p class="list-empty">No friends yet.</p></nav>
+  <div class="list-title"><h2>Requests</h2></div>
+  <nav id="requestList" class="conversation-list" aria-label="Friend requests"><p class="list-empty">No requests.</p></nav>
   <button id="profileButton" class="profile-button"><span class="avatar self" id="profileAvatar">G</span><span><strong id="profileName">Your name</strong><small>This browser session</small></span></button>
 </aside>
 <main class="conversation">
-  <header class="conversation-header"><button id="toggleSidebar" class="icon-button mobile-only" aria-label="Show conversations" aria-expanded="false">☰</button><span id="conversationSymbol" class="channel-symbol">#</span><div class="channel-heading"><h2 id="conversationTitle">Conversations</h2><p id="conversationSubtitle">Rooms and direct messages</p></div><div class="header-actions"><span id="connectionStatus" class="connection-state" role="status"></span><button id="refreshButton" class="text-button">Refresh</button><button id="inviteButton" class="primary" hidden>Invite</button><button id="detailsButton" class="icon-button" aria-label="Room details" hidden>ⓘ</button></div></header>
+  <header class="conversation-header"><button id="toggleSidebar" class="icon-button mobile-only" aria-label="Show conversations" aria-expanded="false">☰</button><span id="conversationSymbol" class="channel-symbol">#</span><div class="channel-heading"><h2 id="conversationTitle">Conversations</h2><p id="conversationSubtitle">Rooms and direct messages</p></div><div class="header-actions"><span id="connectionStatus" class="connection-state" role="status"></span><button id="friendButton" class="text-button" hidden>Add friend</button><button id="refreshButton" class="text-button">Refresh</button><button id="inviteButton" class="primary" hidden>Invite</button><button id="detailsButton" class="icon-button" aria-label="Room details" hidden>ⓘ</button></div></header>
   <div id="connectionBanner" class="connection-banner" role="status" hidden></div>
   <section id="timeline" class="timeline" aria-label="Messages" aria-live="polite" aria-relevant="additions">
     <div id="welcome" class="welcome"><span class="welcome-symbol" aria-hidden="true">#</span><h2>Start a conversation</h2><p>Create a room and share its invite, or join someone else’s.<br>No installation. No account needed.</p><div class="welcome-actions"><button id="createWelcome" class="primary">Create a room</button><button id="joinWelcome">Join with an invite</button></div><small>Messages expire after 24 hours.</small></div>

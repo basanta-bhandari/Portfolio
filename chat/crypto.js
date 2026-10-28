@@ -41,9 +41,10 @@ async function dmKey(me,other,room){
   const seed=await crypto.subtle.importKey('raw',bits,'HKDF',false,['deriveKey']);
   return crypto.subtle.deriveKey({name:'HKDF',hash:'SHA-256',salt:utf8.encode(room),info:utf8.encode('Tether browser v1 direct message')},seed,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
 }
-export async function encryptMessage(me,room,key,other,text){
+export async function encryptMessage(me,room,key,other,text,operation={}){
   if(!text.trim()||text.length>MAX_TEXT)throw new Error(`Messages can contain up to ${MAX_TEXT} characters.`);
   const p={v:1,id:randomHex(),room,sender:me.peer,to:other?.peer||null,createdAt:Date.now()};
+  if(operation.kind){p.kind=operation.kind;p.target=operation.target;}
   const iv=crypto.getRandomValues(new Uint8Array(12));
   p.iv=b64(iv);p.cipher=b64(await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:utf8.encode(header(p))},other?await dmKey(me,other,room):key,utf8.encode(text)));
   p.sig=await sign(me.sign,signaturePayload(p));return p;
@@ -56,5 +57,8 @@ export async function decryptMessage(me,key,peers,p){
   const text=decode.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(p.iv),additionalData:utf8.encode(header(p))},decryption,unb64(p.cipher)));
   if(!text.trim()||text.length>MAX_TEXT)throw new Error('Invalid message length.');return text;
 }
-export async function receipt(me,room,id){const r={room,id,peer:me.peer};return {...r,sig:await sign(me.sign,receiptPayload(r))};}
+export async function receipt(me,room,id,kind='delivered'){
+  const r={room,id,peer:me.peer,kind,at:Date.now()};
+  return {...r,sig:await sign(me.sign,receiptPayload(r))};
+}
 export async function validReceipt(peers,r){return Boolean(peers.get(r.peer)&&await verify(peers.get(r.peer).signKey,receiptPayload(r),r.sig));}
