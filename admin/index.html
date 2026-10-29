@@ -345,6 +345,11 @@ Leave a blank line between paragraphs."></textarea>
       <button type="button" id="cancelProjectEditBtn" style="display:none; margin-left:8px;" class="publish-btn">Cancel edit</button>
     </form>
     <h2 style="margin-top:50px;">All Projects <span id="projectCount"></span></h2>
+    <div class="form-actions">
+      <button type="button" id="exportProjects" class="secondary-btn" aria-describedby="exportProjectsHint">Export JSON</button>
+      <span id="exportProjectsStatus" class="hint" role="status" aria-live="polite"></span>
+    </div>
+    <p id="exportProjectsHint" class="hint">Download all saved projects, including names, descriptions, categories, and named links. Search filters do not limit the export.</p>
     <label class="search-label" for="adminProjectSearch">Search projects</label>
     <input type="search" id="adminProjectSearch" class="search-input" placeholder="Name, description, category" autocomplete="off" disabled>
     <p id="adminProjectStatus" class="hint" role="status" aria-live="polite">Loading projects...</p>
@@ -812,6 +817,31 @@ function filterAdminProjects() {
 }
 document.getElementById('adminProjectSearch').addEventListener('input', filterAdminProjects);
 document.getElementById('retryAdminProjects').addEventListener('click', loadProjects);
+document.getElementById('exportProjects').addEventListener('click', async () => {
+  const button = document.getElementById('exportProjects');
+  const status = document.getElementById('exportProjectsStatus');
+  if (button.disabled) return;
+  button.disabled = true;
+  status.textContent = 'Fetching all current projects...';
+  try {
+    const response = await adminRequest('/api/projects', { cache: 'no-store', credentials: 'include' });
+    const projects = await response.json();
+    if (!Array.isArray(projects)) throw new Error('Could not export the project list. Please try again.');
+    const blob = new Blob([JSON.stringify(projects, null, 2) + '\n'], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'basanta-projects-' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
+    document.body.appendChild(link);
+    try { link.click(); }
+    finally { link.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000); }
+    status.textContent = 'Download started: ' + projects.length + ' project' + (projects.length === 1 ? '' : 's') + '.';
+  } catch (error) {
+    status.textContent = error.name === 'TimeoutError' ? 'Export timed out. Please try again.' : error.message || 'Could not export projects. Please try again.';
+  } finally {
+    button.disabled = false;
+  }
+});
 function cancelProjectEdit() {
   editingProjectId = null; projectForm.reset();
   selectedProjectCategories = []; renderSelectedCategories(); updateCategoryOptions([]);

@@ -35,6 +35,7 @@
             <label class="search-label" for="projectSearch">Search projects</label>
             <input id="projectSearch" class="search-input" type="search" placeholder="Name, description, category" autocomplete="off" disabled>
             <p class="project-freshness"><strong>Hey, this might be stale.</strong> I might have forgotten to update it. <span id="projectUpdated"></span> Check my <a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener noreferrer">GitHub</a> for newer work.</p>
+            <p id="projectOrderStatus" class="project-order-status" role="status" aria-live="polite"></p>
             <p id="projectStatus" role="status" aria-live="polite">Loading projects...</p>
             <button id="retryProjects" type="button" class="retry-button" hidden>Try again</button>
             <p id="searchEmpty" class="search-empty" hidden>No projects match that search.</p>
@@ -43,7 +44,8 @@
         </section>
     </main>
     <footer><p>BASANTA BHANDARI - PORTFOLIO - 2026</p><p><a href="https://github.com/basanta-bhandari" target="_blank" rel="noopener">GitHub</a></p></footer>
-    <script>
+    <script type="module">
+    import { githubCommitDates, orderProjects } from '/projects/activity.js';
     const grid = document.getElementById('contentGrid');
     const search = document.getElementById('projectSearch');
     const empty = document.getElementById('searchEmpty');
@@ -75,7 +77,7 @@
             if (typeof link === 'string') addLink(link, `Link ${index + 1}`);
             else addLink(link?.url, link?.label || `Link ${index + 1}`);
         });
-        if (links.childElementCount) card.appendChild(links); grid.appendChild(card);
+        if (links.childElementCount) card.appendChild(links); grid.appendChild(card); return card;
     }
     search.addEventListener('input', filterProjects);
     async function loadProjects() {
@@ -87,7 +89,7 @@
             const projects = await res.json();
             if (!Array.isArray(projects)) throw new Error('Invalid project response');
             grid.replaceChildren(); projectCount = projects.length;
-            projects.forEach(addProject);
+            const cards = new Map(projects.map(project => [project, addProject(project)]));
             const dates = projects.map(project => Date.parse(project.updated_at || project.created_at)).filter(Number.isFinite);
             const updated = document.getElementById('projectUpdated'); updated.replaceChildren();
             if (dates.length) {
@@ -99,6 +101,26 @@
             status.hidden = projectCount > 0; status.textContent = projectCount ? '' : 'No projects yet.';
             filterProjects();
             if (/^#project-\d+$/.test(location.hash)) document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: 'center' });
+            const orderStatus = document.getElementById('projectOrderStatus');
+            orderStatus.textContent = projectCount ? 'Checking latest GitHub commits...' : '';
+            if (projectCount) {
+                const { dates, partial } = await githubCommitDates(projects);
+                const focused = document.activeElement;
+                for (const { project, date } of orderProjects(projects, dates)) {
+                    const card = cards.get(project);
+                    if (date) {
+                        const activity = document.createElement('small'); activity.className = 'project-activity';
+                        const time = document.createElement('time'); time.dateTime = date;
+                        time.textContent = new Date(date).toLocaleDateString(undefined, { dateStyle: 'medium' });
+                        activity.append('Latest commit: ', time); card.querySelector('h3').after(activity);
+                    }
+                    grid.appendChild(card);
+                }
+                if (focused instanceof HTMLElement && focused !== document.body) focused.focus({ preventScroll: true });
+                orderStatus.textContent = dates.size ? 'Most recently committed GitHub repositories first.' : 'Showing projects in date-added order; GitHub commit dates are unavailable.';
+                if (dates.size && partial) orderStatus.textContent += ' Some commit dates are unavailable; cached dates are used when possible.';
+                if (/^#project-\d+$/.test(location.hash)) document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: 'center' });
+            }
         } catch {
             status.textContent = 'Could not load projects. Please try again.'; retry.hidden = false;
         } finally { grid.setAttribute('aria-busy', 'false'); }

@@ -23,6 +23,8 @@ a { color:inherit; }
 .project-freshness { margin:0 0 20px; padding:13px 16px; border:1px solid var(--line); border-radius:14px; background:color-mix(in srgb, var(--fg) 5%, transparent); color:var(--muted); font-size:.78rem; line-height:1.55; }
 .project-freshness strong { color:var(--fg); }
 .project-freshness a { color:var(--fg); font-weight:700; }
+.project-order-status { color:var(--muted); font-size:.75rem; line-height:1.5; margin:0 0 16px; }
+.project-activity { display:block; font-size:.7rem; margin-bottom:10px; opacity:.8; }
 .search-empty { color:var(--muted); margin-bottom:20px; }
 .content-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
 .project-card { border:1px solid var(--line); padding:20px; transition:background .2s,color .2s; display:flex; flex-direction:column; min-width:0; }
