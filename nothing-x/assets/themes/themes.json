@@ -1,0 +1,84 @@
+{
+  "schema": 1,
+  "default": "nothing",
+  "themes": [
+    {
+      "id": "nothing",
+      "name": "Nothing",
+      "reference": "nothing1.png",
+      "background": "#0c0c0c",
+      "panel": "#171717",
+      "card": "#242424",
+      "border": "#363636",
+      "text": "#f0efed",
+      "muted": "#9d9d9a",
+      "accent": "#ff343b",
+      "ink": "#090909"
+    },
+    {
+      "id": "porcelain",
+      "name": "Porcelain",
+      "reference": "nothing2.png",
+      "background": "#eeeeeb",
+      "panel": "#e2e2df",
+      "card": "#f8f8f5",
+      "border": "#cdcdca",
+      "text": "#171719",
+      "muted": "#68686b",
+      "accent": "#e52430",
+      "ink": "#ffffff"
+    },
+    {
+      "id": "glacier",
+      "name": "Glacier",
+      "reference": "nothing3.png",
+      "background": "#09161d",
+      "panel": "#112630",
+      "card": "#183742",
+      "border": "#2b4e5b",
+      "text": "#f2f7f7",
+      "muted": "#a0b7c1",
+      "accent": "#55c6ed",
+      "ink": "#081014"
+    },
+    {
+      "id": "verdant",
+      "name": "Verdant",
+      "reference": "nothing4.png",
+      "background": "#0a110b",
+      "panel": "#172019",
+      "card": "#233126",
+      "border": "#354738",
+      "text": "#edf5e9",
+      "muted": "#9ead9a",
+      "accent": "#66db58",
+      "ink": "#0a1309"
+    },
+    {
+      "id": "alloy",
+      "name": "Alloy",
+      "reference": "nothing5.png",
+      "background": "#15130e",
+      "panel": "#24211b",
+      "card": "#302b21",
+      "border": "#4c4432",
+      "text": "#f5f0de",
+      "muted": "#bab198",
+      "accent": "#f5ce6b",
+      "ink": "#171309"
+    },
+    {
+      "id": "ion",
+      "name": "Ion",
+      "reference": "nothing6.png",
+      "background": "#07191a",
+      "panel": "#0d292a",
+      "card": "#173a3b",
+      "border": "#265151",
+      "text": "#ecf8f5",
+      "muted": "#99bcbb",
+      "accent": "#63e6df",
+      "ink": "#061515"
+    }
+  ]
+}

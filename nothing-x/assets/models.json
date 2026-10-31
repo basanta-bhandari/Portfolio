@@ -1,0 +1,1087 @@
+{
+  "schema": 1,
+  "models": [
+    {
+      "id": "B181",
+      "name": "Nothing Ear (1)",
+      "kind": "earbuds",
+      "artwork": "ear1",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "low_latency",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Low"
+      ],
+      "eq_presets": [
+        {
+          "name": "Balanced",
+          "value": 0
+        },
+        {
+          "name": "Voice",
+          "value": 1
+        },
+        {
+          "name": "More treble",
+          "value": 2
+        },
+        {
+          "name": "More bass",
+          "value": 3
+        }
+      ],
+      "eq_read": 49183,
+      "eq_write": 61456,
+      "eq_index": 0,
+      "bass_max": 5,
+      "ring_legacy": true,
+      "locally_tested": false
+    },
+    {
+      "id": "B157",
+      "name": "Nothing Ear (stick)",
+      "kind": "earbuds",
+      "artwork": "stick",
+      "features": [
+        "battery",
+        "eq",
+        "in_ear",
+        "low_latency"
+      ],
+      "anc_modes": [],
+      "eq_presets": [
+        {
+          "name": "Balanced",
+          "value": 0
+        },
+        {
+          "name": "Voice",
+          "value": 1
+        },
+        {
+          "name": "More treble",
+          "value": 2
+        },
+        {
+          "name": "More bass",
+          "value": 3
+        }
+      ],
+      "eq_read": 49183,
+      "eq_write": 61456,
+      "eq_index": 0,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B155",
+      "name": "Nothing Ear (2)",
+      "kind": "earbuds",
+      "artwork": "ear2",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "in_ear",
+        "low_latency",
+        "dual",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Balanced",
+          "value": 0
+        },
+        {
+          "name": "Voice",
+          "value": 1
+        },
+        {
+          "name": "More treble",
+          "value": 2
+        },
+        {
+          "name": "More bass",
+          "value": 3
+        }
+      ],
+      "eq_read": 49183,
+      "eq_write": 61456,
+      "eq_index": 0,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B162",
+      "name": "Nothing Ear (a)",
+      "kind": "earbuds",
+      "artwork": "eara",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "bass",
+        "in_ear",
+        "low_latency",
+        "dual",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Balanced",
+          "value": 0
+        },
+        {
+          "name": "Voice",
+          "value": 1
+        },
+        {
+          "name": "More treble",
+          "value": 2
+        },
+        {
+          "name": "More bass",
+          "value": 3
+        }
+      ],
+      "eq_read": 49183,
+      "eq_write": 61456,
+      "eq_index": 0,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B171",
+      "name": "Nothing Ear",
+      "kind": "earbuds",
+      "artwork": "ear",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "bass",
+        "in_ear",
+        "low_latency",
+        "dual",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Balanced",
+          "value": 0
+        },
+        {
+          "name": "Voice",
+          "value": 1
+        },
+        {
+          "name": "More treble",
+          "value": 2
+        },
+        {
+          "name": "More bass",
+          "value": 3
+        }
+      ],
+      "eq_read": 49183,
+      "eq_write": 61456,
+      "eq_index": 0,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B163",
+      "name": "CMF Buds Pro",
+      "kind": "earbuds",
+      "artwork": "generic",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "in_ear",
+        "low_latency",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Dirac Opteo",
+          "value": 0
+        },
+        {
+          "name": "Rock",
+          "value": 1
+        },
+        {
+          "name": "Electronic",
+          "value": 2
+        },
+        {
+          "name": "Pop",
+          "value": 3
+        },
+        {
+          "name": "Enhance vocals",
+          "value": 4
+        },
+        {
+          "name": "Classical",
+          "value": 5
+        }
+      ],
+      "eq_read": 49232,
+      "eq_write": 61469,
+      "eq_index": 1,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B164",
+      "name": "CMF Neckband Pro",
+      "kind": "neckband",
+      "artwork": "neckband",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "bass",
+        "spatial",
+        "low_latency",
+        "dual"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Balanced",
+          "value": 0
+        },
+        {
+          "name": "Voice",
+          "value": 1
+        },
+        {
+          "name": "More treble",
+          "value": 2
+        },
+        {
+          "name": "More bass",
+          "value": 3
+        }
+      ],
+      "eq_read": 49183,
+      "eq_write": 61456,
+      "eq_index": 0,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B168",
+      "name": "CMF Buds",
+      "kind": "earbuds",
+      "artwork": "generic",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "bass",
+        "low_latency",
+        "dual",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Dirac Opteo",
+          "value": 0
+        },
+        {
+          "name": "Rock",
+          "value": 1
+        },
+        {
+          "name": "Electronic",
+          "value": 2
+        },
+        {
+          "name": "Pop",
+          "value": 3
+        },
+        {
+          "name": "Enhance vocals",
+          "value": 4
+        },
+        {
+          "name": "Classical",
+          "value": 5
+        }
+      ],
+      "eq_read": 49232,
+      "eq_write": 61469,
+      "eq_index": 1,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B172",
+      "name": "CMF Buds Pro 2",
+      "kind": "earbuds",
+      "artwork": "cmf-buds-pro-2",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "bass",
+        "spatial",
+        "in_ear",
+        "low_latency",
+        "dual",
+        "codec",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Dirac Opteo",
+          "value": 0
+        },
+        {
+          "name": "Rock",
+          "value": 1
+        },
+        {
+          "name": "Electronic",
+          "value": 2
+        },
+        {
+          "name": "Pop",
+          "value": 3
+        },
+        {
+          "name": "Enhance vocals",
+          "value": 4
+        },
+        {
+          "name": "Classical",
+          "value": 5
+        }
+      ],
+      "eq_read": 49232,
+      "eq_write": 61469,
+      "eq_index": 1,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": true
+    },
+    {
+      "id": "B174",
+      "name": "Nothing Ear (open)",
+      "kind": "earbuds",
+      "artwork": "generic",
+      "features": [
+        "battery",
+        "eq",
+        "low_latency",
+        "dual"
+      ],
+      "anc_modes": [],
+      "eq_presets": [
+        {
+          "name": "Balanced",
+          "value": 0
+        },
+        {
+          "name": "Voice",
+          "value": 1
+        },
+        {
+          "name": "More treble",
+          "value": 2
+        },
+        {
+          "name": "More bass",
+          "value": 3
+        }
+      ],
+      "eq_read": 49183,
+      "eq_write": 61456,
+      "eq_index": 0,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B170",
+      "name": "Nothing Headphone (1)",
+      "kind": "headphones",
+      "artwork": "headphone1",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "bass",
+        "in_ear",
+        "low_latency",
+        "dual",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Balanced",
+          "value": 0
+        },
+        {
+          "name": "Voice",
+          "value": 1
+        },
+        {
+          "name": "More treble",
+          "value": 2
+        },
+        {
+          "name": "More bass",
+          "value": 3
+        }
+      ],
+      "eq_read": 49183,
+      "eq_write": 61456,
+      "eq_index": 0,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B175",
+      "name": "CMF Headphone Pro",
+      "kind": "headphones",
+      "artwork": "cmf-headphone",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "bass",
+        "low_latency",
+        "dual",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Balanced",
+          "value": 0
+        },
+        {
+          "name": "Voice",
+          "value": 1
+        },
+        {
+          "name": "More treble",
+          "value": 2
+        },
+        {
+          "name": "More bass",
+          "value": 3
+        }
+      ],
+      "eq_read": 49183,
+      "eq_write": 61456,
+      "eq_index": 0,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B185",
+      "name": "CMF Buds 2a",
+      "kind": "earbuds",
+      "artwork": "generic",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "bass",
+        "low_latency",
+        "dual",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Dirac Opteo",
+          "value": 0
+        },
+        {
+          "name": "Rock",
+          "value": 1
+        },
+        {
+          "name": "Electronic",
+          "value": 2
+        },
+        {
+          "name": "Pop",
+          "value": 3
+        },
+        {
+          "name": "Enhance vocals",
+          "value": 4
+        },
+        {
+          "name": "Classical",
+          "value": 5
+        }
+      ],
+      "eq_read": 49232,
+      "eq_write": 61469,
+      "eq_index": 1,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B179",
+      "name": "CMF Buds 2",
+      "kind": "earbuds",
+      "artwork": "generic",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "bass",
+        "spatial",
+        "low_latency",
+        "dual",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Dirac Opteo",
+          "value": 0
+        },
+        {
+          "name": "Rock",
+          "value": 1
+        },
+        {
+          "name": "Electronic",
+          "value": 2
+        },
+        {
+          "name": "Pop",
+          "value": 3
+        },
+        {
+          "name": "Enhance vocals",
+          "value": 4
+        },
+        {
+          "name": "Classical",
+          "value": 5
+        }
+      ],
+      "eq_read": 49232,
+      "eq_write": 61469,
+      "eq_index": 1,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B184",
+      "name": "CMF Buds 2 Plus",
+      "kind": "earbuds",
+      "artwork": "generic",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "bass",
+        "spatial",
+        "in_ear",
+        "low_latency",
+        "dual",
+        "codec",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Dirac Opteo",
+          "value": 0
+        },
+        {
+          "name": "Rock",
+          "value": 1
+        },
+        {
+          "name": "Electronic",
+          "value": 2
+        },
+        {
+          "name": "Pop",
+          "value": 3
+        },
+        {
+          "name": "Enhance vocals",
+          "value": 4
+        },
+        {
+          "name": "Classical",
+          "value": 5
+        }
+      ],
+      "eq_read": 49232,
+      "eq_write": 61469,
+      "eq_index": 1,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B173",
+      "name": "Nothing Ear (3)",
+      "kind": "earbuds",
+      "artwork": "generic",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "spatial",
+        "in_ear",
+        "low_latency",
+        "dual",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Balanced",
+          "value": 0
+        },
+        {
+          "name": "Voice",
+          "value": 1
+        },
+        {
+          "name": "More treble",
+          "value": 2
+        },
+        {
+          "name": "More bass",
+          "value": 3
+        }
+      ],
+      "eq_read": 49183,
+      "eq_write": 61456,
+      "eq_index": 0,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B183",
+      "name": "Nothing Ear (a)",
+      "kind": "earbuds",
+      "artwork": "eara",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "bass",
+        "in_ear",
+        "low_latency",
+        "dual",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Balanced",
+          "value": 0
+        },
+        {
+          "name": "Voice",
+          "value": 1
+        },
+        {
+          "name": "More treble",
+          "value": 2
+        },
+        {
+          "name": "More bass",
+          "value": 3
+        }
+      ],
+      "eq_read": 49183,
+      "eq_write": 61456,
+      "eq_index": 0,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B187",
+      "name": "CMF Buds Pro 2",
+      "kind": "earbuds",
+      "artwork": "cmf-buds-pro-2",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "bass",
+        "spatial",
+        "in_ear",
+        "low_latency",
+        "dual",
+        "codec",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Dirac Opteo",
+          "value": 0
+        },
+        {
+          "name": "Rock",
+          "value": 1
+        },
+        {
+          "name": "Electronic",
+          "value": 2
+        },
+        {
+          "name": "Pop",
+          "value": 3
+        },
+        {
+          "name": "Enhance vocals",
+          "value": 4
+        },
+        {
+          "name": "Classical",
+          "value": 5
+        }
+      ],
+      "eq_read": 49232,
+      "eq_write": 61469,
+      "eq_index": 1,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B186",
+      "name": "Nothing Headphone (a)",
+      "kind": "headphones",
+      "artwork": "generic",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "bass",
+        "low_latency",
+        "dual",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Balanced",
+          "value": 0
+        },
+        {
+          "name": "Voice",
+          "value": 1
+        },
+        {
+          "name": "More treble",
+          "value": 2
+        },
+        {
+          "name": "More bass",
+          "value": 3
+        }
+      ],
+      "eq_read": 49183,
+      "eq_write": 61456,
+      "eq_index": 0,
+      "bass_max": 3,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B198",
+      "name": "Nothing Headphone (a)",
+      "kind": "headphones",
+      "artwork": "generic",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "bass",
+        "low_latency",
+        "dual",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Balanced",
+          "value": 0
+        },
+        {
+          "name": "Voice",
+          "value": 1
+        },
+        {
+          "name": "More treble",
+          "value": 2
+        },
+        {
+          "name": "More bass",
+          "value": 3
+        }
+      ],
+      "eq_read": 49183,
+      "eq_write": 61456,
+      "eq_index": 0,
+      "bass_max": 3,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B190",
+      "name": "Nothing Ear (3a)",
+      "kind": "earbuds",
+      "artwork": "generic",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "in_ear",
+        "low_latency",
+        "dual",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Balanced",
+          "value": 0
+        },
+        {
+          "name": "Voice",
+          "value": 1
+        },
+        {
+          "name": "More treble",
+          "value": 2
+        },
+        {
+          "name": "More bass",
+          "value": 3
+        }
+      ],
+      "eq_read": 49183,
+      "eq_write": 61456,
+      "eq_index": 0,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    },
+    {
+      "id": "B193",
+      "name": "CMF Buds Neo",
+      "kind": "earbuds",
+      "artwork": "generic",
+      "features": [
+        "battery",
+        "anc",
+        "eq",
+        "bass",
+        "low_latency",
+        "dual",
+        "find"
+      ],
+      "anc_modes": [
+        "Off",
+        "Transparency",
+        "High",
+        "Mid",
+        "Low",
+        "Adaptive"
+      ],
+      "eq_presets": [
+        {
+          "name": "Dirac Opteo",
+          "value": 0
+        },
+        {
+          "name": "Rock",
+          "value": 1
+        },
+        {
+          "name": "Electronic",
+          "value": 2
+        },
+        {
+          "name": "Pop",
+          "value": 3
+        },
+        {
+          "name": "Enhance vocals",
+          "value": 4
+        },
+        {
+          "name": "Classical",
+          "value": 5
+        }
+      ],
+      "eq_read": 49232,
+      "eq_write": 61469,
+      "eq_index": 1,
+      "bass_max": 5,
+      "ring_legacy": false,
+      "locally_tested": false
+    }
+  ]
+}
