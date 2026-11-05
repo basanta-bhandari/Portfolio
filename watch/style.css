@@ -2,3 +2,4 @@
 .guest .stage-footer label,.guest .empty label{display:none}
 .not-ready .empty label,.not-ready .stage-footer label{opacity:.4;pointer-events:none}.not-ready .empty .hint::after{content:" Create a room first."}
 .call-buttons{display:flex;flex-wrap:wrap;gap:6px}.call-buttons .button{flex:1}.sound-prompt{position:absolute;z-index:5;left:50%;bottom:75px;transform:translateX(-50%);border:0;border-radius:8px;padding:12px 18px;background:#fff;color:#111;font:inherit;cursor:pointer;box-shadow:0 5px 20px #0009;white-space:nowrap}
+#peerStatus{font-size:11px;color:var(--muted)}#peerStatus.link-failed{color:#c35656}
