@@ -3,16 +3,17 @@ import {ID,TOKEN,RETENTION_MS,sameRegistration,signaturePayload} from './protoco
 const $=id=>document.getElementById(id),make=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 const storageKey='tether.browser.v1';
 let saved={};try{saved=JSON.parse(sessionStorage.getItem(storageKey)||'{}');}catch{}
-const state={me:null,name:typeof saved.name==='string'?saved.name.slice(0,40):`Guest ${Math.floor(1000+Math.random()*9000)}`,useDirect:saved.useDirect!==false,rooms:[],current:null,direct:null,sending:false,reply:null,drafts:new Map()};
+const state={me:null,name:typeof saved.name==='string'?saved.name.slice(0,40):`Guest ${Math.floor(1000+Math.random()*9000)}`,useDirect:saved.useDirect!==false,rooms:[],contacts:new Map(),current:null,direct:null,sending:false,reply:null,drafts:new Map()};
 let pollTimer,toastTimer,listSignature,messageSignature;
 const welcome=$('welcome');
 function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{$('toast').hidden=true;},4200);}
-function save(){if(!state.me)return;try{sessionStorage.setItem(storageKey,JSON.stringify({name:state.name,useDirect:state.useDirect,identity:state.me.saved,rooms:state.rooms.map(r=>({id:r.id,name:r.name,secret:r.secret,session:r.session,read:r.read}))}));}catch{toast('This browser cannot save the session. Keep your invite link before reloading.');}}
-function roomState(data){return {...data,messages:new Map(),unread:new Map(),read:Object.assign(Object.create(null),data.read&&typeof data.read==='object'?data.read:{}),peers:new Map(),connections:new Map(),receipts:new Map(),acknowledged:new Set(),ackPending:new Set(),retry:new Map(),after:0,joined:false,loaded:false,live:false,failures:0,polling:null};}
+function save(){if(!state.me)return;try{sessionStorage.setItem(storageKey,JSON.stringify({name:state.name,useDirect:state.useDirect,identity:state.me.saved,rooms:state.rooms.map(r=>({id:r.id,name:r.name,secret:r.secret,session:r.session,read:r.read,created:r.created===true})),contacts:[...state.contacts.values()].map(c=>({...c,rooms:[...c.rooms]}))}));}catch{toast('This browser cannot save the session. Keep your invite link before reloading.');}}
+function roomState(data){return {...data,created:data.created===true,messages:new Map(),unread:new Map(),read:Object.assign(Object.create(null),data.read&&typeof data.read==='object'?data.read:{}),peers:new Map(),connections:new Map(),receipts:new Map(),acknowledged:new Set(),ackPending:new Set(),readAcknowledged:new Set(),readPending:new Set(),operations:new Map(),retry:new Map(),after:0,joined:false,loaded:false,live:false,failures:0,polling:null};}
 const ready=(async()=>{
   if(!crypto?.subtle)throw new Error('Use a current browser over HTTPS to start encrypted chat.');
   state.me=await identity(saved.identity);
   for(const r of Array.isArray(saved.rooms)?saved.rooms.slice(0,20):[]){if(ID.test(r.id)&&TOKEN.test(r.secret)&&TOKEN.test(r.session)&&typeof r.name==='string')state.rooms.push(roomState(r));}
+  for(const c of Array.isArray(saved.contacts)?saved.contacts.slice(0,256):[]){if(c&&ID.test(c.peer||'')&&typeof c.name==='string'&&typeof c.signKey==='string'&&typeof c.exchangeKey==='string'){state.contacts.set(c.peer,{...c,rooms:new Set(Array.isArray(c.rooms)?c.rooms.filter(ID.test):[]),relationship:['friend','incoming','outgoing'].includes(c.relationship)?c.relationship:'none'});}}
   save();renderProfile();renderLists();
 })();
 ready.catch(error=>{$('welcome').querySelector('p').textContent=error.message;toast(error.message);});
@@ -53,7 +54,7 @@ $('createForm').onsubmit=async event=>{
   try{
     await ready;if(state.rooms.length>=20)throw new Error('Leave a room before creating another (20 per browser session).');
     state.name=$('createName').value.trim();if(!state.name)throw new Error('Enter your name.');
-    const r=roomState({id:randomHex(),secret:randomHex(32),session:randomHex(32),name:$('roomName').value.trim()});
+    const r=roomState({id:randomHex(),secret:randomHex(32),session:randomHex(32),name:$('roomName').value.trim(),created:true});
     await enroll(r,'create');state.rooms.unshift(r);save();renderProfile();closeDialog('createDialog');await enterRoom(r);showInvite();
   }catch(error){$('createError').textContent=error.message;}finally{button.disabled=false;button.textContent='Create room';}
 };
@@ -79,11 +80,32 @@ async function enterRoom(r){
 function selectPerson(peer){stashDraft();state.direct=peer;markRead(state.current,`dm:${peer}`);restoreDraft();renderAll();$('sidebar').classList.remove('open');$('toggleSidebar').setAttribute('aria-expanded','false');$('messageInput').focus();}
 function markRead(r,conversation){
   if(!r)return;r.read[conversation]=Date.now();r.unread.delete(conversation);save();
+  if(conversation==='room'||conversation===`dm:${state.direct||''}`)markVisibleRead(r);
+}
+function markVisibleRead(r){
+  for(const m of visibleMessages(r)){
+    if(m.packet.sender===state.me.peer||r.readAcknowledged.has(m.packet.id)||r.readPending.has(m.packet.id))continue;
+    r.readPending.add(m.packet.id);
+    receipt(state.me,r.id,m.packet.id,'read').then(ack=>{
+      for(const c of r.connections.values())if(c.channel?.readyState==='open')try{c.channel.send(JSON.stringify({type:'receipt',receipt:ack}));}catch{}
+      return api(r,'ack',{receipt:ack});
+    }).then(result=>{if(result?.ok)r.readAcknowledged.add(m.packet.id);}).catch(()=>{}).finally(()=>r.readPending.delete(m.packet.id));
+  }
+}
+function observePeer(r,p){
+  if(!p||p.peer===state.me?.peer)return;
+  const old=state.contacts.get(p.peer),rooms=new Set(old?.rooms||[]);rooms.add(r.id);
+  state.contacts.set(p.peer,{...old,...p,rooms,invitedByMe:Boolean(old?.invitedByMe||r.created),relationship:old?.relationship||'none'});
+}
+function contactRoom(peer){return state.rooms.find(r=>r.peers.has(peer))||state.rooms.find(r=>state.contacts.get(peer)?.rooms?.has(r.id));}
+async function openContact(peer){
+  const r=contactRoom(peer);if(!r){toast('That browser session is no longer in a shared room.');return;}
+  await enterRoom(r);selectPerson(peer);
 }
 function noteIncoming(r,p){
   if(p.sender===state.me.peer)return;const conversation=p.to?`dm:${p.sender}`:'room';
   const visible=state.current===r&&(p.to?state.direct===p.sender:!state.direct)&&!document.hidden;
-  if(visible){r.read[conversation]=Math.max(Date.now(),p.createdAt);r.unread.delete(conversation);save();}
+  if(visible){r.read[conversation]=Math.max(Date.now(),p.createdAt);r.unread.delete(conversation);save();markVisibleRead(r);}
   else if(p.createdAt>(Number(r.read[conversation])||0))r.unread.set(conversation,(r.unread.get(conversation)||0)+1);
 }
 function badge(count){const n=make('span','unread-badge',count>99?'99+':String(count));n.setAttribute('aria-label',`${count} unread messages`);return n;}
@@ -91,20 +113,24 @@ function avatar(name,own=false){const n=make('span',`avatar${own?' self':''}`,(n
 function renderProfile(){ $('profileName').textContent=state.name;$('profileAvatar').textContent=state.name.slice(0,1).toUpperCase(); }
 function renderLists(){
   const query=$('conversationSearch').value.trim().toLowerCase(),r=state.current;
-  const peers=r?[...r.peers.values()].filter(p=>p.peer!==state.me?.peer):[];
-  const signature=JSON.stringify([query,state.current?.id,state.direct,state.rooms.map(x=>[x.id,x.name]),peers.map(p=>[p.peer,p.name,Date.now()-p.lastSeen<45000]),state.rooms.map(x=>[x.id,[...x.unread]])]);
+  const contacts=[...state.contacts.values()].filter(p=>p.name.toLowerCase().includes(query)),people=contacts.filter(p=>p.invitedByMe);
+  const signature=JSON.stringify([query,state.current?.id,state.direct,state.rooms.map(x=>[x.id,x.name]),contacts.map(p=>[p.peer,p.name,p.relationship,Date.now()-p.lastSeen<45000]),state.rooms.map(x=>[x.id,[...x.unread]])]);
   if(signature===listSignature)return;listSignature=signature;
-  $('roomCount').textContent=state.rooms.length;$('peopleCount').textContent=peers.length;$('roomList').replaceChildren();$('peopleList').replaceChildren();
+  $('roomCount').textContent=state.rooms.length;$('peopleCount').textContent=people.length;$('roomList').replaceChildren();$('peopleList').replaceChildren();$('friendList').replaceChildren();$('requestList').replaceChildren();
   for(const room of state.rooms.filter(x=>x.name.toLowerCase().includes(query))){
     const button=make('button',`conversation-item${r===room&&!state.direct?' selected':''}`);button.type='button';button.setAttribute('aria-current',r===room&&!state.direct?'page':'false');button.append(make('span','avatar room-avatar','#'),make('span','label',room.name));if(room.unread.get('room'))button.append(badge(room.unread.get('room')));button.onclick=()=>enterRoom(room);$('roomList').append(button);
   }
-  peers.sort((a,b)=>Number(Date.now()-b.lastSeen<45000)-Number(Date.now()-a.lastSeen<45000)||a.name.localeCompare(b.name));
-  for(const p of peers.filter(x=>x.name.toLowerCase().includes(query))){
-    const button=make('button',`conversation-item${state.direct===p.peer?' selected':''}`);button.type='button';button.append(avatar(p.name),make('span','label',p.name));const dot=make('span',`presence${Date.now()-p.lastSeen<45000?' online':''}`);dot.title=Date.now()-p.lastSeen<45000?'Online':'Offline';button.append(dot);if(r.unread.get(`dm:${p.peer}`))button.append(badge(r.unread.get(`dm:${p.peer}`)));button.onclick=()=>selectPerson(p.peer);$('peopleList').append(button);
+  contacts.sort((a,b)=>Number(b.relationship==='friend')-Number(a.relationship==='friend')||Number(Date.now()-b.lastSeen<45000)-Number(Date.now()-a.lastSeen<45000)||a.name.localeCompare(b.name));
+  for(const p of people){
+    const button=make('button',`conversation-item${state.direct===p.peer?' selected':''}`),unread=state.rooms.reduce((n,room)=>n+(room.unread.get(`dm:${p.peer}`)||0),0);button.type='button';button.append(avatar(p.name),make('span','label',p.name));const dot=make('span',`presence${Date.now()-p.lastSeen<45000?' online':''}`);dot.title=Date.now()-p.lastSeen<45000?'Online':'Offline';button.append(dot);if(unread)button.append(badge(unread));button.onclick=()=>openContact(p.peer);$('peopleList').append(button);
   }
   if(!$('roomList').children.length)$('roomList').append(make('p','list-empty',query?'No matching rooms.':'Your rooms will appear here.'));
   const unread=state.rooms.reduce((total,room)=>total+[...room.unread.values()].reduce((sum,n)=>sum+n,0),0);document.title=`${unread?`(${unread}) `:''}Chat / basanta.cc`;
-  if(!$('peopleList').children.length)$('peopleList').append(make('p','list-empty',query?'No matching people.':r?'Invite someone to join this room.':'Join a room to find people.'));
+  for(const p of contacts.filter(x=>x.relationship==='friend')){const b=make('button','conversation-item');b.type='button';b.append(avatar(p.name),make('span','label',p.name),make('span','presence'));b.onclick=()=>openContact(p.peer);$('friendList').append(b);}
+  for(const p of contacts.filter(x=>x.relationship==='incoming')){const row=make('div','request-item');row.append(avatar(p.name),make('span','label',p.name));const accept=make('button','', 'Accept'),decline=make('button','', 'Decline');accept.type=decline.type='button';accept.onclick=()=>respondFriend(p.peer,true);decline.onclick=()=>respondFriend(p.peer,false);row.append(accept,decline);$('requestList').append(row);}
+  if(!$('peopleList').children.length)$('peopleList').append(make('p','list-empty',query?'No matching people.':'People who join rooms you create appear here.'));
+  if(!$('friendList').children.length)$('friendList').append(make('p','list-empty','No friends yet.'));
+  if(!$('requestList').children.length)$('requestList').append(make('p','list-empty','No requests.'));
 }
 function directCount(r){return [...r.connections.values()].filter(x=>x.channel?.readyState==='open').length;}
 function renderHeader(){
@@ -112,6 +138,8 @@ function renderHeader(){
   $('conversationTitle').textContent=p?.name||r?.name||'Conversations';$('conversationSymbol').textContent=state.direct?'@':'#';
   $('conversationSubtitle').textContent=p?`Direct message · ${r.name}`:r?(r.loaded?`${r.peers.size} ${r.peers.size===1?'person':'people'} · Room`:'Connecting to room…'):'Rooms and direct messages';
   $('inviteButton').hidden=!r;$('detailsButton').hidden=!r;$('composerArea').hidden=!r;
+  const relationship=state.direct?state.contacts.get(state.direct)?.relationship:'none';
+  $('friendButton').hidden=!state.direct||relationship==='friend';$('friendButton').textContent=relationship==='incoming'?'Accept friend':relationship==='outgoing'?'Request sent':'Add friend';
   $('connectionStatus').textContent=r?(r.live?'Live':directCount(r)?'Direct only':'Reconnecting…'):'';$('connectionStatus').classList.toggle('live',Boolean(r?.live));
   $('messageInput').placeholder=p?`Message ${p.name}…`:r?`Message ${r.name}…`:'Write a message…';
 }
@@ -119,7 +147,7 @@ function updateComposer(){ const ready=Boolean(state.current?.joined&&state.curr
 function visibleMessages(r){return [...r.messages.values()].filter(m=>(m.expiresAt||m.packet.createdAt+RETENTION_MS)>Date.now()&&(state.direct?m.packet.sender===state.direct&&m.packet.to===state.me.peer||m.packet.sender===state.me.peer&&m.packet.to===state.direct:!m.packet.to)).sort((a,b)=>a.packet.createdAt-b.packet.createdAt||a.packet.id.localeCompare(b.packet.id));}
 function renderMessages(){
   const r=state.current;if(!r){$('timeline').replaceChildren(welcome);messageSignature=null;return;}
-  const messages=visibleMessages(r),signature=JSON.stringify([r.id,r.loaded,state.direct,messages.map(m=>[m.packet.id,m.status,m.text,r.receipts.get(m.packet.id)?.size]),[...r.peers.values()].map(p=>[p.peer,p.name])]);
+  const messages=visibleMessages(r),signature=JSON.stringify([r.id,r.loaded,state.direct,messages.map(m=>[m.packet.id,m.status,m.text,m.edited,m.deleted,[...(r.receipts.get(m.packet.id)?.values()||[])].map(x=>[x.peer,x.kind])]),[...r.peers.values()].map(p=>[p.peer,p.name])]);
   if(signature===messageSignature)return;messageSignature=signature;
   const timeline=$('timeline'),bottom=timeline.scrollHeight-timeline.scrollTop-timeline.clientHeight<120;timeline.replaceChildren();
   if(!r.loaded&&!messages.length){const loading=make('div','empty-conversation');loading.append(make('strong','','Loading messages…'));timeline.append(loading);return;}
@@ -128,9 +156,11 @@ function renderMessages(){
   for(const m of messages){
     const p=m.packet,own=p.sender===state.me.peer,name=own?'You':r.peers.get(p.sender)?.name||'Participant',date=new Date(p.createdAt),dateLabel=date.toLocaleDateString(undefined,{month:'long',day:'numeric'});
     if(day!==dateLabel){day=dateLabel;timeline.append(make('div','day-divider',dateLabel));}
-    const article=make('article',`message${own?' own':''}`),main=make('div','message-main'),head=make('div','message-head'),time=make('time','message-time',date.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'}));time.dateTime=date.toISOString();head.append(make('span','message-author',name),time);main.append(head,make('div','message-body',m.text));
-    if(own){const count=r.receipts.get(p.id)?.size||0;const status=count?(p.to?'Delivered':`Delivered to ${count}`):m.status==='sending'?'Sending…':m.status==='failed'?'Not sent':m.status==='direct'?'Sent directly':'Sent';main.append(make('div',`delivery${m.status==='failed'?' failed':''}`,status));}
+    const article=make('article',`message${own?' own':''}`),main=make('div','message-main'),head=make('div','message-head'),time=make('time','message-time',date.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'}));time.dateTime=date.toISOString();head.append(make('span','message-author',name),time);main.append(head,make('div','message-body',m.deleted?'Message deleted':m.text));
+    if(m.edited&&!m.deleted)main.append(make('span','edited-label','Edited'));
+    if(own){const receipts=[...(r.receipts.get(p.id)?.values()||[])],read=receipts.filter(x=>x.kind==='read').length,delivered=receipts.filter(x=>x.kind==='delivered').length;const status=read?(p.to?'Read':`Read by ${read}`):delivered?(p.to?'Delivered':`Delivered to ${delivered}`):m.status==='sending'?'Sending…':m.status==='failed'?'Not sent':m.status==='direct'?'Sent directly':'Sent';main.append(make('div',`delivery${m.status==='failed'?' failed':''}`,status));}
     const actions=make('div','message-actions'),copy=make('button','','Copy'),reply=make('button','','Reply');copy.type=reply.type='button';copy.onclick=()=>copyText(m.text).then(()=>toast('Message copied.')).catch(()=>toast('Select the message text to copy it.'));reply.onclick=()=>{state.reply=m;$('replyText').textContent=`Reply to ${name}: ${m.text.slice(0,100)}`;$('replyPreview').hidden=false;$('messageInput').focus();};actions.append(copy,reply);
+    if(own&&!m.deleted){const edit=make('button','','Edit'),remove=make('button','','Delete');edit.type=remove.type='button';edit.onclick=()=>editMessage(r,m);remove.onclick=()=>deleteMessage(r,m);actions.append(edit,remove);}
     if(own&&m.status==='failed'){const retry=make('button','','Retry');retry.type='button';retry.onclick=()=>submitPacket(r,m);actions.append(retry);}main.append(actions);article.append(avatar(own?state.name:name,own),main);timeline.append(article);
   }
   if(bottom||messages.length<5)timeline.scrollTop=timeline.scrollHeight;
@@ -139,21 +169,64 @@ function renderAll(){renderLists();renderHeader();renderMessages();updateCompose
 function showFailure(r,error){if(state.current!==r)return;r.live=false;renderHeader();$('connectionBanner').hidden=false;$('connectionBanner').textContent=error.message;}
 async function acknowledge(r,p,channel){
   if(p.sender===state.me.peer)return;
-  const ack=await receipt(state.me,r.id,p.id);
+  const ack=await receipt(state.me,r.id,p.id,'delivered');
   if(channel?.readyState==='open'){try{channel.send(JSON.stringify({type:'receipt',receipt:ack}));}catch{}}
   if(r.acknowledged.has(p.id)||r.ackPending.has(p.id))return;r.ackPending.add(p.id);
   api(r,'ack',{receipt:ack}).then(result=>{if(result.ok)r.acknowledged.add(p.id);}).catch(()=>{}).finally(()=>r.ackPending.delete(p.id));
 }
 async function receiveReceipt(r,ack){
   const m=r.messages.get(ack.id);if(!m||ack.room!==r.id||m.packet.sender!==state.me.peer||ack.peer===state.me.peer||m.packet.to&&m.packet.to!==ack.peer||!await validReceipt(r.peers,ack))return;
-  if(!r.receipts.has(ack.id))r.receipts.set(ack.id,new Set());r.receipts.get(ack.id).add(ack.peer);if(state.current===r)renderMessages();
+  if(!r.receipts.has(ack.id))r.receipts.set(ack.id,new Map());const old=r.receipts.get(ack.id).get(ack.peer);if(!old||ack.kind==='read')r.receipts.get(ack.id).set(ack.peer,ack);if(state.current===r)renderMessages();
+}
+function control(text){
+  if(typeof text!=='string'||!text.startsWith('\u0000tether-control:'))return null;
+  try{const value=JSON.parse(text.slice(16));return ['friend-request','friend-accept','friend-decline'].includes(value.type)?value:null;}catch{return null;}
+}
+function applyOperation(r,p,text){
+  const target=r.messages.get(p.target);
+  if(!target||target.packet.sender!==p.sender||target.packet.to!==p.to){const queued=r.operations.get(p.target)||[];queued.push({p,text});r.operations.set(p.target,queued);return;}
+  if(p.kind==='delete'){target.deleted=true;target.text='';}
+  else if(p.kind==='edit'&&!target.deleted){target.text=text;target.edited=true;}
+}
+function applyQueuedOperations(r,m){for(const item of r.operations.get(m.packet.id)||[])applyOperation(r,item.p,item.text);r.operations.delete(m.packet.id);}
+function applyControl(r,p,value){
+  const c=state.contacts.get(p.sender);if(!c)return;
+  if(value.type==='friend-request'&&c.relationship!=='friend'){c.relationship='incoming';toast(`${c.name} sent you a friend request.`);}
+  if(value.type==='friend-accept'){c.relationship='friend';toast(`${c.name} accepted your friend request.`);}
+  if(value.type==='friend-decline'&&c.relationship==='outgoing'){c.relationship='none';toast(`${c.name} declined your friend request.`);}
+  save();renderLists();
+}
+async function sendControl(peer,type){
+  const r=contactRoom(peer);if(!r)throw new Error('Open a shared room with this person first.');
+  if(!r.joined)await enroll(r,'join');if(!r.peers.has(peer))await poll(r);
+  const other=r.peers.get(peer);if(!other)throw new Error('That person is no longer in a shared room.');
+  const text=`\u0000tether-control:${JSON.stringify({type})}`,packet=await encryptMessage(state.me,r.id,r.keys.key,other,text);
+  const result=await api(r,'message',{packet});broadcast(r,packet);return result;
+}
+async function requestFriend(){
+  if(!state.direct)return;const c=state.contacts.get(state.direct);if(!c)return;
+  try{await sendControl(c.peer,'friend-request');c.relationship='outgoing';save();renderLists();renderHeader();toast('Friend request sent.');}catch(error){toast(error.message);}
+}
+async function respondFriend(peer,accept){
+  const c=state.contacts.get(peer);if(!c)return;
+  try{await sendControl(peer,accept?'friend-accept':'friend-decline');c.relationship=accept?'friend':'none';save();renderLists();toast(accept?`${c.name} is now a friend.`:'Request declined.');}catch(error){toast(error.message);}
+}
+async function editMessage(r,m){
+  const next=prompt('Edit message',m.text);if(next===null||next.trim()===m.text||!next.trim())return;
+  try{const other=m.packet.to?r.peers.get(m.packet.to):null,packet=await encryptMessage(state.me,r.id,r.keys.key,other,next.trim(),{kind:'edit',target:m.packet.id});await api(r,'message',{packet});broadcast(r,packet);applyOperation(r,packet,next.trim());renderMessages();}catch(error){toast(error.message);}
+}
+async function deleteMessage(r,m){
+  if(!confirm('Delete this message for everyone in this conversation?'))return;
+  try{const other=m.packet.to?r.peers.get(m.packet.to):null,packet=await encryptMessage(state.me,r.id,r.keys.key,other,'deleted',{kind:'delete',target:m.packet.id});await api(r,'message',{packet});broadcast(r,packet);applyOperation(r,packet,'');renderMessages();}catch(error){toast(error.message);}
 }
 async function receive(r,p,meta={},channel){
   if(p?.room!==r.id||!ID.test(p.id||'')||!Number.isSafeInteger(p.createdAt)||p.createdAt>Date.now()+300000||p.createdAt+RETENTION_MS<=Date.now())return;
   const old=r.messages.get(p.id);
   if(old){if(old.packet.sig!==p.sig||signaturePayload(old.packet)!==signaturePayload(p))return;if(meta.seq){old.status='sent';old.seq=meta.seq;old.expiresAt=Math.min(meta.expiresAt||Infinity,p.createdAt+RETENTION_MS);}await acknowledge(r,old.packet,channel);return;}
-  const text=await decryptMessage(state.me,r.keys.key,r.peers,p);r.messages.set(p.id,{packet:p,text,status:'sent',seq:meta.seq,expiresAt:Math.min(meta.expiresAt||Infinity,p.createdAt+RETENTION_MS)});
-  noteIncoming(r,p);
+  const text=await decryptMessage(state.me,r.keys.key,r.peers,p);
+  if(p.kind)applyOperation(r,p,text);
+  else if(control(text))applyControl(r,p,control(text));
+  else {const m={packet:p,text,status:'sent',seq:meta.seq,expiresAt:Math.min(meta.expiresAt||Infinity,p.createdAt+RETENTION_MS)};r.messages.set(p.id,m);applyQueuedOperations(r,m);noteIncoming(r,p);}
   while(r.messages.size>1000)r.messages.delete(r.messages.keys().next().value);
   await acknowledge(r,p,channel);
 }
@@ -163,7 +236,7 @@ async function pollNow(r){
   try{
     if(!r.joined)await enroll(r,'join');
     const data=await api(r,'poll',{after:r.after});if(state.current!==r)return false;
-    for(const p of data.peers||[]){try{const old=r.peers.get(p.peer);if(sameRegistration(old,p)||await validPeer(p,r.keys.membership))r.peers.set(p.peer,p);}catch{}}
+    for(const p of data.peers||[]){try{const old=r.peers.get(p.peer);if(sameRegistration(old,p)||await validPeer(p,r.keys.membership)){r.peers.set(p.peer,p);observePeer(r,p);}}catch{}}
     r.peers.set(state.me.peer,{...r.registration,lastSeen:Date.now()});
     for(const row of data.messages||[]){try{await receive(r,row.packet,row);}catch{ /* Keep unverifiable messages out of the transcript. */ }r.after=Math.max(r.after,row.seq);}
     for(const ack of data.receipts||[])await receiveReceipt(r,ack);
@@ -194,6 +267,7 @@ $('messageInput').oninput=updateComposer;$('messageInput').onkeydown=event=>{if(
 $('cancelReply').onclick=()=>{state.reply=null;$('replyPreview').hidden=true;};$('conversationSearch').oninput=renderLists;
 function showInvite(){if(!state.current)return;$('shareLink').value=invite(state.current);$('copyInvite').textContent='Copy invite';openDialog('inviteDialog');}
 $('inviteButton').onclick=showInvite;
+$('friendButton').onclick=()=>{const relationship=state.contacts.get(state.direct)?.relationship;if(relationship==='incoming')respondFriend(state.direct,true);else if(relationship!=='outgoing')requestFriend();};
 async function copyText(text){
   const field=make('textarea','sr-only');field.value=text;field.setAttribute('readonly','');(document.querySelector('dialog[open]')||document.body).append(field);field.select();let copied=false;try{copied=document.execCommand('copy');}catch{}finally{field.remove();}
   if(copied)return;if(!navigator.clipboard?.writeText)throw new Error('Clipboard unavailable');

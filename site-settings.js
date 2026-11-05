@@ -1,8 +1,4 @@
 (() => {
-  document.querySelectorAll('.topnav .links a[href="/chat"], .topnav .links a[href="/chat/"]').forEach(link => {
-    link.hidden = true;
-    link.setAttribute('aria-hidden', 'true');
-  });
   const tetherLinks = [...document.querySelectorAll('.topnav .links a[href="/tether"], .topnav .links a[href="/tether/"]')];
   if (!tetherLinks.length) return;
 

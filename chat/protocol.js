@@ -8,7 +8,10 @@ export function registrationPayload(p) {
 export function sameRegistration(a,b) { return Boolean(a&&b&&a.proof===b.proof&&a.membership===b.membership&&registrationPayload(a)===registrationPayload(b)); }
 export function membershipPayload(p) { return `Tether room member v1\n${registrationPayload(p)}\n${p.proof}`; }
 export function header(p) {
-  return JSON.stringify({v:1,id:p.id,room:p.room,sender:p.sender,to:p.to||null,createdAt:p.createdAt});
+  const h={v:1,id:p.id,room:p.room,sender:p.sender,to:p.to||null,createdAt:p.createdAt};
+  if(p.kind)h.kind=p.kind;
+  if(p.target)h.target=p.target;
+  return JSON.stringify(h);
 }
 export function signaturePayload(p) { return `${header(p)}\n${p.iv}\n${p.cipher}`; }
-export function receiptPayload(r) { return JSON.stringify({room:r.room,id:r.id,peer:r.peer}); }
+export function receiptPayload(r) { return JSON.stringify({room:r.room,id:r.id,peer:r.peer,kind:r.kind||'delivered',at:r.at||0}); }

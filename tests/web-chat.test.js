@@ -69,6 +69,8 @@ test('browser encryption, identity binding and private direct messages',async()=
   const restored=await C.identity(a.saved);assert.equal(restored.peer,a.peer);
   assert.equal(await C.decryptMessage(restored,keys.key,directory,dm),'private to Bob');
   assert.notEqual(keys.access,secret);
+  const edited=await C.encryptMessage(a,room,keys.key,null,'edited text',{kind:'edit',target:group.id});
+  assert.equal(edited.target,group.id);assert.equal(await C.decryptMessage(b,keys.key,directory,edited),'edited text');
 });
 
 test('browser chat API enforces capabilities, signatures, DM isolation, expiry and replay rules',async t=>{
@@ -106,6 +108,14 @@ test('browser chat API enforces capabilities, signatures, DM isolation, expiry a
     const poll=await call({op:'poll',...a.auth});assert.equal(poll.body.receipts.length,1);
     assert.equal(await C.validReceipt(new Map([[b.me.peer,b.registration]]),poll.body.receipts[0]),true);
     assert.equal((await call({op:'ack',...c.auth,receipt:ack})).code,400);
+    const read=await C.receipt(b.me,room,packet.id,'read');assert.equal((await call({op:'ack',...b.auth,receipt:read})).body.ok,true);
+    const afterRead=await call({op:'poll',...a.auth});assert.equal(afterRead.body.receipts[0].kind,'read');
+  });
+  await t.test('signed edit and delete envelopes retain their target in the canonical packet',async()=>{
+    const edit=await C.encryptMessage(a.me,room,a.keys.key,b.registration,'corrected',{kind:'edit',target:packet.id});
+    assert.equal((await call({op:'message',...a.auth,packet:edit})).code,201);
+    assert.equal(messages.get(key(room,edit.id)).packet.target,packet.id);
+    assert.equal((await call({op:'message',...a.auth,packet:{...edit,kind:'delete'}})).code,401);
   });
   await t.test('signaling stays inside the admitted room',async()=>{
     assert.equal((await call({op:'signal',...a.auth,to:C.randomHex(),data:{description:{type:'offer',sdp:'test'}}})).body.ok,false);
@@ -114,7 +124,7 @@ test('browser chat API enforces capabilities, signatures, DM isolation, expiry a
     assert.equal((await call({op:'poll',...b.auth})).body.signals.length,1);
   });
   await t.test('expired ciphertext is not returned, and rate limits fail closed',async()=>{
-    messages.get(key(room,packet.id)).expires_at=Date.now()-1;
+    for(const message of messages.values())if(message.room===room)message.expires_at=Date.now()-1;
     assert.equal((await call({op:'poll',...b.auth})).body.messages.length,0);
     overLimit=true;assert.equal((await call({op:'poll',...a.auth})).code,429);overLimit=false;
   });
