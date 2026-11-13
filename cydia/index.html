@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Basanta's experimental iPad Linux package repository. No installable packages are published yet.">
+    <title>iPad Linux Lab — Basanta</title>
+    <link rel="icon" href="/favicon.png">
+    <link rel="stylesheet" href="/cydia/styles.css">
+</head>
+<body>
+    <header><a href="/">HOME?.</a> <span>/ iPad Linux Lab</span></header>
+    <main>
+        <p class="eyebrow">EXPERIMENTAL / iPad mini 1</p>
+        <h1>A home for the Linux lab.</h1>
+        <p class="intro">A Cydia source for the iPad Linux project, hosted alongside my portfolio.</p>
+
+        <section class="notice" aria-labelledby="status-title">
+            <h2 id="status-title">Not an installer yet</h2>
+            <p><strong>No installable packages are published.</strong> This source currently contains only repository metadata. Adding it does not install or boot Linux.</p>
+            <p>The cable-free launcher is not verified on this iPad. Persistent Linux installation is not available. Keep iOS for normal use; do not restore, repartition, or install unrelated boot tools for this project.</p>
+        </section>
+
+        <section aria-labelledby="source-title">
+            <h2 id="source-title">Cydia source</h2>
+            <p>On a jailbroken device, open <strong>Cydia → Sources → Edit → Add</strong> and enter:</p>
+            <p class="source"><code>https://www.basanta.cc/cydia/</code></p>
+            <p><a class="button" href="cydia://url/https://cydia.saurik.com/api/share#?source=https://www.basanta.cc/cydia/">Open source in Cydia</a></p>
+            <p class="muted">Zero packages is expected. The initial repository is unsigned and its HTTPS compatibility with iOS 9 still needs device testing. If Cydia rejects the source, stop and keep the error; do not disable certificate or package-signature checks.</p>
+        </section>
+
+        <section aria-labelledby="distribution-title">
+            <h2 id="distribution-title">Small website. Separate downloads.</h2>
+            <p>Vercel serves this page and the package indexes. Future redistributable packages can live on Cloudflare R2 instead of taking up space in the portfolio repository.</p>
+            <p>Apple-derived boot files, device calibration and private keys are not hosted here. No package will run a boot command automatically during installation.</p>
+            <p><a href="Release">Repository information</a> · <a href="Packages">Package index</a> · <a href="https://github.com/basanta-bhandari/Portfolio">Website source</a></p>
+        </section>
+    </main>
+    <footer>Built by Basanta. Hosting a package is not proof that it is safe to boot.</footer>
+</body>
+</html>

@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "redirects": [
+    {"source": "/cydia", "destination": "/cydia/", "permanent": false},
     {"source": "/watch", "destination": "/watch/", "permanent": false},
     {
       "source": "/admin/Home",
@@ -42,6 +43,21 @@
           "value": "base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'"
         }
       ]
+    },
+    {
+      "source": "/cydia/:path*",
+      "headers": [
+        {"key": "Cache-Control", "value": "public, max-age=0, must-revalidate, no-transform"},
+        {"key": "Content-Security-Policy", "value": "default-src 'none'; style-src 'self'; img-src 'self'; script-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'self'; form-action 'none'"}
+      ]
+    },
+    {
+      "source": "/cydia/Release",
+      "headers": [{"key": "Content-Type", "value": "text/plain; charset=utf-8"}]
+    },
+    {
+      "source": "/cydia/Packages",
+      "headers": [{"key": "Content-Type", "value": "text/plain; charset=utf-8"}]
     },
     {
       "source": "/watch",
