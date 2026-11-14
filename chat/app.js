@@ -3,12 +3,12 @@ import {ID,TOKEN,RETENTION_MS,sameRegistration,signaturePayload} from './protoco
 const $=id=>document.getElementById(id),make=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 const storageKey='tether.browser.v1';
 let saved={};try{saved=JSON.parse(sessionStorage.getItem(storageKey)||'{}');}catch{}
-const state={me:null,name:typeof saved.name==='string'?saved.name.slice(0,40):`Guest ${Math.floor(1000+Math.random()*9000)}`,useDirect:saved.useDirect!==false,rooms:[],contacts:new Map(),current:null,direct:null,sending:false,reply:null,drafts:new Map()};
+const state={me:null,name:typeof saved.name==='string'?saved.name.slice(0,40):`Guest ${Math.floor(1000+Math.random()*9000)}`,useDirect:saved.useDirect!==false,rooms:[],contacts:new Map(),current:null,direct:null,sending:false,reply:null,editing:null,drafts:new Map()};
 let pollTimer,toastTimer,listSignature,messageSignature;
 const welcome=$('welcome');
 function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{$('toast').hidden=true;},4200);}
 function save(){if(!state.me)return;try{sessionStorage.setItem(storageKey,JSON.stringify({name:state.name,useDirect:state.useDirect,identity:state.me.saved,rooms:state.rooms.map(r=>({id:r.id,name:r.name,secret:r.secret,session:r.session,read:r.read,created:r.created===true})),contacts:[...state.contacts.values()].map(c=>({...c,rooms:[...c.rooms]}))}));}catch{toast('This browser cannot save the session. Keep your invite link before reloading.');}}
-function roomState(data){return {...data,created:data.created===true,messages:new Map(),unread:new Map(),read:Object.assign(Object.create(null),data.read&&typeof data.read==='object'?data.read:{}),peers:new Map(),connections:new Map(),receipts:new Map(),acknowledged:new Set(),ackPending:new Set(),readAcknowledged:new Set(),readPending:new Set(),operations:new Map(),retry:new Map(),after:0,joined:false,loaded:false,live:false,failures:0,polling:null};}
+function roomState(data){return {...data,created:data.created===true,messages:new Map(),unread:new Map(),read:Object.assign(Object.create(null),data.read&&typeof data.read==='object'?data.read:{}),peers:new Map(),connections:new Map(),receipts:new Map(),acknowledged:new Set(),ackPending:new Set(),readAcknowledged:new Set(),readPending:new Set(),operations:new Map(),retry:new Map(),ackQueue:new Map(),ackTimer:null,after:0,receiptAfter:0,joined:false,loaded:false,live:false,failures:0,polling:null};}
 const ready=(async()=>{
   if(!crypto?.subtle)throw new Error('Use a current browser over HTTPS to start encrypted chat.');
   state.me=await identity(saved.identity);
@@ -22,7 +22,7 @@ async function request(body){
   try{
     const response=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store',signal:controller.signal,body:JSON.stringify(body)});
     const data=await response.json().catch(()=>({}));
-    if(!response.ok)throw new Error(data.error||'Chat is temporarily unavailable. Please try again.');return data;
+    if(!response.ok){const error=new Error(data.error||'Chat is temporarily unavailable. Please try again.');error.status=response.status;throw error;}return data;
   }catch(error){if(error.name==='AbortError'||error instanceof TypeError)throw new Error('Cannot reach chat right now. Check your connection and try again.');throw error;}
   finally{clearTimeout(timeout);}
 }
@@ -69,8 +69,8 @@ $('joinForm').onsubmit=async event=>{
   }catch(error){$('joinError').textContent=error.message;}finally{button.disabled=false;button.textContent='Join room';}
 };
 function draftKey(){return state.current?`${state.current.id}/${state.direct||'room'}`:'';}
-function stashDraft(){if(state.current)state.drafts.set(draftKey(),$('messageInput').value);}
-function restoreDraft(){ $('messageInput').value=state.drafts.get(draftKey())||'';state.reply=null;$('replyPreview').hidden=true;updateComposer(); }
+function stashDraft(){if(state.current&&!state.editing)state.drafts.set(draftKey(),$('messageInput').value);}
+function restoreDraft(){ $('messageInput').value=state.drafts.get(draftKey())||'';state.reply=null;state.editing=null;$('replyPreview').hidden=true;updateComposer(); }
 function stopConnections(r){if(!r)return;for(const connection of r.connections.values())connection.pc.close();r.connections.clear();}
 async function enterRoom(r){
   stashDraft();clearTimeout(pollTimer);if(state.current!==r)stopConnections(state.current);
@@ -88,8 +88,26 @@ function markVisibleRead(r){
     r.readPending.add(m.packet.id);
     receipt(state.me,r.id,m.packet.id,'read').then(ack=>{
       for(const c of r.connections.values())if(c.channel?.readyState==='open')try{c.channel.send(JSON.stringify({type:'receipt',receipt:ack}));}catch{}
-      return api(r,'ack',{receipt:ack});
-    }).then(result=>{if(result?.ok)r.readAcknowledged.add(m.packet.id);}).catch(()=>{}).finally(()=>r.readPending.delete(m.packet.id));
+      queueReceipt(r,ack);
+    }).catch(()=>r.readPending.delete(m.packet.id));
+  }
+}
+// Receipts are sent in small batches: opening a room with 100 unread messages used to fire 200
+// separate requests (delivered + read), which tripped the per-session rate limit and stalled polling.
+function queueReceipt(r,ack){
+  const old=r.ackQueue.get(ack.id);if(!old||ack.kind==='read')r.ackQueue.set(ack.id,ack);
+  if(!r.ackTimer)r.ackTimer=setTimeout(()=>flushReceipts(r),400);
+}
+async function flushReceipts(r){
+  r.ackTimer=null;const batch=[...r.ackQueue.values()].slice(0,100);for(const ack of batch)r.ackQueue.delete(ack.id);
+  if(!batch.length)return;
+  try{
+    const result=await api(r,'ack',{receipts:batch}),done=new Set(result.acknowledged||[]);
+    for(const ack of batch)if(done.has(ack.id)){r.acknowledged.add(ack.id);if(ack.kind==='read')r.readAcknowledged.add(ack.id);}
+  }catch{/* Unsent receipts are retried the next time the message is shown or received. */}
+  finally{
+    for(const ack of batch){r.ackPending.delete(ack.id);if(ack.kind==='read')r.readPending.delete(ack.id);}
+    if(r.ackQueue.size&&!r.ackTimer&&state.rooms.includes(r))r.ackTimer=setTimeout(()=>flushReceipts(r),400);
   }
 }
 function observePeer(r,p){
@@ -143,7 +161,7 @@ function renderHeader(){
   $('connectionStatus').textContent=r?(r.live?'Live':directCount(r)?'Direct only':'Reconnecting…'):'';$('connectionStatus').classList.toggle('live',Boolean(r?.live));
   $('messageInput').placeholder=p?`Message ${p.name}…`:r?`Message ${r.name}…`:'Write a message…';
 }
-function updateComposer(){ const ready=Boolean(state.current?.joined&&state.current?.keys);$('messageInput').disabled=!ready;$('sendButton').disabled=!ready||!$('messageInput').value.trim()||state.sending;$('characterCount').textContent=$('messageInput').value.length>3500?`${$('messageInput').value.length}/4000`:'';$('composerHint').textContent=state.direct?'Only you and this person can decrypt DMs':'Encrypted for people with this room’s invite'; }
+function updateComposer(){ const ready=Boolean(state.current?.joined&&state.current?.keys);$('messageInput').disabled=!ready;$('sendButton').disabled=!ready||!$('messageInput').value.trim()||state.sending;$('sendButton').textContent=state.editing?'Save':'Send';$('characterCount').textContent=$('messageInput').value.length>3500?`${$('messageInput').value.length}/4000`:'';$('composerHint').textContent=state.direct?'Only you and this person can decrypt DMs':'Encrypted for people with this room’s invite'; }
 function visibleMessages(r){return [...r.messages.values()].filter(m=>(m.expiresAt||m.packet.createdAt+RETENTION_MS)>Date.now()&&(state.direct?m.packet.sender===state.direct&&m.packet.to===state.me.peer||m.packet.sender===state.me.peer&&m.packet.to===state.direct:!m.packet.to)).sort((a,b)=>a.packet.createdAt-b.packet.createdAt||a.packet.id.localeCompare(b.packet.id));}
 function renderMessages(){
   const r=state.current;if(!r){$('timeline').replaceChildren(welcome);messageSignature=null;return;}
@@ -159,7 +177,7 @@ function renderMessages(){
     const article=make('article',`message${own?' own':''}`),main=make('div','message-main'),head=make('div','message-head'),time=make('time','message-time',date.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'}));time.dateTime=date.toISOString();head.append(make('span','message-author',name),time);main.append(head,make('div','message-body',m.deleted?'Message deleted':m.text));
     if(m.edited&&!m.deleted)main.append(make('span','edited-label','Edited'));
     if(own){const receipts=[...(r.receipts.get(p.id)?.values()||[])],read=receipts.filter(x=>x.kind==='read').length,delivered=receipts.filter(x=>x.kind==='delivered').length;const status=read?(p.to?'Read':`Read by ${read}`):delivered?(p.to?'Delivered':`Delivered to ${delivered}`):m.status==='sending'?'Sending…':m.status==='failed'?'Not sent':m.status==='direct'?'Sent directly':'Sent';main.append(make('div',`delivery${m.status==='failed'?' failed':''}`,status));}
-    const actions=make('div','message-actions'),copy=make('button','','Copy'),reply=make('button','','Reply');copy.type=reply.type='button';copy.onclick=()=>copyText(m.text).then(()=>toast('Message copied.')).catch(()=>toast('Select the message text to copy it.'));reply.onclick=()=>{state.reply=m;$('replyText').textContent=`Reply to ${name}: ${m.text.slice(0,100)}`;$('replyPreview').hidden=false;$('messageInput').focus();};actions.append(copy,reply);
+    const actions=make('div','message-actions'),copy=make('button','','Copy'),reply=make('button','','Reply');copy.type=reply.type='button';copy.onclick=()=>copyText(m.text).then(()=>toast('Message copied.')).catch(()=>toast('Select the message text to copy it.'));reply.onclick=()=>{if(state.editing)cancelComposerContext();state.reply=m;$('replyText').textContent=`Reply to ${name}: ${m.text.slice(0,100)}`;$('replyPreview').hidden=false;$('messageInput').focus();};actions.append(copy,reply);
     if(own&&!m.deleted){const edit=make('button','','Edit'),remove=make('button','','Delete');edit.type=remove.type='button';edit.onclick=()=>editMessage(r,m);remove.onclick=()=>deleteMessage(r,m);actions.append(edit,remove);}
     if(own&&m.status==='failed'){const retry=make('button','','Retry');retry.type='button';retry.onclick=()=>submitPacket(r,m);actions.append(retry);}main.append(actions);article.append(avatar(own?state.name:name,own),main);timeline.append(article);
   }
@@ -169,13 +187,17 @@ function renderAll(){renderLists();renderHeader();renderMessages();updateCompose
 function showFailure(r,error){if(state.current!==r)return;r.live=false;renderHeader();$('connectionBanner').hidden=false;$('connectionBanner').textContent=error.message;}
 async function acknowledge(r,p,channel){
   if(p.sender===state.me.peer)return;
+  const live=channel?.readyState==='open',handled=r.readAcknowledged.has(p.id)||r.acknowledged.has(p.id)||r.ackPending.has(p.id);
+  if(handled&&!live)return;
   const ack=await receipt(state.me,r.id,p.id,'delivered');
-  if(channel?.readyState==='open'){try{channel.send(JSON.stringify({type:'receipt',receipt:ack}));}catch{}}
-  if(r.acknowledged.has(p.id)||r.ackPending.has(p.id))return;r.ackPending.add(p.id);
-  api(r,'ack',{receipt:ack}).then(result=>{if(result.ok)r.acknowledged.add(p.id);}).catch(()=>{}).finally(()=>r.ackPending.delete(p.id));
+  if(live){try{channel.send(JSON.stringify({type:'receipt',receipt:ack}));}catch{}}
+  if(handled)return;r.ackPending.add(p.id);queueReceipt(r,ack);
 }
 async function receiveReceipt(r,ack){
-  const m=r.messages.get(ack.id);if(!m||ack.room!==r.id||m.packet.sender!==state.me.peer||ack.peer===state.me.peer||m.packet.to&&m.packet.to!==ack.peer||!await validReceipt(r.peers,ack))return;
+  const m=r.messages.get(ack?.id),known=r.receipts.get(ack?.id)?.get(ack?.peer);
+  // Already-verified receipts are skipped before the (comparatively expensive) signature check.
+  if(known&&(known.sig===ack.sig||known.kind==='read'&&ack.kind!=='read'))return;
+  if(!m||ack.room!==r.id||m.packet.sender!==state.me.peer||ack.peer===state.me.peer||m.packet.to&&m.packet.to!==ack.peer||!await validReceipt(r.peers,ack))return;
   if(!r.receipts.has(ack.id))r.receipts.set(ack.id,new Map());const old=r.receipts.get(ack.id).get(ack.peer);if(!old||ack.kind==='read')r.receipts.get(ack.id).set(ack.peer,ack);if(state.current===r)renderMessages();
 }
 function control(text){
@@ -211,9 +233,20 @@ async function respondFriend(peer,accept){
   const c=state.contacts.get(peer);if(!c)return;
   try{await sendControl(peer,accept?'friend-accept':'friend-decline');c.relationship=accept?'friend':'none';save();renderLists();toast(accept?`${c.name} is now a friend.`:'Request declined.');}catch(error){toast(error.message);}
 }
-async function editMessage(r,m){
-  const next=prompt('Edit message',m.text);if(next===null||next.trim()===m.text||!next.trim())return;
-  try{const other=m.packet.to?r.peers.get(m.packet.to):null,packet=await encryptMessage(state.me,r.id,r.keys.key,other,next.trim(),{kind:'edit',target:m.packet.id});await api(r,'message',{packet});broadcast(r,packet);applyOperation(r,packet,next.trim());renderMessages();}catch(error){toast(error.message);}
+function editMessage(r,m){
+  if(state.current!==r)return;stashDraft();state.reply=null;state.editing=m;
+  $('replyText').textContent='Editing your message · Esc to cancel';$('replyPreview').hidden=false;
+  $('messageInput').value=m.text;updateComposer();$('messageInput').focus();
+}
+function cancelComposerContext(){
+  const editing=state.editing;state.reply=null;state.editing=null;$('replyPreview').hidden=true;
+  if(editing)$('messageInput').value=state.drafts.get(draftKey())||'';updateComposer();
+}
+async function submitEdit(r,m,next){
+  if(next===m.text||m.deleted)return;
+  const other=m.packet.to?r.peers.get(m.packet.to):null;if(m.packet.to&&!other)throw new Error('That person is no longer available.');
+  const packet=await encryptMessage(state.me,r.id,r.keys.key,other,next,{kind:'edit',target:m.packet.id});
+  await api(r,'message',{packet});broadcast(r,packet);applyOperation(r,packet,next);renderMessages();
 }
 async function deleteMessage(r,m){
   if(!confirm('Delete this message for everyone in this conversation?'))return;
@@ -235,14 +268,15 @@ async function pollNow(r){
   clearTimeout(pollTimer);
   try{
     if(!r.joined)await enroll(r,'join');
-    const data=await api(r,'poll',{after:r.after});if(state.current!==r)return false;
+    const data=await api(r,'poll',{after:r.after,receiptsAfter:r.receiptAfter});if(state.current!==r)return false;
     for(const p of data.peers||[]){try{const old=r.peers.get(p.peer);if(sameRegistration(old,p)||await validPeer(p,r.keys.membership)){r.peers.set(p.peer,p);observePeer(r,p);}}catch{}}
     r.peers.set(state.me.peer,{...r.registration,lastSeen:Date.now()});
     for(const row of data.messages||[]){try{await receive(r,row.packet,row);}catch{ /* Keep unverifiable messages out of the transcript. */ }r.after=Math.max(r.after,row.seq);}
     for(const ack of data.receipts||[])await receiveReceipt(r,ack);
+    if(Number.isSafeInteger(data.receiptCursor))r.receiptAfter=Math.max(r.receiptAfter,data.receiptCursor);
     for(const signal of data.signals||[]){try{await receiveSignal(r,signal.sender,signal.data);}catch{}}
     r.loaded=true;r.live=true;r.failures=0;$('connectionBanner').hidden=true;renderAll();startConnections(r);return true;
-  }catch(error){r.failures++;showFailure(r,error);return false;}
+  }catch(error){r.failures++;if(error.status===401)r.joined=false;/* Re-register on the next attempt after the session was pruned. */showFailure(r,error);return false;}
   finally{if(state.current===r)pollTimer=setTimeout(()=>poll(r),Math.min(15000,(document.hidden?8000:2200)*Math.max(1,r.failures)));}
 }
 function broadcast(r,p){if(state.current!==r)return 0;let count=0;for(const [id,c] of r.connections){if(p.to&&p.to!==id)continue;if(c.channel?.readyState==='open'){try{c.channel.send(JSON.stringify({type:'message',packet:p}));count++;}catch{}}}return count;}
@@ -255,6 +289,12 @@ async function submitPacket(r,m){
 $('messageForm').onsubmit=async event=>{
   event.preventDefault();if(state.sending||!state.current||!$('messageInput').value.trim())return;
   const r=state.current,direct=state.direct,draft=$('messageInput').value,reply=state.reply;state.sending=true;updateComposer();
+  if(state.editing){
+    const m=state.editing;
+    try{await submitEdit(r,m,draft.trim());if(state.editing===m)cancelComposerContext();}
+    catch(error){toast(error.message);}finally{state.sending=false;updateComposer();$('messageInput').focus();}
+    return;
+  }
   try{
     const text=reply?`> ${r.peers.get(reply.packet.sender)?.name||'Participant'}: ${reply.text.slice(0,250)}\n\n${draft.trim()}`:draft.trim();
     const other=direct?r.peers.get(direct):null;if(direct&&!other)throw new Error('That person is no longer available.');
@@ -263,8 +303,8 @@ $('messageForm').onsubmit=async event=>{
     await submitPacket(r,m);
   }catch(error){toast(error.message);}finally{state.sending=false;updateComposer();if(state.current===r&&state.direct===direct)$('messageInput').focus();}
 };
-$('messageInput').oninput=updateComposer;$('messageInput').onkeydown=event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();$('messageForm').requestSubmit();}};
-$('cancelReply').onclick=()=>{state.reply=null;$('replyPreview').hidden=true;};$('conversationSearch').oninput=renderLists;
+$('messageInput').oninput=updateComposer;$('messageInput').onkeydown=event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();$('messageForm').requestSubmit();}else if(event.key==='Escape'&&(state.editing||state.reply)){event.preventDefault();cancelComposerContext();}};
+$('cancelReply').onclick=cancelComposerContext;$('conversationSearch').oninput=renderLists;
 function showInvite(){if(!state.current)return;$('shareLink').value=invite(state.current);$('copyInvite').textContent='Copy invite';openDialog('inviteDialog');}
 $('inviteButton').onclick=showInvite;
 $('friendButton').onclick=()=>{const relationship=state.contacts.get(state.direct)?.relationship;if(relationship==='incoming')respondFriend(state.direct,true);else if(relationship!=='outgoing')requestFriend();};
@@ -281,7 +321,7 @@ $('detailsButton').onclick=()=>{
   const r=state.current;if(!r)return;$('roomDetailsTitle').textContent=r.name;$('roomDetailsConnection').textContent=`Direct connections: ${directCount(r)}. Encrypted delivery through this site is available for everyone else.`;$('memberList').replaceChildren();
   for(const p of r.peers.values()){const row=make('div','member');row.append(avatar(p.name,p.peer===state.me.peer),make('span','',p.peer===state.me.peer?`${p.name} (you)`:p.name),make('small','',Date.now()-p.lastSeen<45000?'Online':'Offline'));$('memberList').append(row);}openDialog('detailsDialog');
 };
-$('leaveRoom').onclick=async()=>{const r=state.current;if(!r)return;api(r,'leave').catch(()=>{});clearTimeout(pollTimer);stopConnections(r);state.rooms=state.rooms.filter(x=>x!==r);state.current=null;state.direct=null;save();closeDialog('detailsDialog');renderAll();if(state.rooms[0])await enterRoom(state.rooms[0]);};
+$('leaveRoom').onclick=async()=>{const r=state.current;if(!r)return;api(r,'leave').catch(()=>{});clearTimeout(pollTimer);clearTimeout(r.ackTimer);r.ackQueue.clear();stopConnections(r);state.rooms=state.rooms.filter(x=>x!==r);state.current=null;state.direct=null;save();closeDialog('detailsDialog');renderAll();if(state.rooms[0])await enterRoom(state.rooms[0]);};
 function sidebar(open){$('sidebar').classList.toggle('open',open);$('toggleSidebar').setAttribute('aria-expanded',String(open));}
 $('toggleSidebar').onclick=()=>sidebar(!$('sidebar').classList.contains('open'));$('closeSidebar').onclick=()=>sidebar(false);
 function connectPeer(r,p,offer=false){

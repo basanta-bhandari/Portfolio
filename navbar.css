@@ -79,10 +79,14 @@
     }
 
     .topnav .links::-webkit-scrollbar { display: none; }
+
+    /* Keep the theme switch on the brand row instead of wrapping onto a line of its own. */
+    .topnav .theme-toggle { position: absolute; top: 10px; right: 18px; }
 }
 
 @media (max-width: 560px) {
     .topnav { padding-inline: 16px; }
     .topnav .brand { font-size: .9rem; }
     .topnav .links { gap: 16px; font-size: .74rem; }
+    .topnav .theme-toggle { right: 16px; }
 }

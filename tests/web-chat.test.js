@@ -8,13 +8,13 @@ const C=await import('../chat/crypto.js');
 const P=await import('../chat/protocol.js');
 const S=await import('../lib/web-chat.js');
 const handler=(await import('../lib/web-chat-handler.js')).default;
-const rooms=new Map(),peers=new Map(),messages=new Map(),signals=[],receipts=new Map();let seq=0,overLimit=false;
+const rooms=new Map(),peers=new Map(),messages=new Map(),signals=[],receipts=new Map();let seq=0,receiptSeq=0,signalId=0,overLimit=false;
 const key=(room,peer)=>`${room}/${peer}`;
 const active=m=>m.expires_at>Date.now();
 function publicMessage(m){return {seq:m.seq,packet:m.packet,expires_at:new Date(m.expires_at)};}
 globalThis.__portfolioTestSql=async(parts,...v)=>{
   const q=parts.join('?').replace(/\s+/g,' ').trim();
-  if(q.startsWith('CREATE '))return [];
+  if(q.startsWith('CREATE ')||q.startsWith('ALTER TABLE'))return [];
   if(q.startsWith('INSERT INTO tether_web_limits'))return [{count:overLimit?100000:1}];
   if(q.startsWith('INSERT INTO tether_web_rooms')){if(rooms.has(v[0]))return [];rooms.set(v[0],{access_hash:v[1],name:v[2],expires_at:Date.now()+P.RETENTION_MS});return [{id:v[0]}];}
   if(q.startsWith('SELECT name FROM tether_web_rooms')){const r=rooms.get(v[0]);return r&&r.access_hash===v[1]&&active(r)?[{name:r.name}]:[];}
@@ -29,14 +29,15 @@ globalThis.__portfolioTestSql=async(parts,...v)=>{
   if(q.startsWith('SELECT * FROM (SELECT seq,packet')||q.startsWith('SELECT seq,packet')){const initial=q.startsWith('SELECT *'),room=v[0],after=initial?0:v[1],peer=v[initial?1:2];const rows=[...messages.values()].filter(m=>m.room===room&&active(m)&&m.seq>after&&(!m.recipient||m.recipient===peer||m.sender===peer)).sort((a,b)=>a.seq-b.seq);return (initial?rows.slice(-100):rows.slice(0,100)).map(publicMessage);}
   if(q.startsWith('UPDATE tether_web_rooms')){rooms.get(v[0]).expires_at=Date.now()+P.RETENTION_MS;return [];}
   if(q.startsWith('SELECT peer FROM tether_web_peers')){const p=peers.get(key(v[0],v[1]));return p?[{peer:p.peer}]:[];}
-  if(q.startsWith('DELETE FROM tether_web_signals WHERE id IN')){const selected=signals.filter(s=>s.room===v[0]&&s.recipient===v[1]).slice(0,100);for(const s of selected)signals.splice(signals.indexOf(s),1);return selected;}
+  if(q.startsWith('DELETE FROM tether_web_signals WHERE id IN')){const selected=signals.filter(s=>s.room===v[0]&&s.recipient===v[1]&&s.expires_at>Date.now()).slice(0,100);for(const s of selected)signals.splice(signals.indexOf(s),1);return selected;}
   if(q.startsWith('DELETE FROM tether_web_signals'))return [];
-  if(q.startsWith('INSERT INTO tether_web_signals')){signals.push({room:v[0],sender:v[1],recipient:v[2],data:JSON.parse(v[3])});return [];}
-  if(q.startsWith('INSERT INTO tether_web_receipts')){const m=messages.get(key(v[2],v[3])),peer=v[0];if(!m||!active(m)||m.sender===peer||m.recipient&&m.recipient!==peer)return [];receipts.set(`${key(v[2],v[3])}/${peer}`,JSON.parse(v[1]));return [{peer}];}
-  if(q.startsWith('SELECT r.receipt'))return [...receipts.values()].filter(r=>r.room===v[0]&&messages.get(key(r.room,r.id))?.sender===v[1]&&active(messages.get(key(r.room,r.id)))).map(receipt=>({receipt}));
+  if(q.startsWith('INSERT INTO tether_web_signals')){signals.push({id:++signalId,room:v[0],sender:v[1],recipient:v[2],data:JSON.parse(v[3]),expires_at:Date.now()+60000});return [];}
+  if(q.startsWith('INSERT INTO tether_web_receipts')){const peer=v[0],out=[];for(const r of JSON.parse(v[1])){const m=messages.get(key(v[2],r.id));if(!m||!active(m)||m.sender===peer||m.recipient&&m.recipient!==peer)continue;const k=`${key(v[2],r.id)}/${peer}`,old=receipts.get(k);if(!(old?.receipt.kind==='read'&&r.kind!=='read'))receipts.set(k,{receipt:r,seq:++receiptSeq});out.push({id:r.id});}return out;}
+  if(q.startsWith('SELECT r.receipt'))return [...receipts.values()].filter(({receipt:r})=>r.room===v[0]&&messages.get(key(r.room,r.id))?.sender===v[1]&&active(messages.get(key(r.room,r.id)))).map(({receipt})=>({receipt}));
+  if(q.startsWith('SELECT r.seq,r.receipt'))return [...receipts.values()].filter(({receipt:r,seq})=>r.room===v[0]&&seq>v[1]&&messages.get(key(r.room,r.id))?.sender===v[2]&&active(messages.get(key(r.room,r.id)))).sort((a,b)=>a.seq-b.seq).map(({receipt,seq})=>({receipt,seq}));
   if(q.startsWith('DELETE FROM tether_web_messages')){for(const [k,m] of messages)if(!active(m)&&(!v.length||m.room===v[0]))messages.delete(k);return [];}
   if(q.startsWith('DELETE FROM tether_web_rooms')){for(const [k,r] of rooms)if(!active(r))rooms.delete(k);return [];}
-  if(q.startsWith('DELETE FROM tether_web_limits'))return [];
+  if(q.startsWith('DELETE FROM tether_web_limits')||q.startsWith('DELETE FROM tether_web_peers'))return [];
   throw new Error(`Unexpected test SQL: ${q}`);
 };
 function response(){return {code:200,headers:{},setHeader(k,v){this.headers[k]=v;},status(code){this.code=code;return this;},json(body){this.body=body;return this;}};}
@@ -110,6 +111,21 @@ test('browser chat API enforces capabilities, signatures, DM isolation, expiry a
     assert.equal((await call({op:'ack',...c.auth,receipt:ack})).code,400);
     const read=await C.receipt(b.me,room,packet.id,'read');assert.equal((await call({op:'ack',...b.auth,receipt:read})).body.ok,true);
     const afterRead=await call({op:'poll',...a.auth});assert.equal(afterRead.body.receipts[0].kind,'read');
+    const late=await C.receipt(b.me,room,packet.id,'delivered');assert.equal((await call({op:'ack',...b.auth,receipt:late})).body.ok,true);
+    assert.equal((await call({op:'poll',...a.auth})).body.receipts[0].kind,'read','a late delivered receipt must not downgrade read');
+  });
+  await t.test('receipts can be batched and fetched incrementally with a cursor',async()=>{
+    const group=await C.encryptMessage(a.me,room,a.keys.key,null,'batched receipts');
+    assert.equal((await call({op:'message',...a.auth,packet:group})).code,201);
+    const batch=[await C.receipt(c.me,room,group.id,'delivered'),await C.receipt(c.me,room,group.id,'read')];
+    const acked=await call({op:'ack',...c.auth,receipts:batch});assert.equal(acked.code,200);assert.deepEqual(acked.body.acknowledged,[group.id]);
+    const first=await call({op:'poll',...a.auth,receiptsAfter:0});assert.ok(first.body.receiptCursor>0);
+    assert.equal(first.body.receipts.find(r=>r.id===group.id&&r.peer===c.me.peer).kind,'read');
+    const next=await call({op:'poll',...a.auth,receiptsAfter:first.body.receiptCursor});
+    assert.equal(next.body.receipts.length,0);assert.equal(next.body.receiptCursor,first.body.receiptCursor);
+    assert.equal((await call({op:'ack',...c.auth,receipts:[]})).code,400);
+    assert.equal((await call({op:'ack',...c.auth,receipts:[...batch,{...batch[0],sig:batch[1].sig}]})).code,400);
+    assert.equal((await call({op:'poll',...a.auth,receiptsAfter:-1})).code,400);
   });
   await t.test('signed edit and delete envelopes retain their target in the canonical packet',async()=>{
     const edit=await C.encryptMessage(a.me,room,a.keys.key,b.registration,'corrected',{kind:'edit',target:packet.id});
@@ -122,6 +138,8 @@ test('browser chat API enforces capabilities, signatures, DM isolation, expiry a
     await call({op:'signal',...a.auth,to:b.me.peer,data:{candidate:{candidate:'disposable'}}});
     assert.equal((await call({op:'poll',...c.auth})).body.signals.length,0);
     assert.equal((await call({op:'poll',...b.auth})).body.signals.length,1);
+    await call({op:'signal',...a.auth,to:b.me.peer,data:{candidate:{candidate:'stale'}}});signals.at(-1).expires_at=Date.now()-1;
+    assert.equal((await call({op:'poll',...b.auth})).body.signals.length,0,'expired signals are not delivered');
   });
   await t.test('expired ciphertext is not returned, and rate limits fail closed',async()=>{
     for(const message of messages.values())if(message.room===room)message.expires_at=Date.now()-1;
